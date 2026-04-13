@@ -23,7 +23,7 @@ export default function Modal({ title, onClose, children, footer }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '14px 20px', borderBottom: '1px solid #e5e7eb',
         }}>
-          <strong style={{ fontSize: 16 }}>{title}</strong>
+          <strong data-testid="modal-title" style={{ fontSize: 16 }}>{title}</strong>
           <button
             data-testid="modal-close"
             onClick={onClose}

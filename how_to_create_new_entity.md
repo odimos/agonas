@@ -11,7 +11,8 @@ captain_player_id -> player.id,FK,NO,,
 vice_captain_player_id -> player.id,FK,NO,,
 
 Use similar UI for the front end as we did for referees. You can see the wireframes in frontend\wireframes\referee or directly in the frontend\src\pages\RefereesPage.jsx
-Also use similar structure as we did for referees, you can see a summary of the previous work in the following example. Dont overstretch with tests, just important ones, this is an mvp.
+Also use similar structure as we did for referees, you can see a summary of the previous work in the following example. Dont overstretch with tests, just important ones, this is an mvp. 
+In the end RUN YOURSELF the tests and if any errors arise FIX them.
 
  ## Example from referee:
  Everything is written. Here's a summary of what was created and what you need to do to run it:
