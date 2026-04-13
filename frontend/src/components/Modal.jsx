@@ -1,4 +1,4 @@
-export default function Modal({ title, onClose, children, footer }) {
+export default function Modal({ title, onClose, children, footer, width = 420 }) {
   return (
     <div
       style={{
@@ -13,15 +13,18 @@ export default function Modal({ title, onClose, children, footer }) {
         style={{
           background: '#fff',
           borderRadius: 8,
-          width: 420,
+          width,
           maxWidth: '95vw',
+          maxHeight: '92vh',
+          display: 'flex',
+          flexDirection: 'column',
           boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '14px 20px', borderBottom: '1px solid #e5e7eb',
+          padding: '14px 20px', borderBottom: '1px solid #e5e7eb', flexShrink: 0,
         }}>
           <strong data-testid="modal-title" style={{ fontSize: 16 }}>{title}</strong>
           <button
@@ -33,12 +36,12 @@ export default function Modal({ title, onClose, children, footer }) {
           </button>
         </div>
 
-        <div style={{ padding: '20px' }}>{children}</div>
+        <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>{children}</div>
 
         {footer && (
           <div style={{
             padding: '12px 20px', borderTop: '1px solid #e5e7eb',
-            display: 'flex', justifyContent: 'flex-end', gap: 8,
+            display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0,
           }}>
             {footer}
           </div>

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import Modal from '../Modal'
 
 const row = { display: 'flex', gap: 8, marginBottom: 10, fontSize: 14 }
@@ -7,7 +8,15 @@ const btn = (v) => ({
   background: v === 'danger' ? '#dc2626' : '#2563eb', color: '#fff',
 })
 
-export default function DetailsModal({ player, onClose, onEdit, onDelete }) {
+export default function DetailsModal({ player, teams = [], onClose, onEdit, onDelete }) {
+  const navigate = useNavigate()
+  const team = teams.find(t => t.id === player.team_id)
+
+  const goToTeam = () => {
+    onClose()
+    navigate(`/teams?team=${team.id}`)
+  }
+
   return (
     <Modal
       title="Player Details"
@@ -19,11 +28,24 @@ export default function DetailsModal({ player, onClose, onEdit, onDelete }) {
         </>
       }
     >
-      <div style={row}><span style={lbl}>First Name *</span><span>{player.first_name}</span></div>
-      <div style={row}><span style={lbl}>Last Name *</span><span>{player.last_name}</span></div>
+      <div style={row}><span style={lbl}>First Name</span><span>{player.first_name}</span></div>
+      <div style={row}><span style={lbl}>Last Name</span><span>{player.last_name}</span></div>
       <div style={row}><span style={lbl}>Nickname</span><span>{player.nickname || '—'}</span></div>
       <div style={row}><span style={lbl}>Phone</span><span>{player.phone || '—'}</span></div>
       <div style={row}><span style={lbl}>Email</span><span>{player.email || '—'}</span></div>
+      <div style={row}>
+        <span style={lbl}>Team</span>
+        {team ? (
+          <button
+            onClick={goToTeam}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#2563eb', fontSize: 14, textDecoration: 'underline' }}
+          >
+            {team.name}
+          </button>
+        ) : (
+          <span>—</span>
+        )}
+      </div>
       <div style={row}><span style={lbl}>Comments</span><span style={{ whiteSpace: 'pre-wrap' }}>{player.comments || '—'}</span></div>
     </Modal>
   )

@@ -2,7 +2,7 @@ import json
 
 from django.test import Client, TestCase
 
-from api.models import Player
+from api.models import Player, Team
 
 VALID = {'first_name': 'John', 'last_name': 'Doe'}
 
@@ -78,3 +78,27 @@ class PlayerRetrieveUpdateDeleteTest(TestCase):
         res = self.client.delete(f'/api/players/{self.player.id}')
         self.assertEqual(res.status_code, 204)
         self.assertFalse(Player.objects.filter(id=self.player.id).exists())
+
+    def test_create_with_team(self):
+        team = Team.objects.create(name='FC Test')
+        res = self.client.post(
+            '/api/players/',
+            json.dumps({**VALID, 'team_id': team.id}),
+            content_type='application/json',
+        )
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.json()['team_id'], team.id)
+
+    def test_update_team(self):
+        team = Team.objects.create(name='FC Test')
+        res = self._put({**VALID, 'team_id': team.id})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()['team_id'], team.id)
+
+    def test_clear_team(self):
+        team = Team.objects.create(name='FC Test')
+        self.player.team = team
+        self.player.save()
+        res = self._put({**VALID, 'team_id': None})
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.json()['team_id'])

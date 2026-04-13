@@ -13,9 +13,9 @@ const btn = (v) => ({
   background: v === 'primary' ? '#2563eb' : '#6b7280', color: '#fff',
 })
 
-const empty = { first_name: '', last_name: '', nickname: '', phone: '', email: '', comments: '' }
+const empty = { first_name: '', last_name: '', nickname: '', phone: '', email: '', comments: '', team_id: '' }
 
-export default function AddPlayerModal({ onClose, onSave }) {
+export default function AddPlayerModal({ teams = [], onClose, onSave }) {
   const [form, setForm] = useState(empty)
   const [error, setError] = useState('')
 
@@ -24,7 +24,11 @@ export default function AddPlayerModal({ onClose, onSave }) {
   const handleSave = async () => {
     setError('')
     try {
-      await createPlayer({ ...form, team_id: null })
+      await createPlayer({
+        ...form,
+        team_id: form.team_id ? Number(form.team_id) : null,
+        comments: form.comments || null,
+      })
       onSave()
     } catch {
       setError('Please fill all required fields correctly.')
@@ -62,6 +66,15 @@ export default function AddPlayerModal({ onClose, onSave }) {
       <div style={field}>
         <label style={label}>Email</label>
         <input data-testid="input-email" style={input} value={form.email} onChange={set('email')} />
+      </div>
+      <div style={field}>
+        <label style={label}>Team</label>
+        <select data-testid="input-team" style={input} value={form.team_id} onChange={set('team_id')}>
+          <option value="">— None —</option>
+          {teams.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
       </div>
       <div style={field}>
         <label style={label}>Comments</label>

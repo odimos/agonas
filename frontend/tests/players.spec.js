@@ -95,6 +95,28 @@ test('edit modal updates player', async ({ page, request }) => {
   await apiCleanup(request, 'Edit')
 })
 
+// ─── team assignment ──────────────────────────────────────────────────────────
+
+test('assigning a team shows team name in the list', async ({ page, request }) => {
+  // create a team to assign
+  const teamRes = await request.post('http://localhost:8000/api/teams/', { data: { name: 'PlayerTestTeam', is_active: true } })
+  const teamId = (await teamRes.json()).id
+
+  await apiCleanup(request, 'Teamd')
+  await page.goto('/players')
+
+  await page.getByTestId('add-player-btn').click()
+  await page.getByTestId('input-first-name').fill('Teamd')
+  await page.getByTestId('input-last-name').fill('Player')
+  await page.getByTestId('input-team').selectOption({ label: 'PlayerTestTeam' })
+  await page.getByTestId('btn-save').click()
+
+  await expect(page.getByTestId('player-row').filter({ hasText: 'PlayerTestTeam' }).first()).toBeVisible()
+
+  await apiCleanup(request, 'Teamd')
+  await request.delete(`http://localhost:8000/api/teams/${teamId}`)
+})
+
 // ─── delete ───────────────────────────────────────────────────────────────────
 
 test('delete modal removes player', async ({ page, request }) => {
