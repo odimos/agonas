@@ -34,7 +34,7 @@ function clickRow(page, name) {
 
 test('list page renders heading and add button', async ({ page }) => {
   await page.goto('/referees')
-  await expect(page.getByText('Referees')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Referees' })).toBeVisible()
   await expect(page.getByTestId('add-referee-btn')).toBeVisible()
   await expect(page.getByTestId('search-input')).toBeVisible()
 })
