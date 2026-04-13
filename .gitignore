@@ -1,0 +1,31 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.coverage
+htmlcov/
+
+# Django
+db_data/
+
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+build/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Editors
+.vscode/
+.idea/
+.DS_Store

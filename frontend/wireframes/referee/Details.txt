@@ -1,0 +1,13 @@
+                    ┌───────────────────────────────────┐
+                    │ Referee Details                [X]│
+                    ├───────────────────────────────────┤
+                    │ *First Name:   John               │
+                    │ *Last Name:    Smith              │
+                    │ *Phone:        6999999999         │
+                    │ Email:        john@mail.com      │
+                    │ Comments:     Experienced ref    │
+                    │               available weekdays │
+                    │                                   │
+                    ├───────────────────────────────────┤
+                    │ [ Edit ]   [ Delete ]             │
+                    └───────────────────────────────────┘

@@ -1,0 +1,4 @@
+first_name,last_name,phone,email,comments
+YES,YES,YES,NO,NO
+NO,NO,NO,NO,YES
+Trim,Trim,Trim,Trim,Trim

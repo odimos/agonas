@@ -1,0 +1,10 @@
+                  ┌─────────────────────────────────┐
+                  │ Delete Referee               [X]│
+                  ├─────────────────────────────────┤
+                  │ Are you sure you want to delete │
+                  │ John Smith?                     │
+                  │                                 │
+                  │ This action cannot be undone.   │
+                  ├─────────────────────────────────┤
+                  │ [ Cancel ]      [ Delete ]      │
+                  └─────────────────────────────────┘
