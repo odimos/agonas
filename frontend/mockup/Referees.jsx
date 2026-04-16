@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
+import ItemModal from './ItemModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ function StatusBadge({ status }) {
 
 // ─── Referee Row ──────────────────────────────────────────────────────────────
 
-function RefereeRow({ referee, isFirst }) {
+function RefereeRow({ referee, isFirst, onClick }) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
@@ -69,6 +70,7 @@ function RefereeRow({ referee, isFirst }) {
         cursor: 'pointer',
         padding: '0 1.5rem',
       }}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -92,6 +94,7 @@ function RefereeRow({ referee, isFirst }) {
 
 export default function Referees() {
   const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState(null)
 
   const filtered = MOCK_REFEREES.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -106,11 +109,26 @@ export default function Referees() {
       <DataTable
         columns={COLUMNS}
         rows={filtered}
-        renderRow={(row, isFirst) => <RefereeRow key={row.id} referee={row} isFirst={isFirst} />}
+        renderRow={(row, isFirst) => (
+          <RefereeRow key={row.id} referee={row} isFirst={isFirst} onClick={() => setSelected(row)} />
+        )}
         search={search}
         onSearch={setSearch}
         total={42}
       />
+      {selected && (
+        <ItemModal
+          title="Λεπτομέρειες Διαιτητή"
+          subtitle={`ID: REF-${selected.id}`}
+          onClose={() => setSelected(null)}
+        >
+          {(editing) => (
+            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
+              Content for <strong>{selected.name}</strong> — form fields coming soon.
+            </p>
+          )}
+        </ItemModal>
+      )}
     </div>
   )
 }

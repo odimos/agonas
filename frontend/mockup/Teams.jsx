@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
+import ItemModal from './ItemModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ function StatusBadge({ status }) {
 
 // ─── Team Row ─────────────────────────────────────────────────────────────────
 
-function TeamRow({ team, isFirst }) {
+function TeamRow({ team, isFirst, onClick }) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
@@ -69,6 +70,7 @@ function TeamRow({ team, isFirst }) {
         transition: 'background-color 0.15s ease',
         padding: '0 1.5rem',
       }}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -98,6 +100,7 @@ function TeamRow({ team, isFirst }) {
 
 export default function Teams() {
   const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState(null)
 
   const filtered = MOCK_TEAMS.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
@@ -113,11 +116,26 @@ export default function Teams() {
       <DataTable
         columns={COLUMNS}
         rows={filtered}
-        renderRow={(row, isFirst) => <TeamRow key={row.id} team={row} isFirst={isFirst} />}
+        renderRow={(row, isFirst) => (
+          <TeamRow key={row.id} team={row} isFirst={isFirst} onClick={() => setSelected(row)} />
+        )}
         search={search}
         onSearch={setSearch}
         total={24}
       />
+      {selected && (
+        <ItemModal
+          title="Λεπτομέρειες Ομάδας"
+          subtitle={`ID: TEAM-${selected.id}`}
+          onClose={() => setSelected(null)}
+        >
+          {(editing) => (
+            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
+              Content for <strong>{selected.name}</strong> — form fields coming soon.
+            </p>
+          )}
+        </ItemModal>
+      )}
     </div>
   )
 }

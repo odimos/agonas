@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { colors, radius, s } from './styles'
+
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
+import ItemModal from './ItemModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -61,7 +63,7 @@ function StatusBadge({ status }) {
 
 // ─── Player Row ───────────────────────────────────────────────────────────────
 
-function PlayerRow({ player, isFirst }) {
+function PlayerRow({ player, isFirst, onClick }) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
@@ -74,6 +76,7 @@ function PlayerRow({ player, isFirst }) {
         cursor: 'pointer',
         padding: '0 1.5rem',
       }}
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -103,6 +106,7 @@ function PlayerRow({ player, isFirst }) {
 
 export default function Players() {
   const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState(null)
 
   const filtered = MOCK_PLAYERS.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -117,11 +121,26 @@ export default function Players() {
       <DataTable
         columns={COLUMNS}
         rows={filtered}
-        renderRow={(row, isFirst) => <PlayerRow key={row.id} player={row} isFirst={isFirst} />}
+        renderRow={(row, isFirst) => (
+          <PlayerRow key={row.id} player={row} isFirst={isFirst} onClick={() => setSelected(row)} />
+        )}
         search={search}
         onSearch={setSearch}
         total={42}
       />
+      {selected && (
+        <ItemModal
+          title="Λεπτομέρειες Παίκτη"
+          subtitle={`ID: ${selected.id}`}
+          onClose={() => setSelected(null)}
+        >
+          {(editing) => (
+            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
+              Content for <strong>{selected.name}</strong> — form fields coming soon.
+            </p>
+          )}
+        </ItemModal>
+      )}
     </div>
   )
 }
