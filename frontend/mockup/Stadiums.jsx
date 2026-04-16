@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { colors, fonts, radius, s } from './styles'
+import { colors, fonts, radius } from './styles'
+import { PageHeader, StatCard } from './Buttons'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -57,28 +58,10 @@ export default function Stadiums() {
   return (
     <div style={st.page}>
 
-      {/* Page Header */}
-      <div style={st.pageHeader}>
-        <h1 style={st.pageTitle}>Γήπεδα</h1>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button style={s.btnOutline}>Κατέβασε τα Δεδομένα</button>
-          <button style={s.btnPrimary}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>add</span>
-            Προσθεσε Γήπεδο
-          </button>
-        </div>
-      </div>
+      <PageHeader title="Γήπεδα" addName="Γηπέδου" />
 
-      {/* Active Stadiums Card */}
-      <div style={st.statsRow}>
-        <div style={st.statCard}>
-          <p style={st.statLabel}>ΕΝΕΡΓΑ ΓΗΠΕΔΑ</p>
-          <p style={st.statValue}>12</p>
-          <div style={st.statFooter}>
-            <span className="material-symbols-outlined" style={{ fontSize: '0.875rem', color: colors.tertiary }}>check_circle</span>
-            <span style={st.statFooterText}>All safety certified</span>
-          </div>
-        </div>
+      <div style={{ alignSelf: 'flex-start' }}>
+        <StatCard label="ΕΝΕΡΓΑ ΓΗΠΕΔΑ" count={12} />
       </div>
 
       {/* Directory Table */}

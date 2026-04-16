@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { colors, fonts, radius, s } from './styles'
+import { colors, fonts, radius } from './styles'
+import { PageHeader, StatCard } from './Buttons'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -92,25 +93,11 @@ export default function Teams() {
   return (
     <div style={st.page}>
 
-      {/* Page Header */}
-      <div style={st.pageHeader}>
-        <h1 style={st.pageTitle}>Ομάδες</h1>
-        <button style={s.btnPrimary}>
-          <span className="material-symbols-outlined" style={{ fontSize: '0.875rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>add</span>
-          ΠΡΟΣΘΗΚΗ ΟΜΑΔΑΣ
-        </button>
-      </div>
+      <PageHeader title="Ομάδες" addName="Ομάδας" />
 
-      {/* Two Stat Cards */}
       <div style={st.statsGrid}>
-        <div style={{ ...st.statCard, borderLeftColor: colors.tertiary }}>
-          <p style={st.statLabel}>ΣΥΝΟΛΟ ΟΜΑΔΩΝ</p>
-          <p style={{ ...st.statValue, color: colors.onSurface }}>24</p>
-        </div>
-        <div style={{ ...st.statCard, borderLeftColor: colors.error }}>
-          <p style={st.statLabel}>ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ</p>
-          <p style={{ ...st.statValue, color: colors.error }}>03</p>
-        </div>
+        <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={21} />
+        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor={colors.error} valueColor={colors.error} />
       </div>
 
       {/* Table Card */}
@@ -201,8 +188,7 @@ const st = {
 
   // Two stat cards
   statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    display: 'flex',
     gap: '1rem',
   },
   statCard: {
