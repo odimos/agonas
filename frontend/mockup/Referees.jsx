@@ -1,15 +1,42 @@
 import { useState } from 'react'
-import { colors, fonts, radius } from './styles'
+import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
+import DataTable from './DataTable'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const MOCK_REFEREES = [
-  { id: 1, name: 'Marcus Bennett',  phone: '(555) 124-5678', email: 'm.bennett@leagueref.org',   status: 'ΕΝΕΡΓΟΣ'   },
-  { id: 2, name: 'Sarah Rodriguez', phone: '(555) 982-1134', email: 'sarah.r@officiating.com',   status: 'ΕΝΕΡΓΟΣ'   },
-  { id: 3, name: 'James Loughton',  phone: '(555) 443-8890', email: 'loughton.ref@net.com',      status: 'ΑΝΕΝΕΡΓΟΣ' },
-  { id: 4, name: 'Elena Chen',      phone: '(555) 671-2209', email: 'echen@proref.org',           status: 'ΕΝΕΡΓΟΣ'   },
-  { id: 5, name: 'David Watson',    phone: '(555) 303-9112', email: 'dwatson@official.io',        status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 1,  name: 'Marcus Bennett',    phone: '(555) 124-5678', email: 'm.bennett@leagueref.org',    status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 2,  name: 'Sarah Rodriguez',   phone: '(555) 982-1134', email: 'sarah.r@officiating.com',    status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 3,  name: 'James Loughton',    phone: '(555) 443-8890', email: 'loughton.ref@net.com',       status: 'ΑΝΕΝΕΡΓΟΣ' },
+  { id: 4,  name: 'Elena Chen',        phone: '(555) 671-2209', email: 'echen@proref.org',            status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 5,  name: 'David Watson',      phone: '(555) 303-9112', email: 'dwatson@official.io',         status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 6,  name: 'Priya Nair',        phone: '(555) 210-4456', email: 'p.nair@proref.org',           status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 7,  name: 'Carlos Mendez',     phone: '(555) 887-3300', email: 'c.mendez@leagueref.org',     status: 'ΑΝΕΝΕΡΓΟΣ' },
+  { id: 8,  name: 'Fiona Gallagher',   phone: '(555) 556-7712', email: 'fgallagher@official.io',     status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 9,  name: 'Tomasz Wierzbicki', phone: '(555) 334-9988', email: 't.wierzbicki@eurref.com',    status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 10, name: 'Aisha Okonkwo',     phone: '(555) 778-1123', email: 'a.okonkwo@officiating.com',  status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 11, name: 'Brett Harrington',  phone: '(555) 445-6601', email: 'b.harrington@leagueref.org', status: 'ΑΝΕΝΕΡΓΟΣ' },
+  { id: 12, name: 'Yuki Tanaka',       phone: '(555) 990-2234', email: 'y.tanaka@proref.org',        status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 13, name: 'Omar Hassan',       phone: '(555) 661-8870', email: 'o.hassan@official.io',       status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 14, name: 'Lucia Ferrara',     phone: '(555) 123-9945', email: 'l.ferrara@eurref.com',       status: 'ΕΝΕΡΓΟΣ'   },
+  { id: 15, name: 'Kevin O\'Brien',    phone: '(555) 302-5567', email: 'k.obrien@leagueref.org',     status: 'ΑΝΕΝΕΡΓΟΣ' },
+]
+
+// ─── Column layout (shared between header and rows) ───────────────────────────
+
+const cols = {
+  name:   { flex: '0 0 280px', padding: '0.875rem 0' },
+  phone:  { flex: '0 0 200px', padding: '0.875rem 1rem' },
+  email:  { flex: 1,           padding: '0.875rem 1rem' },
+  status: { flex: '0 0 150px', padding: '0.875rem 1rem' },
+}
+
+const COLUMNS = [
+  { header: 'ΟΝΟΜΑ',      style: cols.name   },
+  { header: 'ΤΗΛΕΦΩΝΟ',  style: cols.phone  },
+  { header: 'EMAIL',      style: cols.email  },
+  { header: 'ΚΑΤΑΣΤΑΣΗ', style: cols.status },
 ]
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -45,16 +72,16 @@ function RefereeRow({ referee, isFirst }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div style={st.colName}>
+      <div style={cols.name}>
         <span style={st.cellName}>{referee.name}</span>
       </div>
-      <div style={st.colPhone}>
+      <div style={cols.phone}>
         <span style={st.cellMid}>{referee.phone}</span>
       </div>
-      <div style={st.colEmail}>
+      <div style={cols.email}>
         <span style={st.cellMono}>{referee.email}</span>
       </div>
-      <div style={st.colStatus}>
+      <div style={cols.status}>
         <StatusBadge status={referee.status} />
       </div>
     </div>
@@ -71,66 +98,19 @@ export default function Referees() {
   )
 
   return (
-    <div style={st.page}>
-
+    <div style={s.infoPage}>
       <PageHeader title="Διαιτητές" addName="Διαιτητή" />
-
       <div style={{ alignSelf: 'flex-start' }}>
         <StatCard label="ΕΝΕΡΓΟΙ ΔΙΑΙΤΗΤΕΣ" count={42} />
       </div>
-
-      {/* Table Card */}
-      <div style={st.tableCard}>
-
-        {/* Search Bar */}
-        <div style={st.toolbar}>
-          <div style={st.searchWrap}>
-            <span className="material-symbols-outlined" style={st.searchIcon}>search</span>
-            <input
-              style={st.searchInput}
-              placeholder="Search by name..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button style={st.iconBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>filter_list</span>
-            </button>
-            <button style={st.iconBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>sort</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Table Header */}
-        <div style={st.thead}>
-          <div style={st.colName}><span style={st.th}>ΟΝΟΜΑ</span></div>
-          <div style={st.colPhone}><span style={st.th}>ΤΗΛΕΦΩΝΟ</span></div>
-          <div style={st.colEmail}><span style={st.th}>EMAIL</span></div>
-          <div style={st.colStatus}><span style={st.th}>ΚΑΤΑΣΤΑΣΗ</span></div>
-        </div>
-
-        {/* Rows */}
-        <div>
-          {filtered.map((referee, i) => (
-            <RefereeRow key={referee.id} referee={referee} isFirst={i === 0} />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div style={st.pagination}>
-          <span style={st.paginationInfo}>Showing 1 to {filtered.length} of 42 referees</span>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button style={{ ...st.pageBtn, opacity: 0.4 }} disabled>Previous</button>
-            {[1, 2, 3].map(n => (
-              <button key={n} style={{ ...st.pageBtn, ...(n === 1 ? st.pageBtnActive : {}) }}>{n}</button>
-            ))}
-            <button style={st.pageBtn}>ΕΠΟΜΕΝΟ</button>
-          </div>
-        </div>
-      </div>
-
+      <DataTable
+        columns={COLUMNS}
+        rows={filtered}
+        renderRow={(row, isFirst) => <RefereeRow key={row.id} referee={row} isFirst={isFirst} />}
+        search={search}
+        onSearch={setSearch}
+        total={42}
+      />
     </div>
   )
 }
@@ -138,135 +118,9 @@ export default function Referees() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
-  page: {
-    padding: '2rem 2.5rem',
-    fontFamily: fonts.body,
-    backgroundColor: colors.surface,
-    minHeight: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.75rem',
-  },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pageTitle: {
-    fontSize: '2.25rem',
-    fontWeight: 800,
-    letterSpacing: '-0.025em',
-    color: colors.onSurface,
-    margin: 0,
-  },
-
-  // Stat card
-  statCard: {
-    display: 'inline-flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderLeft: `4px solid ${colors.tertiary}`,
-    borderRadius: radius.lg,
-    padding: '1.5rem 1.5rem 1.5rem 1.75rem',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    minWidth: '200px',
-  },
-  statLabel: {
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: colors.onSurfaceVariant,
-    margin: 0,
-  },
-  statValue: {
-    fontSize: '2rem',
-    fontWeight: 800,
-    color: colors.onSurface,
-    margin: 0,
-    lineHeight: '2.25rem',
-  },
-
-  // Table card
-  tableCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    border: `1px solid ${colors.outlineVariant}22`,
-  },
-
-  // Search toolbar
-  toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0.875rem 1.5rem',
-    borderBottom: `1px solid ${colors.outlineVariant}22`,
-  },
-  searchWrap: {
-    position: 'relative',
-    flex: 1,
-    maxWidth: '560px',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontSize: '0.9375rem',
-    color: colors.outline,
-  },
-  searchInput: {
-    width: '100%',
-    padding: '0.5rem 0.75rem 0.5rem 2.375rem',
-    backgroundColor: colors.surfaceContainerLow,
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem',
-    color: colors.onSurface,
-    fontFamily: fonts.body,
-    outline: 'none',
-    boxSizing: 'border-box',
-  },
-  iconBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '0.375rem',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    cursor: 'pointer',
-  },
-
-  // Table
-  thead: {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: `${colors.surfaceContainerHigh}80`,
-    padding: '0 1.5rem',
-    borderBottom: `1px solid ${colors.outlineVariant}22`,
-  },
-  th: {
-    fontSize: '0.625rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    color: colors.onSurfaceVariant,
-  },
-
-  // Column widths
-  colName:   { flex: '0 0 280px', padding: '0.875rem 0' },
-  colPhone:  { flex: '0 0 200px', padding: '0.875rem 1rem' },
-  colEmail:  { flex: 1,           padding: '0.875rem 1rem' },
-  colStatus: { flex: '0 0 150px', padding: '0.875rem 1rem' },
-
   cellName: { fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface },
   cellMid:  { fontSize: '0.875rem', fontWeight: 400, color: colors.onSurfaceVariant },
   cellMono: { fontSize: '0.8125rem', color: colors.onSurfaceVariant, fontFamily: 'monospace' },
-
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -276,33 +130,5 @@ const st = {
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
-  },
-
-  // Pagination
-  pagination: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.875rem 1.5rem',
-    borderTop: `1px solid ${colors.outlineVariant}22`,
-  },
-  paginationInfo: {
-    fontSize: '0.875rem',
-    color: colors.onSurfaceVariant,
-  },
-  pageBtn: {
-    padding: '0.3125rem 0.8125rem',
-    border: `1px solid ${colors.outlineVariant}`,
-    borderRadius: radius.DEFAULT,
-    backgroundColor: 'transparent',
-    fontSize: '0.875rem',
-    color: colors.onSurfaceVariant,
-    cursor: 'pointer',
-    fontFamily: fonts.body,
-  },
-  pageBtnActive: {
-    backgroundColor: colors.primary,
-    color: colors.onPrimary,
-    border: `1px solid ${colors.primary}`,
   },
 }

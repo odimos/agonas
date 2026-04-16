@@ -25,6 +25,5 @@ const styles = {
     flex: 1,
     width: 'calc(100vw - 16rem)',
     backgroundColor: colors.surface,
-    overflow: 'auto',
   },
 }

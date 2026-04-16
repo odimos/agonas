@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { colors, fonts, radius } from './styles'
+import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
+import DataTable from './DataTable'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,22 @@ const MOCK_TEAMS = [
     id: 4, name: 'Harbor City FC',      captain: 'Marcus Thorne',   contact: 'm.thorne@harborcity.net', status: 'ΕΝΕΡΓΗ',
     logo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAMmCV_EYnv7UsY0_h-iG951R8VYw-s_SZ1dj4ngpChHuHj054LOghlTryM9i9X0lt1gJeBzNj_Nwc7OVkikknqgLq4CD6P3d3zp4B6oXFJc5JMU4_4uVLTAaT19D0dzT1hHtF28GpQf84PLV8EmjN0BLFMNbMD3o_P4mORQqu2uYzAAzuDH4nEC0Bnlbp7_Sdpll0oMZeoz3F0GJYBoDPXdzPrc6AN_XkAhEr3lLH336I3y7GPwVvZcwFseD-zJ2-9NBWcMasc4Y',
   },
+]
+
+// ─── Column layout ────────────────────────────────────────────────────────────
+
+const cols = {
+  name:    { display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 280px', padding: '0.875rem 0' },
+  captain: { flex: '0 0 200px', padding: '0.875rem 1rem' },
+  contact: { flex: 1,           padding: '0.875rem 1rem' },
+  status:  { flex: '0 0 140px', padding: '0.875rem 1rem' },
+}
+
+const COLUMNS = [
+  { header: 'ΟΝΟΜΑ ΟΜΑΔΑΣ', style: cols.name    },
+  { header: 'ΑΡΧΗΓΟΣ',      style: cols.captain },
+  { header: 'ΕΠΙΚΟΙΝΩΝΙΑ',  style: cols.contact },
+  { header: 'ΚΑΤΑΣΤΑΣΗ',    style: cols.status  },
 ]
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -55,8 +72,7 @@ function TeamRow({ team, isFirst }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Name + Logo */}
-      <div style={st.colName}>
+      <div style={cols.name}>
         <div style={st.thumb}>
           {team.logo
             ? <img src={team.logo} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -65,16 +81,13 @@ function TeamRow({ team, isFirst }) {
         </div>
         <span style={st.cellName}>{team.name}</span>
       </div>
-
-      <div style={st.colCaptain}>
+      <div style={cols.captain}>
         <span style={st.cellMid}>{team.captain}</span>
       </div>
-
-      <div style={st.colContact}>
+      <div style={cols.contact}>
         <span style={st.cellMono}>{team.contact}</span>
       </div>
-
-      <div style={st.colStatus}>
+      <div style={cols.status}>
         <StatusBadge status={team.status} />
       </div>
     </div>
@@ -91,71 +104,20 @@ export default function Teams() {
   )
 
   return (
-    <div style={st.page}>
-
+    <div style={s.infoPage}>
       <PageHeader title="Ομάδες" addName="Ομάδας" />
-
       <div style={st.statsGrid}>
-        <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={21} />
+        <StatCard label="ΣΥΝΟΛΟ ΟΜΑΔΩΝ" count={24} />
         <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor={colors.error} valueColor={colors.error} />
       </div>
-
-      {/* Table Card */}
-      <div style={st.tableCard}>
-
-        {/* Search + Filter Bar */}
-        <div style={st.toolbar}>
-          <div style={st.searchWrap}>
-            <span className="material-symbols-outlined" style={st.searchIcon}>search</span>
-            <input
-              style={st.searchInput}
-              placeholder="Search by name..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button style={st.iconBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>filter_list</span>
-            </button>
-            <button style={st.iconBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>sort</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Table Header */}
-        <div style={st.thead}>
-          <div style={st.colName}><span style={st.th}>ΟΝΟΜΑ ΟΜΑΔΑΣ</span></div>
-          <div style={st.colCaptain}><span style={st.th}>ΑΡΧΗΓΟΣ</span></div>
-          <div style={st.colContact}><span style={st.th}>ΕΠΙΚΟΙΝΩΝΙΑ</span></div>
-          <div style={st.colStatus}><span style={st.th}>ΚΑΤΑΣΤΑΣΗ</span></div>
-        </div>
-
-        {/* Rows */}
-        <div>
-          {filtered.map((team, i) => (
-            <TeamRow key={team.id} team={team} isFirst={i === 0} />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div style={st.pagination}>
-          <span style={st.paginationInfo}>Showing 4 of 24 teams</span>
-          <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
-            <button style={{ ...st.pageBtn, opacity: 0.4 }} disabled>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_left</span>
-            </button>
-            {[1, 2, 3].map(n => (
-              <button key={n} style={{ ...st.pageBtn, ...(n === 1 ? st.pageBtnActive : {}) }}>{n}</button>
-            ))}
-            <button style={st.pageBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_right</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
+      <DataTable
+        columns={COLUMNS}
+        rows={filtered}
+        renderRow={(row, isFirst) => <TeamRow key={row.id} team={row} isFirst={isFirst} />}
+        search={search}
+        onSearch={setSearch}
+        total={24}
+      />
     </div>
   )
 }
@@ -163,134 +125,10 @@ export default function Teams() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
-  page: {
-    padding: '2rem 2.5rem',
-    fontFamily: fonts.body,
-    backgroundColor: colors.surface,
-    minHeight: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.75rem',
-  },
-  pageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pageTitle: {
-    fontSize: '2.25rem',
-    fontWeight: 800,
-    letterSpacing: '-0.025em',
-    color: colors.onSurface,
-    margin: 0,
-    lineHeight: '2.5rem',
-  },
-
-  // Two stat cards
   statsGrid: {
     display: 'flex',
     gap: '1rem',
   },
-  statCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderLeft: '4px solid',
-    borderRadius: radius.lg,
-    padding: '1.5rem 1.5rem 1.5rem 1.75rem',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.35rem',
-  },
-  statLabel: {
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.12em',
-    color: colors.onSurfaceVariant,
-    margin: 0,
-  },
-  statValue: {
-    fontSize: '1.875rem',
-    fontWeight: 800,
-    margin: 0,
-    lineHeight: '2.25rem',
-  },
-
-  // Table card
-  tableCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-    border: `1px solid ${colors.outlineVariant}22`,
-  },
-
-  // Toolbar
-  toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '1rem 1.5rem',
-    borderBottom: `1px solid ${colors.outlineVariant}22`,
-  },
-  searchWrap: {
-    position: 'relative',
-    flex: 1,
-    maxWidth: '560px',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontSize: '0.9375rem',
-    color: colors.outline,
-  },
-  searchInput: {
-    width: '100%',
-    padding: '0.5625rem 0.75rem 0.5625rem 2.375rem',
-    backgroundColor: colors.surfaceContainerLow,
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem',
-    color: colors.onSurface,
-    fontFamily: fonts.body,
-    outline: 'none',
-    boxSizing: 'border-box',
-  },
-  iconBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '0.375rem',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    cursor: 'pointer',
-  },
-
-  // Table
-  thead: {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
-    padding: '0 1.5rem',
-    borderBottom: `1px solid ${colors.outlineVariant}33`,
-  },
-  th: {
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.07em',
-    color: colors.onSurfaceVariant,
-  },
-
-  // Column layout
-  colName:    { display: 'flex', alignItems: 'center', gap: '0.875rem', flex: '0 0 280px', padding: '0.875rem 0' },
-  colCaptain: { flex: '0 0 200px', padding: '0.875rem 1rem' },
-  colContact: { flex: 1,          padding: '0.875rem 1rem' },
-  colStatus:  { flex: '0 0 140px', padding: '0.875rem 1rem' },
-
   thumb: {
     width: '2.5rem',
     height: '2.5rem',
@@ -305,7 +143,6 @@ const st = {
   cellName:  { fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface },
   cellMid:   { fontSize: '0.875rem', fontWeight: 400, color: colors.onSurface },
   cellMono:  { fontSize: '0.8125rem', fontWeight: 400, color: colors.onSurfaceVariant, fontFamily: 'monospace' },
-
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -314,39 +151,5 @@ const st = {
     fontSize: '0.6875rem',
     fontWeight: 700,
     letterSpacing: '0.04em',
-  },
-
-  // Pagination
-  pagination: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0.875rem 1.5rem',
-    borderTop: `1px solid ${colors.outlineVariant}22`,
-  },
-  paginationInfo: {
-    fontSize: '0.8125rem',
-    color: colors.onSurfaceVariant,
-  },
-  pageBtn: {
-    minWidth: '2rem',
-    height: '2rem',
-    padding: '0 0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.DEFAULT,
-    border: `1px solid ${colors.outlineVariant}`,
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: colors.onSurfaceVariant,
-    fontFamily: fonts.body,
-  },
-  pageBtnActive: {
-    backgroundColor: colors.primary,
-    color: colors.onPrimary,
-    border: `1px solid ${colors.primary}`,
   },
 }

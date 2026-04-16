@@ -30,6 +30,41 @@ const left = {
   gap: '2rem',
 }
 
+const right = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+}
+
+const iconBtn = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '2.25rem',
+  height: '2.25rem',
+  background: 'none',
+  border: 'none',
+  borderRadius: '0.25rem',
+  cursor: 'pointer',
+}
+
+const iconSt = {
+  fontSize: '1.25rem',
+  color: colors.onSurfaceVariant,
+}
+
+const avatar = {
+  width: '2.25rem',
+  height: '2.25rem',
+  borderRadius: '50%',
+  backgroundColor: colors.surfaceContainerHigh,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  marginLeft: '0.25rem',
+}
+
 export default function Header() {
   return (
     <header style={s.header}>
@@ -52,6 +87,18 @@ export default function Header() {
             </NavLink>
           ))}
         </nav>
+      </div>
+
+      <div style={right}>
+        <button style={iconBtn}>
+          <span className="material-symbols-outlined" style={iconSt}>notifications</span>
+        </button>
+        <button style={iconBtn}>
+          <span className="material-symbols-outlined" style={iconSt}>settings</span>
+        </button>
+        <div style={avatar}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>person</span>
+        </div>
       </div>
     </header>
   )

@@ -167,4 +167,14 @@ export const s = {
     color: colors.onBackground,
     fontFamily: fonts.body,
   },
+
+  // Info sub-page container (Teams, Players, Referees, Stadiums)
+  infoPage: {
+    padding: '2rem 2.5rem',
+    fontFamily: fonts.body,
+    backgroundColor: colors.surface,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.75rem',
+  },
 }
