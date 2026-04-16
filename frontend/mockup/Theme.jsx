@@ -1,14 +1,15 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header     from './Header'
 import { colors, fonts } from './styles'
-import Dashboard   from './Dashboard'
-import Tournaments from './Tournaments'
-import Info        from './Info'
-import Stats       from './Stats'
-import Teams       from './Teams'
-import Players     from './Players'
-import Referees    from './Referees'
-import Stadiums    from './Stadiums'
+import Dashboard          from './Dashboard'
+import Tournament         from './Tournament'
+import TournamentOverview from './TournamentOverview'
+import Info               from './Info'
+import Stats              from './Stats'
+import Teams              from './Teams'
+import Players            from './Players'
+import Referees           from './Referees'
+import Stadiums           from './Stadiums'
 
 const styles = {
   // Break out of #root's 1126px centered constraint without transform
@@ -39,7 +40,10 @@ export default function Theme() {
         <Routes>
           <Route path="/"            element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard"   element={<Dashboard />} />
-          <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/tournaments" element={<Tournament />}>
+            <Route index             element={<Navigate to="/tournaments/1" replace />} />
+            <Route path=":id"        element={<TournamentOverview />} />
+          </Route>
           <Route path="/info"        element={<Info />}>
             <Route index             element={<Navigate to="/info/teams" replace />} />
             <Route path="teams"      element={<Teams />} />

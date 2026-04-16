@@ -13,7 +13,7 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
 
   return (
     <div style={st.overlay} onClick={onClose}>
-      <div style={st.modal} onClick={e => e.stopPropagation()}>
+      <div style={{ ...st.modal, maxWidth }} onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div style={st.header}>
@@ -74,7 +74,7 @@ const st = {
   modal: {
     backgroundColor: colors.surfaceContainerLowest,
     width: '100%',
-    maxWidth,
+    maxWidth: '672px',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
