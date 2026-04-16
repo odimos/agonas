@@ -3,6 +3,7 @@ import { fetchMatches } from '../api/matches'
 import { fetchTeams } from '../api/teams'
 import { fetchReferees } from '../api/referees'
 import { fetchStadiums } from '../api/stadiums'
+import { fetchPlayers } from '../api/players'
 import AddMatchModal from '../components/matches/AddMatchModal'
 import DetailsModal from '../components/matches/DetailsModal'
 import EditMatchModal from '../components/matches/EditMatchModal'
@@ -25,15 +26,17 @@ export default function MatchesPage() {
   const [teams, setTeams] = useState([])
   const [referees, setReferees] = useState([])
   const [stadiums, setStadiums] = useState([])
+  const [players, setPlayers] = useState([])
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
 
   const load = useCallback(async () => {
-    const [m, t, r, s] = await Promise.all([fetchMatches(), fetchTeams(), fetchReferees(), fetchStadiums()])
+    const [m, t, r, s, p] = await Promise.all([fetchMatches(), fetchTeams(), fetchReferees(), fetchStadiums(), fetchPlayers()])
     setMatches(m)
     setTeams(t)
     setReferees(r)
     setStadiums(s)
+    setPlayers(p)
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -143,7 +146,7 @@ export default function MatchesPage() {
       {modal?.type === 'details' && (
         <DetailsModal
           match={modal.match}
-          teams={teams} referees={referees} stadiums={stadiums}
+          teams={teams} referees={referees} stadiums={stadiums} players={players}
           onClose={close}
           onEdit={() => setModal({ type: 'edit', match: modal.match })}
           onDelete={() => setModal({ type: 'delete', match: modal.match })}

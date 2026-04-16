@@ -15,15 +15,17 @@ docker compose up postgress
 docker compose up --watch frontend
 docker compose run -rm --no-deps --service-ports --use-aliases backend python manage.py runserver 0.0.0.0:8000
 
-Use this:
+
 docker compose up db
 docker compose up --watch frontend
 docker compose up --watch --no-deps backend
 
+### Use this for dev work:
+```bash
 docker compose up db
 docker compose up frontend
 docker compose up backend --no-deps
-
+```
 ---
 
 ## Running Tests

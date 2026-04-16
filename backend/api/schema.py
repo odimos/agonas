@@ -253,3 +253,67 @@ class MatchOut(Schema):
     scheduled_at: Optional[datetime]
     comments: Optional[str]
     tournament_id: Optional[int]
+
+
+class MatchPlayerCardIn(Schema):
+    player_id: int
+    match_id: int
+    team_id: int
+    card_type: str
+    minute: int
+    comments: Optional[str] = None
+
+    @field_validator('card_type')
+    @classmethod
+    def validate_card_type(cls, v: str) -> str:
+        if v not in ('yellow', 'red'):
+            raise ValueError('card_type must be yellow or red')
+        return v
+
+    @field_validator('minute')
+    @classmethod
+    def validate_minute(cls, v: int) -> int:
+        if not (0 <= v <= 130):
+            raise ValueError('minute must be between 0 and 130')
+        return v
+
+    @field_validator('comments', mode='before')
+    @classmethod
+    def trim_comments(cls, v):
+        if isinstance(v, str):
+            return v.strip() or None
+        return v
+
+
+class MatchPlayerCardOut(Schema):
+    id: int
+    player_id: int
+    match_id: int
+    team_id: Optional[int]
+    card_type: str
+    minute: int
+    comments: Optional[str]
+
+
+class MatchPlayerGoalIn(Schema):
+    player_id: int
+    match_id: int
+    team_id: int
+    own_goal: bool = False
+    minute: int
+
+    @field_validator('minute')
+    @classmethod
+    def validate_minute(cls, v: int) -> int:
+        if not (0 <= v <= 130):
+            raise ValueError('minute must be between 0 and 130')
+        return v
+
+
+class MatchPlayerGoalOut(Schema):
+    id: int
+    player_id: int
+    match_id: int
+    team_id: Optional[int]
+    own_goal: bool
+    minute: int
