@@ -3,6 +3,7 @@ import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
+import RefereeModalContent from './RefereeModalContent'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -122,11 +123,7 @@ export default function Referees() {
           subtitle={`ID: REF-${selected.id}`}
           onClose={() => setSelected(null)}
         >
-          {(editing) => (
-            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
-              Content for <strong>{selected.name}</strong> — form fields coming soon.
-            </p>
-          )}
+          {(editing) => <RefereeModalContent referee={selected} editing={editing} />}
         </ItemModal>
       )}
     </div>

@@ -3,6 +3,7 @@ import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
+import StadiumModalContent from './StadiumModalContent'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -93,15 +94,11 @@ export default function Stadiums() {
       />
       {selected && (
         <ItemModal
-          title="Λεπτομέρειες Γηπέδου"
+          title={selected.name}
           subtitle={`ID: STAD-${selected.id}`}
           onClose={() => setSelected(null)}
         >
-          {(editing) => (
-            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
-              Content for <strong>{selected.name}</strong> — form fields coming soon.
-            </p>
-          )}
+          {(editing) => <StadiumModalContent stadium={selected} editing={editing} />}
         </ItemModal>
       )}
     </div>

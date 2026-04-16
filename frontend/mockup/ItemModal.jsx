@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { colors, fonts, radius } from './styles'
 
-export default function ItemModal({ title, subtitle, onClose, onDelete, children }) {
+export default function ItemModal({ title, subtitle, badge, onClose, onDelete, children }) {
   const [editing, setEditing] = useState(false)
 
   function handleDelete() {
@@ -18,7 +18,10 @@ export default function ItemModal({ title, subtitle, onClose, onDelete, children
         {/* Header */}
         <div style={st.header}>
           <div>
-            <h2 style={st.title}>{title}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <h2 style={st.title}>{title}</h2>
+              {badge}
+            </div>
             {subtitle && <p style={st.subtitle}>{subtitle}</p>}
           </div>
           <button style={st.closeBtn} onClick={onClose}>
@@ -64,7 +67,7 @@ const st = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: `${colors.onSurface}33`,
+    backgroundColor: `${colors.onSurface}66`,
     backdropFilter: 'blur(4px)',
     WebkitBackdropFilter: 'blur(4px)',
   },
@@ -75,8 +78,8 @@ const st = {
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    borderRadius: radius.lg,
-    border: `1px solid ${colors.outlineVariant}33`,
+    borderRadius: radius.DEFAULT,
+    border: `1px solid ${colors.outlineVariant}4d`,
     boxShadow: '0 12px 32px rgba(25,28,28,0.12)',
     overflow: 'hidden',
   },
@@ -84,26 +87,26 @@ const st = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0.75rem 1.5rem',
-    backgroundColor: colors.surfaceContainerLow,
-    borderBottom: `1px solid ${colors.outlineVariant}1a`,
+    padding: '1rem 2rem',
+    backgroundColor: colors.surfaceContainerHigh,
+    borderBottom: `1px solid ${colors.outlineVariant}80`,
     flexShrink: 0,
   },
   title: {
-    fontSize: '0.9375rem',
+    fontSize: '1.25rem',
     fontWeight: 700,
-    letterSpacing: '-0.01em',
+    letterSpacing: '-0.02em',
     color: colors.onSurface,
     margin: 0,
     fontFamily: fonts.headline,
   },
   subtitle: {
-    fontSize: '0.5625rem',
-    fontWeight: 700,
+    fontSize: '0.8125rem',
+    fontWeight: 600,
     textTransform: 'uppercase',
-    letterSpacing: '0.1em',
+    letterSpacing: '0.08em',
     color: colors.onSurfaceVariant,
-    margin: '0.125rem 0 0',
+    margin: '0.1rem 0 0',
     fontFamily: fonts.label,
   },
   closeBtn: {
@@ -126,9 +129,9 @@ const st = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1.25rem 2rem',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderTop: `1px solid ${colors.outlineVariant}1a`,
+    padding: '1.5rem 2rem',
+    backgroundColor: colors.surfaceContainerLow,
+    borderTop: `1px solid ${colors.outlineVariant}4d`,
     flexShrink: 0,
   },
   deleteBtn: {

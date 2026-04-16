@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { colors, radius, s } from './styles'
-
 import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
+import PlayerModalContent from './PlayerModalContent'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -134,11 +134,7 @@ export default function Players() {
           subtitle={`ID: ${selected.id}`}
           onClose={() => setSelected(null)}
         >
-          {(editing) => (
-            <p style={{ color: colors.onSurfaceVariant, fontSize: '0.875rem' }}>
-              Content for <strong>{selected.name}</strong> — form fields coming soon.
-            </p>
-          )}
+          {(editing) => <PlayerModalContent player={selected} editing={editing} />}
         </ItemModal>
       )}
     </div>
