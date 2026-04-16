@@ -139,7 +139,7 @@ export default function Teams() {
     <div style={s.infoPage}>
       <PageHeader title="Ομάδες" addName="Ομάδας" />
       <div style={st.statsGrid}>
-        <StatCard label="ΣΥΝΟΛΟ ΟΜΑΔΩΝ" count={24} />
+        <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={24} />
         <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor={colors.error} valueColor={colors.error} />
       </div>
       <DataTable

@@ -8,10 +8,30 @@ import StadiumModalContent from './StadiumModalContent'
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const MOCK_STADIUMS = [
-  { id: 1, name: 'Emerald Arena',   capacity: '45,000', address: '1221 Sports Way, North District', zone: 'Metro Zone A',      costPerHour: 30 },
-  { id: 2, name: 'Old Stone Field', capacity: '12,000', address: '45 Heritage Blvd, West Village',  zone: 'Historic District',  costPerHour: 45 },
-  { id: 3, name: 'Summit Stadium',  capacity: '65,000', address: '1 Apex Plaza, Mountain View',     zone: 'High Altitude Zone', costPerHour: 25 },
-  { id: 4, name: 'River Bank Oval', capacity: '28,000', address: '900 Waterfront Dr, East Bay',     zone: 'Coastal Zone',       costPerHour: 30 },
+  {
+    id: 1, name: 'Emerald Arena', address: '1221 Sports Way, North District',
+    phone: '+1 (210) 000-0055', email: 'facility@emeraldarena.com',
+    costPerHour: 450, mapUrl: 'https://maps.google.com/?q=1221+Sports+Way',
+    comments: 'Main venue for championship rounds. Requires 48h advance booking. Floodlights operational until 23:00.',
+  },
+  {
+    id: 2, name: 'Old Stone Field', address: '45 Heritage Blvd, West Village',
+    phone: '+1 (210) 000-0088', email: 'admin@oldstonefield.com',
+    costPerHour: 600, mapUrl: 'https://maps.google.com/?q=45+Heritage+Blvd',
+    comments: 'Historic venue. Grass pitch — no cleats over 12mm. Parking limited to 80 vehicles.',
+  },
+  {
+    id: 3, name: 'Summit Stadium', address: '1 Apex Plaza, Mountain View',
+    phone: '+1 (210) 000-0012', email: 'ops@summitstadium.com',
+    costPerHour: 320, mapUrl: '',
+    comments: '',
+  },
+  {
+    id: 4, name: 'River Bank Oval', address: '900 Waterfront Dr, East Bay',
+    phone: '+1 (210) 000-0033', email: 'riverbank@eastbay.net',
+    costPerHour: 380, mapUrl: 'https://maps.google.com/?q=900+Waterfront+Dr',
+    comments: 'Flood risk in winter months — check availability Nov–Feb. Surface recently resurfaced (2024).',
+  },
 ]
 
 // ─── Column layout ────────────────────────────────────────────────────────────
@@ -96,6 +116,7 @@ export default function Stadiums() {
         <ItemModal
           title={selected.name}
           subtitle={`ID: STAD-${selected.id}`}
+          maxWidth="896px"
           onClose={() => setSelected(null)}
         >
           {(editing) => <StadiumModalContent stadium={selected} editing={editing} />}

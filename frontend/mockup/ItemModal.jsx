@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { colors, fonts, radius } from './styles'
 
-export default function ItemModal({ title, subtitle, badge, onClose, onDelete, children }) {
+export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', onClose, onDelete, children }) {
   const [editing, setEditing] = useState(false)
 
   function handleDelete() {
@@ -74,7 +74,7 @@ const st = {
   modal: {
     backgroundColor: colors.surfaceContainerLowest,
     width: '100%',
-    maxWidth: '672px',
+    maxWidth,
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
