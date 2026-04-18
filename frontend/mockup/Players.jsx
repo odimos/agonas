@@ -4,6 +4,7 @@ import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import PlayerModalContent from './PlayerModalContent'
+import CreateModal from './CreateModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ function PlayerRow({ player, isFirst, onClick }) {
 export default function Players() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   const filtered = MOCK_PLAYERS.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -111,9 +113,10 @@ export default function Players() {
 
   return (
     <div style={s.infoPage}>
-      <PageHeader title="Παίκτες" addName="Παίκτη" />
-      <div style={{ alignSelf: 'flex-start' }}>
+      <PageHeader title="Παίκτες" addName="Παίκτη" onAdd={() => setCreating(true)} />
+      <div style={{ display: 'flex', gap: '1rem' }}>
         <StatCard label="ΕΝΕΡΓΟΙ ΠΑΙΚΤΕΣ" count={42} />
+        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor="#eab308" valueColor="#eab308" />
       </div>
       <DataTable
         columns={COLUMNS}
@@ -134,6 +137,7 @@ export default function Players() {
           {(editing) => <PlayerModalContent player={selected} editing={editing} />}
         </ItemModal>
       )}
+      {creating && <CreateModal type="player" onClose={() => setCreating(false)} />}
     </div>
   )
 }

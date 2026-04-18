@@ -4,6 +4,7 @@ import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import StadiumModalContent from './StadiumModalContent'
+import CreateModal from './CreateModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ function StadiumRow({ stadium, isFirst, onClick }) {
 export default function Stadiums() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   const filtered = MOCK_STADIUMS.filter(stadium =>
     stadium.name.toLowerCase().includes(search.toLowerCase())
@@ -94,7 +96,7 @@ export default function Stadiums() {
 
   return (
     <div style={s.infoPage}>
-      <PageHeader title="Γήπεδα" addName="Γηπέδου" />
+      <PageHeader title="Γήπεδα" addName="Γηπέδου" onAdd={() => setCreating(true)} />
       <div style={{ alignSelf: 'flex-start' }}>
         <StatCard label="ΕΝΕΡΓΑ ΓΗΠΕΔΑ" count={12} />
       </div>
@@ -118,6 +120,7 @@ export default function Stadiums() {
           {(editing) => <StadiumModalContent stadium={selected} editing={editing} />}
         </ItemModal>
       )}
+      {creating && <CreateModal type="stadium" onClose={() => setCreating(false)} />}
     </div>
   )
 }

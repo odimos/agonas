@@ -2,10 +2,10 @@ import { NavLink } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 
 const MENU_LINKS = [
-  { label: 'Teams',    icon: 'groups',  to: '/info/teams' },
-  { label: 'Players',  icon: 'person',  to: '/info/players' },
-  { label: 'Referees', icon: 'sports',  to: '/info/referees' },
-  { label: 'Stadiums', icon: 'stadium', to: '/info/stadiums' },
+  { label: 'Ομάδες',    icon: 'groups',  to: '/info/teams' },
+  { label: 'Παίκτες',  icon: 'person',  to: '/info/players' },
+  { label: 'Διαιτητές', icon: 'sports',  to: '/info/referees' },
+  { label: 'Γήπεδα', icon: 'stadium', to: '/info/stadiums' },
 ]
 
 export default function SideMenu() {

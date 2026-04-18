@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 
 const MOCK_TOURNAMENTS = [
-  { id: 1, name: 'Tournament 1', icon: 'trophy',         phases: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
-  { id: 2, name: 'Tournament 2', icon: 'sports_kabaddi', phases: ['Phase 1', 'Phase 2'] },
+  { id: 1, name: 'Tournament 1', icon: 'trophy', phases: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
+  { id: 2, name: 'Tournament 2', icon: 'trophy', phases: ['Phase 1', 'Phase 2'] },
 ]
 
 const PHASE_ICONS = ['looks_one', 'looks_two', 'looks_3', 'looks_4', 'looks_5', 'looks_6']

@@ -4,17 +4,17 @@ import ModalField from './ModalField'
 
 function initForm(team) {
   return {
-    captainName:  team.captain       ?? '',
-    captainEmail: team.contact       ?? '',
-    captainPhone: team.captainPhone  ?? '',
-    viceName:     team.viceCaptain   ?? '',
-    viceEmail:    team.viceEmail     ?? '',
-    vicePhone:    team.vicePhone     ?? '',
-    comments:     team.comments      ?? '',
+    teamName:  team.name      ?? '',
+    teamLogo:  team.logo      ?? '',
+    captainId: team.captainId ?? '',
+    viceId:    team.viceId    ?? '',
+    comments:  team.comments  ?? '',
   }
 }
 
-function OfficerCard({ circleColor, icon, label, name, email, phone, editing, onName, onEmail, onPhone }) {
+function OfficerCard({ circleColor, icon, label, playerId, players, editing, onChange }) {
+  const selected = players.find(p => p.id === playerId)
+
   return (
     <div style={{ ...st.card, borderLeftColor: circleColor }}>
       <div style={st.cardHeader}>
@@ -22,16 +22,28 @@ function OfficerCard({ circleColor, icon, label, name, email, phone, editing, on
         <span style={st.cardLabel}>{label}</span>
       </div>
       {editing ? (
-        <div style={st.cardFields}>
-          <ModalField label="ΟΝΟΜΑ"        value={name}  editing onChange={onName}  />
-          <ModalField label="Email"         value={email} editing onChange={onEmail} icon="mail" type="email" />
-          <ModalField label="ΤΗΛΕΦΩΝΟ"     value={phone} editing onChange={onPhone} icon="call" type="tel"   />
-        </div>
+        players.length === 0 ? (
+          <p style={st.cardEmpty}>Δεν υπάρχουν παίκτες</p>
+        ) : (
+          <div style={{ position: 'relative' }}>
+            <select
+              style={{ ...st.playerSelect, borderBottomColor: circleColor }}
+              value={playerId}
+              onChange={e => onChange(e.target.value)}
+            >
+              <option value="">— Επιλογή παίκτη —</option>
+              {players.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
+          </div>
+        )
       ) : (
         <div style={st.cardText}>
-          <p style={st.cardName}>{name || '—'}</p>
-          {email && <p style={st.cardMeta}>{email}</p>}
-          {phone && <p style={st.cardMeta}>{phone}</p>}
+          <p style={st.cardName}>{selected?.name || '—'}</p>
+          {selected?.email && <p style={st.cardMeta}>{selected.email}</p>}
+          {selected?.phone && <p style={st.cardMeta}>{selected.phone}</p>}
         </div>
       )}
     </div>
@@ -49,8 +61,40 @@ export default function TeamModalContent({ team, editing }) {
 
   const players = team.players ?? []
 
+  function handleLogoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setForm(f => ({ ...f, teamLogo: url }))
+  }
+
   return (
     <div style={st.body}>
+
+      {/* Team identity row */}
+      <div style={st.identityRow}>
+        <div style={st.logoWrap}>
+          {form.teamLogo
+            ? <img src={form.teamLogo} alt="logo" style={st.logoImg} />
+            : <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.onSurfaceVariant }}>shield</span>
+          }
+          {editing && (
+            <label style={st.logoOverlay}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>photo_camera</span>
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoChange} />
+            </label>
+          )}
+        </div>
+        {editing ? (
+          <input
+            style={st.nameInput}
+            value={form.teamName}
+            onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+          />
+        ) : (
+          <h3 style={st.teamName}>{form.teamName}</h3>
+        )}
+      </div>
 
       {/* Captain + Vice-captain */}
       <div style={st.officerGrid}>
@@ -58,25 +102,19 @@ export default function TeamModalContent({ team, editing }) {
           circleColor={colors.tertiary}
           icon="stars"
           label="ΑΡΧΗΓΟΣ"
-          name={form.captainName}
-          email={form.captainEmail}
-          phone={form.captainPhone}
+          playerId={form.captainId}
+          players={players}
           editing={editing}
-          onName={set('captainName')}
-          onEmail={set('captainEmail')}
-          onPhone={set('captainPhone')}
+          onChange={set('captainId')}
         />
         <OfficerCard
           circleColor={colors.primaryContainer}
           icon="star_half"
           label="ΥΠΑΡΧΗΓΟΣ"
-          name={form.viceName}
-          email={form.viceEmail}
-          phone={form.vicePhone}
+          playerId={form.viceId}
+          players={players}
           editing={editing}
-          onName={set('viceName')}
-          onEmail={set('viceEmail')}
-          onPhone={set('vicePhone')}
+          onChange={set('viceId')}
         />
       </div>
 
@@ -140,6 +178,65 @@ export default function TeamModalContent({ team, editing }) {
 
 const st = {
   body:       { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
+
+  identityRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.25rem',
+    padding: '1rem 1.25rem',
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: radius.DEFAULT,
+  },
+  logoWrap: {
+    position: 'relative',
+    width: '4rem',
+    height: '4rem',
+    borderRadius: radius.DEFAULT,
+    backgroundColor: colors.surfaceContainerHigh,
+    border: `1px solid ${colors.outlineVariant}4d`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  logoImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  logoOverlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    cursor: 'pointer',
+  },
+  teamName: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    color: colors.onSurface,
+    margin: 0,
+    fontFamily: fonts.headline,
+  },
+  nameInput: {
+    fontSize: '1.25rem',
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    color: colors.onSurface,
+    fontFamily: fonts.headline,
+    border: 'none',
+    borderBottom: `2px solid ${colors.tertiary}`,
+    background: 'transparent',
+    outline: 'none',
+    flex: 1,
+    padding: '0.125rem 0',
+  },
+
   officerGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' },
 
   card: {
@@ -157,10 +254,36 @@ const st = {
     color: colors.onSurfaceVariant,
     fontFamily: fonts.label,
   },
-  cardFields: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-  cardText:   { display: 'flex', flexDirection: 'column', gap: 0 },
-  cardName:   { fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface, margin: 0, lineHeight: 1.4, marginBottom: '0.125rem' },
-  cardMeta:   { fontSize: '0.75rem', color: colors.onSurfaceVariant, margin: 0, lineHeight: 1.3 },
+  cardText:  { display: 'flex', flexDirection: 'column', gap: 0 },
+  cardName:  { fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface, margin: 0, lineHeight: 1.4, marginBottom: '0.125rem' },
+  cardMeta:  { fontSize: '0.75rem', color: colors.onSurfaceVariant, margin: 0, lineHeight: 1.3 },
+  cardEmpty: { fontSize: '0.75rem', color: colors.outline, fontStyle: 'italic', margin: 0, fontFamily: fonts.body },
+  playerSelect: {
+    width: '100%',
+    backgroundColor: colors.surfaceContainer,
+    border: 'none',
+    borderBottom: '2px solid',
+    outline: 'none',
+    padding: '0.5rem 1.75rem 0.5rem 0.5rem',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: colors.onSurface,
+    fontFamily: fonts.body,
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    boxSizing: 'border-box',
+    display: 'block',
+    cursor: 'pointer',
+  },
+  selectChevron: {
+    position: 'absolute',
+    right: '0.375rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    fontSize: '1.25rem',
+    color: colors.onSurfaceVariant,
+    pointerEvents: 'none',
+  },
 
   sectionLabel: {
     display: 'block',

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 
@@ -5,76 +6,104 @@ const MOCK_PHASES = {
   '1-1': {
     name: 'Phase One', number: '01', status: 'Active',
     teams: [
-      { id: 'TA-01', name: 'Team A', leaguePoints: 1420, status: 'normal' },
-      { id: 'TB-02', name: 'Team B', leaguePoints: 1385, status: 'selected' },
-      { id: 'TC-03', name: 'Team C', leaguePoints: 890,  status: 'eliminated' },
-      { id: 'TD-04', name: 'Team D', leaguePoints: 1210, status: 'normal' },
+      { id: 'TA-01', name: 'Team Alpha',   leaguePoints: 1420, status: 'normal' },
+      { id: 'TB-02', name: 'Team Bravo',   leaguePoints: 1385, status: 'selected' },
+      { id: 'TC-03', name: 'Team Charlie', leaguePoints: 890,  status: 'eliminated' },
+      { id: 'TD-04', name: 'Team Delta',   leaguePoints: 1210, status: 'normal' },
+      { id: 'TE-05', name: 'Team Echo',    leaguePoints: 1050, status: 'normal' },
+      { id: 'TF-06', name: 'Team Foxtrot', leaguePoints: 970,  status: 'eliminated' },
+      { id: 'TG-07', name: 'Team Golf',    leaguePoints: 1300, status: 'normal' },
+      { id: 'TH-08', name: 'Team Hotel',   leaguePoints: 1140, status: 'normal' },
     ],
     matches: [
-      { teamA: 'Team A', teamB: 'Team B', scoreA: 2, scoreB: 1, status: 'Final',      datetime: 'Mar 12, 18:00', location: null },
-      { teamA: 'Team C', teamB: 'Team D', scoreA: 0, scoreB: 3, status: 'Final',      datetime: 'Mar 12, 20:30', location: null },
-      { teamA: 'Team B', teamB: 'Team D', scoreA: null, scoreB: null, status: 'InProgress', datetime: null, location: 'Pitch 01' },
-      { teamA: 'Team A', teamB: 'Team D', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 14, 15:00', location: null },
-      { teamA: 'Team B', teamB: 'Team C', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 14, 17:30', location: null },
+      { teamA: 'Team Alpha',   teamB: 'Team Bravo',   scoreA: 2, scoreB: 1, status: 'Final',     datetime: 'Mar 12, 18:00' },
+      { teamA: 'Team Charlie', teamB: 'Team Delta',   scoreA: 0, scoreB: 3, status: 'Final',     datetime: 'Mar 12, 20:30' },
+      { teamA: 'Team Echo',    teamB: 'Team Foxtrot', scoreA: 1, scoreB: 1, status: 'Final',     datetime: 'Mar 13, 17:00' },
+      { teamA: 'Team Golf',    teamB: 'Team Hotel',   scoreA: 4, scoreB: 2, status: 'Final',     datetime: 'Mar 13, 19:30' },
+      { teamA: 'Team Bravo',   teamB: 'Team Delta',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 15, 18:00' },
+      { teamA: 'Team Alpha',   teamB: 'Team Golf',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 15, 20:00' },
+      { teamA: 'Team Echo',    teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 16, 17:30' },
+      { teamA: 'Team Charlie', teamB: 'Team Foxtrot', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 16, 19:00' },
+      { teamA: 'Team Alpha',   teamB: 'Team Echo',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 17, 17:00' },
+      { teamA: 'Team Delta',   teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 17, 19:00' },
+      { teamA: 'Team Bravo',   teamB: 'Team Foxtrot', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 18, 18:00' },
+      { teamA: 'Team Golf',    teamB: 'Team Charlie', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 18, 20:00' },
+      { teamA: 'Team Alpha',   teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 19, 18:00' },
     ],
   },
   '1-2': {
     name: 'Phase Two', number: '02', status: 'Active',
     teams: [
-      { id: 'TA-01', name: 'Team A', leaguePoints: 1520, status: 'selected' },
-      { id: 'TB-02', name: 'Team B', leaguePoints: 1385, status: 'normal' },
-      { id: 'TD-04', name: 'Team D', leaguePoints: 1310, status: 'normal' },
-      { id: 'TE-05', name: 'Team E', leaguePoints: 760,  status: 'eliminated' },
+      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1520, status: 'selected' },
+      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1385, status: 'normal' },
+      { id: 'TD-04', name: 'Team Delta', leaguePoints: 1310, status: 'normal' },
+      { id: 'TG-07', name: 'Team Golf',  leaguePoints: 1280, status: 'normal' },
+      { id: 'TH-08', name: 'Team Hotel', leaguePoints: 1140, status: 'eliminated' },
     ],
     matches: [
-      { teamA: 'Team A', teamB: 'Team D', scoreA: 3, scoreB: 0, status: 'Final',      datetime: 'Apr 02, 17:00', location: null },
-      { teamA: 'Team B', teamB: 'Team E', scoreA: 2, scoreB: 2, status: 'Final',      datetime: 'Apr 02, 19:30', location: null },
-      { teamA: 'Team A', teamB: 'Team B', scoreA: null, scoreB: null, status: 'InProgress', datetime: null, location: 'Pitch 02' },
-      { teamA: 'Team D', teamB: 'Team E', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 05, 16:00', location: null },
+      { teamA: 'Team Alpha', teamB: 'Team Delta', scoreA: 3, scoreB: 0, status: 'Final',     datetime: 'Apr 02, 17:00' },
+      { teamA: 'Team Bravo', teamB: 'Team Golf',  scoreA: 2, scoreB: 2, status: 'Final',     datetime: 'Apr 02, 19:30' },
+      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 05, 17:00' },
+      { teamA: 'Team Delta', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 05, 19:30' },
+      { teamA: 'Team Hotel', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 06, 18:00' },
     ],
   },
   '1-3': {
     name: 'Phase Three', number: '03', status: 'Inactive',
     teams: [
-      { id: 'TA-01', name: 'Team A', leaguePoints: 1620, status: 'normal' },
-      { id: 'TB-02', name: 'Team B', leaguePoints: 1490, status: 'normal' },
+      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1620, status: 'normal' },
+      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1490, status: 'normal' },
+      { id: 'TG-07', name: 'Team Golf',  leaguePoints: 1350, status: 'normal' },
     ],
     matches: [
-      { teamA: 'Team A', teamB: 'Team B', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 10, 18:00', location: null },
+      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 10, 18:00' },
+      { teamA: 'Team Alpha', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 10, 20:00' },
+      { teamA: 'Team Bravo', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 11, 18:00' },
     ],
   },
   '1-4': {
     name: 'Phase Four', number: '04', status: 'Inactive',
     teams: [
-      { id: 'TA-01', name: 'Team A', leaguePoints: 1620, status: 'normal' },
+      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1620, status: 'normal' },
+      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1490, status: 'normal' },
     ],
-    matches: [],
+    matches: [
+      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Jun 01, 18:00' },
+    ],
   },
   '2-1': {
     name: 'Phase One', number: '01', status: 'Active',
     teams: [
-      { id: 'TF-01', name: 'Team F', leaguePoints: 980,  status: 'normal' },
-      { id: 'TG-02', name: 'Team G', leaguePoints: 1100, status: 'selected' },
-      { id: 'TH-03', name: 'Team H', leaguePoints: 870,  status: 'eliminated' },
-      { id: 'TI-04', name: 'Team I', leaguePoints: 1050, status: 'normal' },
+      { id: 'TI-01', name: 'Team India',   leaguePoints: 980,  status: 'normal' },
+      { id: 'TJ-02', name: 'Team Juliet',  leaguePoints: 1100, status: 'selected' },
+      { id: 'TK-03', name: 'Team Kilo',    leaguePoints: 870,  status: 'eliminated' },
+      { id: 'TL-04', name: 'Team Lima',    leaguePoints: 1050, status: 'normal' },
+      { id: 'TM-05', name: 'Team Mike',    leaguePoints: 1190, status: 'normal' },
+      { id: 'TN-06', name: 'Team November',leaguePoints: 930,  status: 'eliminated' },
     ],
     matches: [
-      { teamA: 'Team F', teamB: 'Team G', scoreA: 1, scoreB: 2, status: 'Final',      datetime: 'Mar 20, 18:00', location: null },
-      { teamA: 'Team H', teamB: 'Team I', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 22, 17:00', location: null },
+      { teamA: 'Team India',   teamB: 'Team Juliet',  scoreA: 1, scoreB: 2, status: 'Final',     datetime: 'Mar 20, 18:00' },
+      { teamA: 'Team Kilo',    teamB: 'Team Lima',    scoreA: 0, scoreB: 1, status: 'Final',     datetime: 'Mar 20, 20:00' },
+      { teamA: 'Team Mike',    teamB: 'Team November',scoreA: 3, scoreB: 1, status: 'Final',     datetime: 'Mar 21, 18:00' },
+      { teamA: 'Team Juliet',  teamB: 'Team Lima',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 23, 17:00' },
+      { teamA: 'Team India',   teamB: 'Team Mike',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 23, 19:30' },
     ],
   },
   '2-2': {
     name: 'Phase Two', number: '02', status: 'Inactive',
     teams: [
-      { id: 'TF-01', name: 'Team F', leaguePoints: 1080, status: 'normal' },
-      { id: 'TG-02', name: 'Team G', leaguePoints: 1200, status: 'normal' },
+      { id: 'TJ-02', name: 'Team Juliet', leaguePoints: 1200, status: 'normal' },
+      { id: 'TL-04', name: 'Team Lima',   leaguePoints: 1080, status: 'normal' },
+      { id: 'TM-05', name: 'Team Mike',   leaguePoints: 1190, status: 'normal' },
     ],
-    matches: [],
+    matches: [
+      { teamA: 'Team Juliet', teamB: 'Team Lima', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 15, 18:00' },
+      { teamA: 'Team Juliet', teamB: 'Team Mike', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 15, 20:00' },
+    ],
   },
 }
 
-function TeamCard({ team }) {
-  const isSelected   = team.status === 'selected'
+function TeamCard({ team, isSelected, onSelect }) {
   const isEliminated = team.status === 'eliminated'
 
   const cardStyle = {
@@ -84,8 +113,7 @@ function TeamCard({ team }) {
   }
 
   return (
-    <div style={cardStyle}>
-      {isSelected && <div style={st.selectedBadge}>Selected</div>}
+    <div style={cardStyle} onClick={() => !isEliminated && onSelect(team.id)}>
       <div style={st.teamCardTop}>
         <div style={{ ...st.teamIcon, ...(isSelected ? st.teamIconSelected : {}) }}>
           <span className="material-symbols-outlined" style={{ color: isEliminated ? colors.outline : isSelected ? colors.tertiary : colors.outline }}>
@@ -93,7 +121,7 @@ function TeamCard({ team }) {
           </span>
         </div>
         {isSelected ? (
-          <button style={st.deleteBtn}>
+          <button style={st.deleteBtn} onClick={e => e.stopPropagation()}>
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>delete</span>
             <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase' }}>Delete</span>
           </button>
@@ -108,31 +136,29 @@ function TeamCard({ team }) {
 }
 
 function MatchCard({ match }) {
-  const isFinal      = match.status === 'Final'
-  const isInProgress = match.status === 'InProgress'
-  const isScheduled  = match.status === 'Scheduled'
+  const isFinal     = match.status === 'Final'
+  const isScheduled = match.status === 'Scheduled'
 
   return (
-    <div style={{ ...st.matchCard, ...(isScheduled ? st.matchCardScheduled : {}), ...(isInProgress ? st.matchCardInProgress : {}) }}>
+    <div style={{ ...st.matchCard, ...(isScheduled ? st.matchCardScheduled : {}) }}>
       <div style={st.matchTeams}>
         <div style={st.matchRow}>
           <span style={st.matchTeamName}>{match.teamA}</span>
           <span style={{ ...st.matchScore, ...(isScheduled ? st.matchScoreMuted : {}) }}>
-            {isFinal ? match.scoreA : isInProgress ? 'Live' : '--'}
+            {isFinal ? match.scoreA : '--'}
           </span>
         </div>
         <div style={st.matchRow}>
           <span style={st.matchTeamName}>{match.teamB}</span>
           <span style={{ ...st.matchScore, ...(isScheduled ? st.matchScoreMuted : {}) }}>
-            {isFinal ? match.scoreB : isInProgress ? 'Live' : '--'}
+            {isFinal ? match.scoreB : '--'}
           </span>
         </div>
       </div>
       <div style={st.matchFooter}>
-        {isFinal      && <span style={st.matchStatusFinal}>Final</span>}
-        {isInProgress && <span style={st.matchStatusLive}>In Progress</span>}
-        {isScheduled  && <span style={st.matchStatusScheduled}>Scheduled</span>}
-        <span style={st.matchMeta}>{match.location ?? match.datetime}</span>
+        {isFinal     && <span style={st.matchStatusFinal}>Final</span>}
+        {isScheduled && <span style={st.matchStatusScheduled}>Scheduled</span>}
+        <span style={st.matchMeta}>{match.datetime}</span>
       </div>
     </div>
   )
@@ -142,11 +168,21 @@ export default function Phase() {
   const { id, phaseId } = useParams()
   const key   = `${id}-${phaseId}`
   const phase = MOCK_PHASES[key] ?? MOCK_PHASES['1-1']
+  const [teamSearch, setTeamSearch] = useState('')
+  const [selectedTeamId, setSelectedTeamId] = useState(
+    () => phase.teams.find(t => t.status === 'selected')?.id ?? null
+  )
+
+  function handleSelectTeam(teamId) {
+    setSelectedTeamId(prev => prev === teamId ? null : teamId)
+  }
+
+  const filteredTeams = phase.teams.filter(t =>
+    t.name.toLowerCase().includes(teamSearch.toLowerCase())
+  )
 
   return (
     <div style={st.page}>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}.phase-pulse{animation:pulse 1.5s ease-in-out infinite}`}</style>
-
       {/* Header */}
       <div style={st.header}>
         <div>
@@ -165,11 +201,34 @@ export default function Phase() {
       {/* Teams */}
       <section style={st.section}>
         <div style={st.sectionHeader}>
-          <h3 style={st.sectionTitle}>Qualified Teams</h3>
-          <span style={st.sectionCount}>{phase.teams.length} total participating</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <h3 style={st.sectionTitle}>Qualified Teams</h3>
+            <span style={st.sectionCount}>{phase.teams.length} total participating</span>
+          </div>
+          <button style={st.addTeamBtn}>
+            <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>add</span>
+            Add Team
+          </button>
         </div>
-        <div style={st.teamsRow}>
-          {phase.teams.map(team => <TeamCard key={team.id} team={team} />)}
+        <div style={st.teamsSearchWrap}>
+          <span className="material-symbols-outlined" style={st.teamsSearchIcon}>search</span>
+          <input
+            style={st.teamsSearchInput}
+            placeholder="Search teams..."
+            value={teamSearch}
+            onChange={e => setTeamSearch(e.target.value)}
+          />
+        </div>
+        <style>{`.teams-row::-webkit-scrollbar{height:8px}.teams-row::-webkit-scrollbar-track{background:${colors.surfaceContainerLow};border-radius:4px}.teams-row::-webkit-scrollbar-thumb{background:${colors.outlineVariant};border-radius:4px}`}</style>
+        <div className="teams-row" style={st.teamsRow}>
+          {filteredTeams.map(team => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              isSelected={selectedTeamId === team.id}
+              onSelect={handleSelectTeam}
+            />
+          ))}
         </div>
       </section>
 
@@ -188,10 +247,6 @@ export default function Phase() {
         </div>
         <div style={st.matchGrid}>
           {phase.matches.map((match, i) => <MatchCard key={i} match={match} />)}
-          <div style={st.addMatchCard}>
-            <span className="material-symbols-outlined" style={{ color: colors.outlineVariant }}>add_circle</span>
-            <span style={st.addMatchLabel}>Add Match</span>
-          </div>
         </div>
       </section>
 
@@ -208,7 +263,6 @@ export default function Phase() {
           <button style={st.footerGhostBtn}>Preview Ruleset</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button style={st.footerDiscardBtn}>Discard Changes</button>
           <button style={st.footerFinishBtn}>Finish Phase</button>
         </div>
       </div>
@@ -306,16 +360,41 @@ const st = {
   },
 
   // Teams
+  teamsSearchWrap: {
+    position: 'relative',
+    maxWidth: '320px',
+  },
+  teamsSearchIcon: {
+    position: 'absolute',
+    left: '0.75rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    fontSize: '0.9375rem',
+    color: colors.outline,
+  },
+  teamsSearchInput: {
+    width: '100%',
+    padding: '0.5rem 0.75rem 0.5rem 2.375rem',
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}33`,
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem',
+    color: colors.onSurface,
+    fontFamily: fonts.body,
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
   teamsRow: {
     display: 'flex',
     gap: '1rem',
     overflowX: 'auto',
     paddingBottom: '0.5rem',
+    scrollbarWidth: 'auto',
   },
   teamCard: {
-    minWidth: '240px',
+    minWidth: '180px',
     backgroundColor: colors.surfaceContainerLowest,
-    padding: '1.25rem',
+    padding: '0.75rem 1rem',
     border: `1px solid ${colors.outlineVariant}33`,
     cursor: 'pointer',
     position: 'relative',
@@ -331,24 +410,25 @@ const st = {
     opacity: 0.6,
     filter: 'grayscale(1)',
   },
-  selectedBadge: {
-    position: 'absolute',
-    top: '-0.5rem',
-    right: '-0.5rem',
-    backgroundColor: colors.tertiary,
-    color: colors.onTertiary,
-    fontSize: '0.5rem',
-    fontWeight: 900,
-    padding: '0.125rem 0.5rem',
-    textTransform: 'uppercase',
-    letterSpacing: '-0.02em',
-    fontFamily: fonts.label,
-  },
   teamCardTop: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '1rem',
+    marginBottom: '0.5rem',
+  },
+  addTeamBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0.375rem 0.75rem',
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: colors.onSurface,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
   },
   teamIcon: {
     width: '2.5rem',
@@ -405,28 +485,24 @@ const st = {
   },
   matchGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '1px',
-    backgroundColor: colors.outlineVariant + '1a',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+    gap: '0.5rem',
   },
   matchCard: {
     backgroundColor: colors.surfaceContainerLowest,
-    padding: '1rem',
+    padding: '0.625rem 0.875rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    height: '8rem',
+    height: '5.5rem',
   },
   matchCardScheduled: {
     opacity: 0.4,
   },
-  matchCardInProgress: {
-    borderLeft: `4px solid ${colors.tertiary}`,
-  },
   matchTeams: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '0.25rem',
   },
   matchRow: {
     display: 'flex',
@@ -434,13 +510,13 @@ const st = {
     alignItems: 'center',
   },
   matchTeamName: {
-    fontSize: '0.875rem',
+    fontSize: '0.75rem',
     fontWeight: 600,
     color: colors.onSurface,
     fontFamily: fonts.body,
   },
   matchScore: {
-    fontSize: '0.875rem',
+    fontSize: '0.75rem',
     fontWeight: 700,
     fontFamily: 'monospace',
     color: colors.onSurface,
@@ -463,14 +539,6 @@ const st = {
     color: colors.tertiary,
     fontFamily: fonts.label,
   },
-  matchStatusLive: {
-    fontSize: '0.625rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    color: colors.tertiary,
-    fontFamily: fonts.label,
-    animation: 'pulse 1.5s ease-in-out infinite',
-  },
   matchStatusScheduled: {
     fontSize: '0.625rem',
     fontWeight: 700,
@@ -483,25 +551,6 @@ const st = {
     color: colors.outline,
     fontFamily: fonts.label,
   },
-  addMatchCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    border: `1px dashed ${colors.outlineVariant}66`,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '8rem',
-    cursor: 'pointer',
-    gap: '0.5rem',
-  },
-  addMatchLabel: {
-    fontSize: '0.625rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    color: colors.outlineVariant,
-    fontFamily: fonts.label,
-  },
-
   // Footer
   footer: {
     position: 'fixed',
@@ -540,19 +589,6 @@ const st = {
     fontSize: '0.875rem',
     fontWeight: 500,
     color: colors.onSurfaceVariant,
-    cursor: 'pointer',
-    fontFamily: fonts.label,
-  },
-  footerDiscardBtn: {
-    padding: '0.625rem 1.5rem',
-    backgroundColor: colors.surfaceContainerLow,
-    border: `1px solid ${colors.outlineVariant}`,
-    borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '-0.02em',
-    color: colors.onSurface,
     cursor: 'pointer',
     fontFamily: fonts.label,
   },

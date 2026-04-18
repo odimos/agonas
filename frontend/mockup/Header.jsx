@@ -12,7 +12,7 @@ const logo = {
   fontSize: '1.2rem',
   fontWeight: 700,
   letterSpacing: '-0.02em',
-  color: colors.onBackground,
+  color: colors.primary,
   textDecoration: 'none',
   whiteSpace: 'nowrap',
   fontFamily: fonts.headline,

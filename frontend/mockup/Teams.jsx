@@ -4,51 +4,48 @@ import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import TeamModalContent from './TeamModalContent'
+import CreateModal from './CreateModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const MOCK_TEAMS = [
   {
     id: 1, name: 'North Star Rangers', status: 'ΕΝΕΡΓΗ',
-    captain: 'Alexander Vance', contact: 'vance.a@northstars.com', captainPhone: '+1 (555) 010-2233',
-    viceCaptain: 'Jordan Smyth', viceEmail: 'j.smyth@northstars.com', vicePhone: '+1 (555) 902-1143',
+    captainId: 'NS-001', viceId: 'NS-002',
     comments: 'Team has consistently shown high sportsmanship. Noted interest in early slot scheduling for regional rounds. Paperwork for secondary sponsorship is pending approval.',
     players: [
-      { id: 'NS-001', name: 'Marcus Thorne' },
-      { id: 'NS-002', name: 'Julianna Sterling' },
-      { id: 'NS-003', name: 'Dominic Reed' },
+      { id: 'NS-001', name: 'Marcus Thorne',     email: 'm.thorne@northstars.com',   phone: '+1 (555) 010-2233' },
+      { id: 'NS-002', name: 'Julianna Sterling',  email: 'j.sterling@northstars.com', phone: '+1 (555) 902-1143' },
+      { id: 'NS-003', name: 'Dominic Reed',       email: 'd.reed@northstars.com',     phone: '+1 (555) 320-8844' },
     ],
     logo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCINzVJCj9R8ZkjVYYRd6Ca9PDYndD_OFwn-7WmRE-BmlSle8-rnBa8soT0UPmJ1OasE8wojKO0EP0k7DGZ1ZQ73hRxC2oQwqqECuu2mgrYTMbd9tckN4f4dOdkzuLW3suj_gQkhsHo-76fuq6fonb2qRjiwMMly_eVsvzHgn_kYb67XqkIJkZJJEsTnWuHdkdB83wxm1INfpeeAWRexQP8cAcHWI_T9VN3ICrtKMXg6Kl_kLILUVo8FP-tKgz9uKCZJQ6iZhZ1oqc',
   },
   {
     id: 2, name: 'Metropolitan United', status: 'ΕΝΕΡΓΗ',
-    captain: 'Sarah Sterling', contact: 'admin@metroutd.io', captainPhone: '+1 (555) 234-7711',
-    viceCaptain: 'Kaelan Brooks', viceEmail: 'k.brooks@metroutd.io', vicePhone: '+1 (555) 445-9900',
+    captainId: 'MU-001', viceId: 'MU-002',
     comments: 'Promoted from regional division last season. Strong midfield coordination.',
     players: [
-      { id: 'MU-001', name: 'Kaelan Brooks' },
-      { id: 'MU-002', name: 'Elena Rodriguez' },
+      { id: 'MU-001', name: 'Kaelan Brooks',    email: 'k.brooks@metroutd.io',   phone: '+1 (555) 445-9900' },
+      { id: 'MU-002', name: 'Elena Rodriguez',  email: 'e.rodriguez@metroutd.io', phone: '+1 (555) 234-7711' },
     ],
     logo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD-6YlMQxFxBdjTu9qWwSg8E5JObKBlspxg5fmbXNL-qF7cHS7BYCE1HzpWODmSqohrvJa6GJLch-RTmfWyV1rRSAOqBH2Jp35WMUdrCG0Jo5EmVFmPlzpqzcm7Xi3oK70gt-nWIvWeuP5ZozGXNY3M047Rs77BoLt7ouGzxwBKVnZb2yDJoH9De7gSWoBmWF0yAE9qh5md4DQqFB3I0YD1XbSVEHbjpAetW3RXYaMSfbf718qgYsiSv3FmZPTbvZ5YxQE2HWchNCc',
   },
   {
     id: 3, name: 'Valley Falcons', status: 'ΑΝΕΝΕΡΓΗ',
-    captain: 'Elena Rodriguez', contact: 'elena.r@falcons.com', captainPhone: '+1 (555) 320-8844',
-    viceCaptain: '', viceEmail: '', vicePhone: '',
+    captainId: '', viceId: '',
     comments: '',
     players: [],
     logo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBEbGdhAPVF5vf84llZvH_7jG93eTenACQ8Z-_EhJVkUu-YNDQoDauHkLKbCeOFkfZcniUOL7CsbhmQxZStT09OzsYpsqYC-h6daQXg2kd6BGdgooYdp0k3cggUtAv5MFmbd9ZLGI2H00ItQ2oyA0K41XDwRQavAMgnO9YMao32tEdkePTmaRwMHlfv7u2juLkyZJvnwPJpvPBDidKiTmzzQBYkCe9rJx6Ztol1pIzD3zQJQKRtVxI8v_DtXeuGsIisjXxVEQS9DN8',
   },
   {
     id: 4, name: 'Harbor City FC', status: 'ΕΝΕΡΓΗ',
-    captain: 'Marcus Thorne', contact: 'm.thorne@harborcity.net', captainPhone: '+1 (555) 882-9011',
-    viceCaptain: 'Alexander Vance', viceEmail: 'a.vance@harborcity.net', vicePhone: '+1 (555) 012-4455',
+    captainId: 'HC-001', viceId: 'HC-002',
     comments: 'Consistent top-3 finisher. Captain under review for league ambassador role next season.',
     players: [
-      { id: 'HC-001', name: 'Alexander Vance' },
-      { id: 'HC-002', name: 'Dominic Reed' },
-      { id: 'HC-003', name: 'Kaelan Brooks' },
-      { id: 'HC-004', name: 'Julianna Sterling' },
+      { id: 'HC-001', name: 'Alexander Vance',    email: 'a.vance@harborcity.net',   phone: '+1 (555) 012-4455' },
+      { id: 'HC-002', name: 'Dominic Reed',       email: 'd.reed@harborcity.net',     phone: '+1 (555) 882-9011' },
+      { id: 'HC-003', name: 'Kaelan Brooks',      email: 'k.brooks@harborcity.net',   phone: '+1 (555) 445-9900' },
+      { id: 'HC-004', name: 'Julianna Sterling',  email: 'j.sterling@harborcity.net', phone: '+1 (555) 320-8844' },
     ],
     logo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAMmCV_EYnv7UsY0_h-iG951R8VYw-s_SZ1dj4ngpChHuHj054LOghlTryM9i9X0lt1gJeBzNj_Nwc7OVkikknqgLq4CD6P3d3zp4B6oXFJc5JMU4_4uVLTAaT19D0dzT1hHtF28GpQf84PLV8EmjN0BLFMNbMD3o_P4mORQqu2uYzAAzuDH4nEC0Bnlbp7_Sdpll0oMZeoz3F0GJYBoDPXdzPrc6AN_XkAhEr3lLH336I3y7GPwVvZcwFseD-zJ2-9NBWcMasc4Y',
   },
@@ -113,7 +110,7 @@ function TeamRow({ team, isFirst, onClick }) {
         <span style={st.cellName}>{team.name}</span>
       </div>
       <div style={cols.captain}>
-        <span style={st.cellMid}>{team.captain}</span>
+        <span style={st.cellMid}>{team.players.find(p => p.id === team.captainId)?.name ?? '—'}</span>
       </div>
       <div style={cols.contact}>
         <span style={st.cellMono}>{team.contact}</span>
@@ -130,6 +127,7 @@ function TeamRow({ team, isFirst, onClick }) {
 export default function Teams() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   const filtered = MOCK_TEAMS.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
@@ -137,10 +135,10 @@ export default function Teams() {
 
   return (
     <div style={s.infoPage}>
-      <PageHeader title="Ομάδες" addName="Ομάδας" />
+      <PageHeader title="Ομάδες" addName="Ομάδας" onAdd={() => setCreating(true)} />
       <div style={st.statsGrid}>
         <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={24} />
-        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor={colors.error} valueColor={colors.error} />
+        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor="#eab308" valueColor="#eab308" />
       </div>
       <DataTable
         columns={COLUMNS}
@@ -162,6 +160,7 @@ export default function Teams() {
           {(editing) => <TeamModalContent team={selected} editing={editing} />}
         </ItemModal>
       )}
+      {creating && <CreateModal type="team" onClose={() => setCreating(false)} />}
     </div>
   )
 }

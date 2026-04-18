@@ -4,6 +4,7 @@ import { PageHeader, StatCard } from './Buttons'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import RefereeModalContent from './RefereeModalContent'
+import CreateModal from './CreateModal'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,7 @@ function RefereeRow({ referee, isFirst, onClick }) {
 export default function Referees() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   const filtered = MOCK_REFEREES.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -103,9 +105,10 @@ export default function Referees() {
 
   return (
     <div style={s.infoPage}>
-      <PageHeader title="Διαιτητές" addName="Διαιτητή" />
-      <div style={{ alignSelf: 'flex-start' }}>
+      <PageHeader title="Διαιτητές" addName="Διαιτητή" onAdd={() => setCreating(true)} />
+      <div style={{ display: 'flex', gap: '1rem' }}>
         <StatCard label="ΕΝΕΡΓΟΙ ΔΙΑΙΤΗΤΕΣ" count={42} />
+        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor="#eab308" valueColor="#eab308" />
       </div>
       <DataTable
         columns={COLUMNS}
@@ -126,6 +129,7 @@ export default function Referees() {
           {(editing) => <RefereeModalContent referee={selected} editing={editing} />}
         </ItemModal>
       )}
+      {creating && <CreateModal type="referee" onClose={() => setCreating(false)} />}
     </div>
   )
 }

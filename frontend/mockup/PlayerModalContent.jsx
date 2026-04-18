@@ -12,7 +12,7 @@ function initForm(player) {
     phone:     player.phone    ?? '',
     email:     player.email    ?? '',
     nickname:  player.nickname ?? '',
-    team:      player.team     ?? TEAMS[0],
+    team:      player.team     ?? '',
     comments:  player.comments ?? '',
   }
 }
@@ -50,6 +50,7 @@ export default function PlayerModalContent({ player, editing }) {
               value={form.team}
               onChange={e => set('team')(e.target.value)}
             >
+              <option value="">— </option>
               {TEAMS.map(t => <option key={t}>{t}</option>)}
             </select>
             <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
