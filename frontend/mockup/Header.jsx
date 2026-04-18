@@ -4,7 +4,7 @@ import { s, colors, fonts } from './styles'
 const NAV_LINKS = [
   { label: 'Dashboard',   to: '/dashboard' },
   { label: 'Tournaments', to: '/tournaments' },
-  { label: 'Info',        to: '/info' },
+  { label: 'Entities',    to: '/entities' },
   { label: 'Stats',       to: '/stats' },
 ]
 

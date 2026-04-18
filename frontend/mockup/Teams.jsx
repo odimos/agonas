@@ -134,7 +134,7 @@ export default function Teams() {
   )
 
   return (
-    <div style={s.infoPage}>
+    <div style={s.EntitiesPage}>
       <PageHeader title="Ομάδες" addName="Ομάδας" onAdd={() => setCreating(true)} />
       <div style={st.statsGrid}>
         <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={24} />

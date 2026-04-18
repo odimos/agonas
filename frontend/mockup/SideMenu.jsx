@@ -2,17 +2,17 @@ import { NavLink } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 
 const MENU_LINKS = [
-  { label: 'Ομάδες',    icon: 'groups',  to: '/info/teams' },
-  { label: 'Παίκτες',  icon: 'person',  to: '/info/players' },
-  { label: 'Διαιτητές', icon: 'sports',  to: '/info/referees' },
-  { label: 'Γήπεδα', icon: 'stadium', to: '/info/stadiums' },
+  { label: 'Ομάδες',    icon: 'groups',  to: '/entities/teams' },
+  { label: 'Παίκτες',  icon: 'person',  to: '/entities/players' },
+  { label: 'Διαιτητές', icon: 'sports',  to: '/entities/referees' },
+  { label: 'Γήπεδα', icon: 'stadium', to: '/entities/stadiums' },
 ]
 
 export default function SideMenu() {
   return (
     <aside style={styles.aside}>
       <div style={styles.heading}>
-        <p style={styles.title}>League Info</p>
+        <p style={styles.title}>Entities</p>
         <p style={styles.subtitle}>Contextual Management</p>
       </div>
       <nav style={styles.nav}>

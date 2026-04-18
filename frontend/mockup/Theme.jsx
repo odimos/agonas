@@ -5,7 +5,7 @@ import Dashboard          from './Dashboard'
 import Tournament         from './Tournament'
 import TournamentOverview from './TournamentOverview'
 import Phase             from './Phase'
-import Info               from './Info'
+import Entities           from './Entities'
 import Stats              from './Stats'
 import Teams              from './Teams'
 import Players            from './Players'
@@ -46,8 +46,8 @@ export default function Theme() {
             <Route path=":id"                    element={<TournamentOverview />} />
             <Route path=":id/phases/:phaseId"   element={<Phase />} />
           </Route>
-          <Route path="/info"        element={<Info />}>
-            <Route index             element={<Navigate to="/info/teams" replace />} />
+          <Route path="/entities"    element={<Entities />}>
+            <Route index             element={<Navigate to="/entities/teams" replace />} />
             <Route path="teams"      element={<Teams />} />
             <Route path="players"    element={<Players />} />
             <Route path="referees"   element={<Referees />} />
