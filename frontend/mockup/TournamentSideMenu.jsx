@@ -13,9 +13,12 @@ export default function TournamentSideMenu() {
   const navigate  = useNavigate()
   const location  = useLocation()
 
-  const activeId = (() => {
-    const m = location.pathname.match(/\/tournaments\/(\d+)/)
-    return m ? parseInt(m[1]) : 1
+  const { activeId, activePhase } = (() => {
+    const m = location.pathname.match(/\/tournaments\/(\d+)(?:\/phases\/(\d+))?/)
+    return {
+      activeId:    m ? parseInt(m[1]) : 1,
+      activePhase: m && m[2] ? parseInt(m[2]) : null,
+    }
   })()
 
   const [expanded, setExpanded] = useState(() => new Set([activeId]))
@@ -63,7 +66,11 @@ export default function TournamentSideMenu() {
               {isExpanded && (
                 <div style={st.phaseList}>
                   {t.phases.map((phase, i) => (
-                    <button key={phase} style={{ ...st.phaseLink, ...(isActive && i === 0 ? st.phaseLinkActive : {}) }}>
+                    <button
+                      key={phase}
+                      style={{ ...st.phaseLink, ...(activeId === t.id && activePhase === i + 1 ? st.phaseLinkActive : {}) }}
+                      onClick={() => navigate(`/tournaments/${t.id}/phases/${i + 1}`)}
+                    >
                       <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>{PHASE_ICONS[i] ?? 'circle'}</span>
                       {phase}
                     </button>
@@ -74,17 +81,6 @@ export default function TournamentSideMenu() {
           )
         })}
       </nav>
-
-      <div style={st.bottom}>
-        <button style={st.bottomLink}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>archive</span>
-          Archive
-        </button>
-        <button style={st.bottomLink}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>help_outline</span>
-          Help
-        </button>
-      </div>
 
     </aside>
   )
@@ -199,27 +195,5 @@ const st = {
   phaseLinkActive: {
     color: colors.tertiary,
     fontWeight: 600,
-  },
-  bottom: {
-    padding: '0.75rem',
-    borderTop: `1px solid ${colors.outlineVariant}33`,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
-  },
-  bottomLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.625rem',
-    padding: '0.625rem 0.875rem',
-    borderRadius: radius.lg,
-    color: colors.onSurfaceVariant,
-    background: 'none',
-    border: 'none',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: fonts.body,
-    textAlign: 'left',
   },
 }

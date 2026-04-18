@@ -4,6 +4,7 @@ import { colors, fonts } from './styles'
 import Dashboard          from './Dashboard'
 import Tournament         from './Tournament'
 import TournamentOverview from './TournamentOverview'
+import Phase             from './Phase'
 import Info               from './Info'
 import Stats              from './Stats'
 import Teams              from './Teams'
@@ -42,7 +43,8 @@ export default function Theme() {
           <Route path="/dashboard"   element={<Dashboard />} />
           <Route path="/tournaments" element={<Tournament />}>
             <Route index             element={<Navigate to="/tournaments/1" replace />} />
-            <Route path=":id"        element={<TournamentOverview />} />
+            <Route path=":id"                    element={<TournamentOverview />} />
+            <Route path=":id/phases/:phaseId"   element={<Phase />} />
           </Route>
           <Route path="/info"        element={<Info />}>
             <Route index             element={<Navigate to="/info/teams" replace />} />

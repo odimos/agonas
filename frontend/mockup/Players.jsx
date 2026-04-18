@@ -81,9 +81,6 @@ function PlayerRow({ player, isFirst, onClick }) {
       onMouseLeave={() => setHovered(false)}
     >
       <div style={cols.name}>
-        <div style={st.avatar}>
-          <img src={player.avatar} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
         <div>
           <p style={st.cellName}>{player.name}</p>
           <p style={st.cellId}>ID: {player.id}</p>
@@ -144,15 +141,6 @@ export default function Players() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
-  avatar: {
-    width: '2rem',
-    height: '2rem',
-    borderRadius: radius.DEFAULT,
-    overflow: 'hidden',
-    backgroundColor: `${colors.primaryContainer}33`,
-    border: `1px solid ${colors.primaryContainer}4d`,
-    flexShrink: 0,
-  },
   cellName: { fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface, margin: 0 },
   cellId:   { fontSize: '0.625rem', textTransform: 'uppercase', color: colors.onSurfaceVariant, margin: '2px 0 0', letterSpacing: '0.05em' },
   cellMid:  { fontSize: '0.875rem', fontWeight: 400, color: colors.onSurfaceVariant },

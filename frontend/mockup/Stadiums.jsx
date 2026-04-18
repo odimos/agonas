@@ -67,12 +67,8 @@ function StadiumRow({ stadium, isFirst, onClick }) {
       onMouseLeave={() => setHovered(false)}
     >
       <div style={cols.name}>
-        <div style={st.thumb}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>stadium</span>
-        </div>
         <div>
           <p style={st.stadiumName}>{stadium.name}</p>
-          <p style={st.stadiumMeta}>Capacity: {stadium.capacity}</p>
         </div>
       </div>
       <div style={cols.address}>
@@ -129,18 +125,7 @@ export default function Stadiums() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
-  thumb: {
-    width: '3rem',
-    height: '3rem',
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: radius.DEFAULT,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
   stadiumName: { fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, margin: 0 },
-  stadiumMeta: { fontSize: '0.75rem', color: colors.onSurfaceVariant, margin: '2px 0 0' },
   cellText:    { fontSize: '0.875rem', color: colors.onSurface, margin: 0 },
   cellSub:     { fontSize: '0.75rem', color: colors.onSurfaceVariant, margin: '2px 0 0' },
   costText:    { fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface, margin: 0 },

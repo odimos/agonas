@@ -48,10 +48,6 @@ export default function TournamentOverview() {
           <p style={st.subtitle}>Configuration &amp; Management Dashboard</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button style={st.secondaryBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>share</span>
-            Share Access
-          </button>
           <button style={st.primaryBtn}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>save</span>
             Save Changes
@@ -216,11 +212,11 @@ const st = {
   progressCard: {
     backgroundColor: colors.surfaceContainerLowest,
     borderLeft: `4px solid ${colors.tertiary}`,
-    padding: '2rem',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    minHeight: '12rem',
+    minHeight: '7rem',
   },
   cardLabel: {
     display: 'block',
@@ -229,11 +225,11 @@ const st = {
     textTransform: 'uppercase',
     letterSpacing: '0.18em',
     color: colors.onSurfaceVariant,
-    marginBottom: '0.75rem',
+    marginBottom: '0.375rem',
     fontFamily: fonts.label,
   },
   progressNum: {
-    fontSize: '3rem',
+    fontSize: '2rem',
     fontWeight: 800,
     letterSpacing: '-0.04em',
     color: colors.onSurface,
@@ -270,13 +266,13 @@ const st = {
   teamsCard: {
     backgroundColor: colors.surfaceContainerLowest,
     borderLeft: `4px solid ${colors.primary}`,
-    padding: '2rem',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
   },
   teamsNum: {
-    fontSize: '2.5rem',
+    fontSize: '2rem',
     fontWeight: 800,
     letterSpacing: '-0.04em',
     color: colors.onSurface,
