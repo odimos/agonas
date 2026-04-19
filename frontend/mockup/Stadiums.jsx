@@ -95,7 +95,7 @@ export default function Stadiums() {
   )
 
   return (
-    <div style={s.infoPage}>
+    <div style={s.entitiesPage}>
       <PageHeader title="Γήπεδα" addName="Γηπέδου" onAdd={() => setCreating(true)} />
       <div style={{ alignSelf: 'flex-start' }}>
         <StatCard label="ΕΝΕΡΓΑ ΓΗΠΕΔΑ" count={12} />

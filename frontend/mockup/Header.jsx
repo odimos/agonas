@@ -5,7 +5,7 @@ const NAV_LINKS = [
   { label: 'Dashboard',   to: '/dashboard' },
   { label: 'Tournaments', to: '/tournaments' },
   { label: 'Entities',    to: '/entities' },
-  { label: 'Stats',       to: '/stats' },
+  { label: 'Page',        to: '/page' },
 ]
 
 const logo = {

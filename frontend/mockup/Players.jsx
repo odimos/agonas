@@ -112,7 +112,7 @@ export default function Players() {
   )
 
   return (
-    <div style={s.infoPage}>
+    <div style={s.entitiesPage}>
       <PageHeader title="Παίκτες" addName="Παίκτη" onAdd={() => setCreating(true)} />
       <div style={{ display: 'flex', gap: '1rem' }}>
         <StatCard label="ΕΝΕΡΓΟΙ ΠΑΙΚΤΕΣ" count={42} />

@@ -5,7 +5,8 @@ const MENU_LINKS = [
   { label: 'Ομάδες',    icon: 'groups',  to: '/entities/teams' },
   { label: 'Παίκτες',  icon: 'person',  to: '/entities/players' },
   { label: 'Διαιτητές', icon: 'sports',  to: '/entities/referees' },
-  { label: 'Γήπεδα', icon: 'stadium', to: '/entities/stadiums' },
+  { label: 'Γήπεδα',    icon: 'stadium',        to: '/entities/stadiums'  },
+  { label: 'Αιτήματα', icon: 'mark_email_read', to: '/entities/requests'  },
 ]
 
 export default function SideMenu() {

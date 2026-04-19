@@ -104,7 +104,7 @@ export default function Referees() {
   )
 
   return (
-    <div style={s.infoPage}>
+    <div style={s.entitiesPage}>
       <PageHeader title="Διαιτητές" addName="Διαιτητή" onAdd={() => setCreating(true)} />
       <div style={{ display: 'flex', gap: '1rem' }}>
         <StatCard label="ΕΝΕΡΓΟΙ ΔΙΑΙΤΗΤΕΣ" count={42} />

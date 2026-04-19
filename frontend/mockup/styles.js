@@ -168,8 +168,8 @@ export const s = {
     fontFamily: fonts.body,
   },
 
-  // Info sub-page container (Teams, Players, Referees, Stadiums)
-  infoPage: {
+  // Entities sub-page container (Teams, Players, Referees, Stadiums)
+  entitiesPage: {
     padding: '2rem 2.5rem',
     fontFamily: fonts.body,
     backgroundColor: colors.surface,

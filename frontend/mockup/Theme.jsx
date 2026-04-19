@@ -53,7 +53,7 @@ export default function Theme() {
             <Route path="referees"   element={<Referees />} />
             <Route path="stadiums"   element={<Stadiums />} />
           </Route>
-          <Route path="/stats"       element={<Stats />} />
+          <Route path="/page"         element={<Stats />} />
         </Routes>
       </main>
     </div>
