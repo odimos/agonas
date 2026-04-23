@@ -1,6 +1,8 @@
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 export default function DataTable({ columns, rows, renderRow, search, onSearch, total }) {
+  const { t } = useLang()
   return (
     <div style={st.tableCard}>
 
@@ -10,7 +12,7 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
           <span className="material-symbols-outlined" style={st.searchIcon}>search</span>
           <input
             style={st.searchInput}
-            placeholder="Search..."
+            placeholder={t('dt_search')}
             value={search}
             onChange={e => onSearch(e.target.value)}
           />
@@ -41,7 +43,7 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
 
       {/* Pagination */}
       <div style={st.pagination}>
-        <span style={st.paginationInfo}>Showing {rows.length} of {total ?? rows.length}</span>
+        <span style={st.paginationInfo}>{t('dt_showing')} {rows.length} {t('dt_of')} {total ?? rows.length}</span>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <button style={{ ...st.pageBtn, ...st.pageBtnIcon, opacity: 0.4 }} disabled>
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_left</span>

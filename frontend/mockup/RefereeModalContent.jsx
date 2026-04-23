@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { colors } from './styles'
 import ModalField from './ModalField'
+import { useLang } from './LangContext'
 
 function initForm(referee) {
   const parts = referee.name.trim().split(' ')
@@ -14,6 +15,7 @@ function initForm(referee) {
 }
 
 export default function RefereeModalContent({ referee, editing }) {
+  const { t } = useLang()
   const [form, setForm] = useState(() => initForm(referee))
 
   useEffect(() => {
@@ -27,19 +29,19 @@ export default function RefereeModalContent({ referee, editing }) {
 
       {/* Row 1 — Name */}
       <div style={st.grid2}>
-        <ModalField label="ΟΝΟΜΑ"   value={form.firstName} editing={editing} onChange={set('firstName')} />
-        <ModalField label="ΕΠΙΘΕΤΟ" value={form.lastName}  editing={editing} onChange={set('lastName')}  />
+        <ModalField label={t('modal_first_name')} value={form.firstName} editing={editing} onChange={set('firstName')} />
+        <ModalField label={t('modal_last_name')}  value={form.lastName}  editing={editing} onChange={set('lastName')}  />
       </div>
 
       {/* Row 2 — Contact */}
       <div style={st.grid2}>
-        <ModalField label="ΤΗΛΕΦΩΝΟ" value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   />
-        <ModalField label="Email"     value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" />
+        <ModalField label={t('modal_phone')} value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   />
+        <ModalField label="Email"            value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" />
       </div>
 
       {/* Row 3 — Comments */}
       <ModalField
-        label="ΣΧΟΛΙΑ"
+        label={t('modal_comments_label')}
         value={form.comments}
         editing={editing}
         onChange={set('comments')}

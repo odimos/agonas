@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 const MOCK_PHASES = {
   '1-1': {
@@ -103,7 +104,7 @@ const MOCK_PHASES = {
   },
 }
 
-function TeamCard({ team, isSelected, onSelect }) {
+function TeamCard({ team, isSelected, onSelect, t }) {
   const isEliminated = team.status === 'eliminated'
 
   const cardStyle = {
@@ -123,19 +124,19 @@ function TeamCard({ team, isSelected, onSelect }) {
         {isSelected ? (
           <button style={st.deleteBtn} onClick={e => e.stopPropagation()}>
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>delete</span>
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase' }}>Delete</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase' }}>{t('ph_delete')}</span>
           </button>
         ) : (
-          <span style={st.teamId}>{isEliminated ? 'Eliminated' : `ID: ${team.id}`}</span>
+          <span style={st.teamId}>{isEliminated ? t('ph_eliminated') : `ID: ${team.id}`}</span>
         )}
       </div>
       <h4 style={st.teamName}>{team.name}</h4>
-      <p style={st.teamPoints}>League Points: {team.leaguePoints.toLocaleString()}</p>
+      <p style={st.teamPoints}>{t('ph_points')} {team.leaguePoints.toLocaleString()}</p>
     </div>
   )
 }
 
-function MatchCard({ match }) {
+function MatchCard({ match, t }) {
   const isFinal     = match.status === 'Final'
   const isScheduled = match.status === 'Scheduled'
 
@@ -156,8 +157,8 @@ function MatchCard({ match }) {
         </div>
       </div>
       <div style={st.matchFooter}>
-        {isFinal     && <span style={st.matchStatusFinal}>Final</span>}
-        {isScheduled && <span style={st.matchStatusScheduled}>Scheduled</span>}
+        {isFinal     && <span style={st.matchStatusFinal}>{t('ph_final')}</span>}
+        {isScheduled && <span style={st.matchStatusScheduled}>{t('ph_scheduled')}</span>}
         <span style={st.matchMeta}>{match.datetime}</span>
       </div>
     </div>
@@ -166,6 +167,7 @@ function MatchCard({ match }) {
 
 export default function Phase() {
   const { id, phaseId } = useParams()
+  const { t } = useLang()
   const key   = `${id}-${phaseId}`
   const phase = MOCK_PHASES[key] ?? MOCK_PHASES['1-1']
   const [teamSearch, setTeamSearch] = useState('')
@@ -186,13 +188,13 @@ export default function Phase() {
       {/* Header */}
       <div style={st.header}>
         <div>
-          <span style={st.headerLabel}>Current Management</span>
-          <h1 style={st.title}>{phase.number} {phase.name}</h1>
+          <span style={st.headerLabel}>{t('ph_label')}</span>
+          <h1 style={st.title}>{t('phase_label')} {phase.number}</h1>
         </div>
         <div style={st.headerRight}>
           <button style={st.statusBadge}>
             <span style={{ ...st.statusDot, backgroundColor: phase.status === 'Active' ? colors.tertiary : colors.outline }} />
-            Status: {phase.status}
+            {t('ph_status')}: {t(phase.status === 'Active' ? 'ph_status_active' : 'ph_status_inactive')}
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>expand_more</span>
           </button>
         </div>
@@ -202,19 +204,19 @@ export default function Phase() {
       <section style={st.section}>
         <div style={st.sectionHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <h3 style={st.sectionTitle}>Qualified Teams</h3>
-            <span style={st.sectionCount}>{phase.teams.length} total participating</span>
+            <h3 style={st.sectionTitle}>{t('ph_qual_teams')}</h3>
+            <span style={st.sectionCount}>{phase.teams.length} {t('ph_participating')}</span>
           </div>
           <button style={st.addTeamBtn}>
             <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>add</span>
-            Add Team
+            {t('ph_add_team')}
           </button>
         </div>
         <div style={st.teamsSearchWrap}>
           <span className="material-symbols-outlined" style={st.teamsSearchIcon}>search</span>
           <input
             style={st.teamsSearchInput}
-            placeholder="Search teams..."
+            placeholder={t('ph_search')}
             value={teamSearch}
             onChange={e => setTeamSearch(e.target.value)}
           />
@@ -227,6 +229,7 @@ export default function Phase() {
               team={team}
               isSelected={selectedTeamId === team.id}
               onSelect={handleSelectTeam}
+              t={t}
             />
           ))}
         </div>
@@ -235,7 +238,7 @@ export default function Phase() {
       {/* Matches */}
       <section style={st.section}>
         <div style={st.sectionHeader}>
-          <h3 style={st.sectionTitle}>Scheduled Matches</h3>
+          <h3 style={st.sectionTitle}>{t('ph_matches')}</h3>
           <div style={{ display: 'flex', gap: '0.25rem' }}>
             <button style={st.viewBtn}>
               <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>grid_view</span>
@@ -246,7 +249,7 @@ export default function Phase() {
           </div>
         </div>
         <div style={st.matchGrid}>
-          {phase.matches.map((match, i) => <MatchCard key={i} match={match} />)}
+          {phase.matches.map((match, i) => <MatchCard key={i} match={match} t={t} />)}
         </div>
       </section>
 
@@ -257,13 +260,13 @@ export default function Phase() {
       <div style={st.footer}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button style={st.footerOutlineBtn}>
-            Generate Program
+            {t('ph_gen_program')}
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>expand_more</span>
           </button>
-          <button style={st.footerGhostBtn}>Preview Ruleset</button>
+          <button style={st.footerGhostBtn}>{t('ph_preview')}</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button style={st.footerFinishBtn}>Finish Phase</button>
+          <button style={st.footerFinishBtn}>{t('ph_finish')}</button>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header     from './Header'
+import { LangProvider } from './LangContext'
 import { colors, fonts } from './styles'
 import Dashboard          from './Dashboard'
 import Tournament         from './Tournament'
@@ -11,6 +12,7 @@ import Teams              from './Teams'
 import Players            from './Players'
 import Referees           from './Referees'
 import Stadiums           from './Stadiums'
+import Requests           from './Requests'
 
 const styles = {
   // Break out of #root's 1126px centered constraint without transform
@@ -35,6 +37,7 @@ const styles = {
 
 export default function Theme() {
   return (
+    <LangProvider>
     <div style={styles.wrapper}>
       <Header />
       <main style={styles.content}>
@@ -52,10 +55,12 @@ export default function Theme() {
             <Route path="players"    element={<Players />} />
             <Route path="referees"   element={<Referees />} />
             <Route path="stadiums"   element={<Stadiums />} />
+            <Route path="requests"   element={<Requests />} />
           </Route>
           <Route path="/page"         element={<Stats />} />
         </Routes>
       </main>
     </div>
+    </LangProvider>
   )
 }

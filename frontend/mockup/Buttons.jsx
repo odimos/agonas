@@ -1,39 +1,41 @@
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 export function ExportCSVButton({ onClick }) {
+  const { t } = useLang()
   return (
     <button style={st.csvBtn} onClick={onClick}>
       <span className="material-symbols-outlined" style={st.icon}>download</span>
-      Κατέβασε το ως CSV
+      {t('btn_export')}
     </button>
   )
 }
 
-export function AddButton({ name, onClick }) {
+export function AddButton({ label, onClick }) {
   return (
     <button style={st.addBtn} onClick={onClick}>
       <span className="material-symbols-outlined" style={st.icon}>add</span>
-      Προσθήκη {name}
+      {label}
     </button>
   )
 }
 
-export function StatCard({ label, count, accentColor, valueColor }) {
+export function StatCard({ label, count, accentColor, valueColor, style }) {
   return (
-    <div style={{ ...st.statCard, borderLeftColor: accentColor ?? colors.tertiary }}>
+    <div style={{ ...st.statCard, borderLeftColor: accentColor ?? colors.tertiary, ...style }}>
       <p style={st.statLabel}>{label}</p>
       <p style={{ ...st.statValue, color: valueColor ?? colors.onSurface }}>{count}</p>
     </div>
   )
 }
 
-export function PageHeader({ title, addName, onAdd, onExport }) {
+export function PageHeader({ title, addLabel, onAdd, onExport }) {
   return (
     <div style={st.header}>
       <h1 style={st.title}>{title}</h1>
       <div style={st.actions}>
         <ExportCSVButton onClick={onExport} />
-        <AddButton name={addName} onClick={onAdd} />
+        <AddButton label={addLabel} onClick={onAdd} />
       </div>
     </div>
   )
@@ -94,7 +96,7 @@ const st = {
     verticalAlign: 'middle',
   },
   statCard: {
-    display: 'inline-flex',
+    display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
     backgroundColor: colors.surfaceContainerLowest,

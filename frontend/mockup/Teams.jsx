@@ -5,6 +5,7 @@ import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import TeamModalContent from './TeamModalContent'
 import CreateModal from './CreateModal'
+import { useLang } from './LangContext'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -60,13 +61,6 @@ const cols = {
   status:  { flex: '0 0 140px', padding: '0.875rem 1rem' },
 }
 
-const COLUMNS = [
-  { header: 'ΟΝΟΜΑ ΟΜΑΔΑΣ', style: cols.name    },
-  { header: 'ΑΡΧΗΓΟΣ',      style: cols.captain },
-  { header: 'ΕΠΙΚΟΙΝΩΝΙΑ',  style: cols.contact },
-  { header: 'ΚΑΤΑΣΤΑΣΗ',    style: cols.status  },
-]
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLES = {
@@ -75,9 +69,10 @@ const STATUS_STYLES = {
 }
 
 function StatusBadge({ status }) {
+  const { t } = useLang()
   return (
     <span style={{ ...st.badge, ...(STATUS_STYLES[status] ?? STATUS_STYLES['ΑΝΕΝΕΡΓΗ']) }}>
-      {status}
+      {t(status)}
     </span>
   )
 }
@@ -125,20 +120,28 @@ function TeamRow({ team, isFirst, onClick }) {
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
 export default function Teams() {
+  const { t } = useLang()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
 
-  const filtered = MOCK_TEAMS.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = MOCK_TEAMS.filter(team =>
+    team.name.toLowerCase().includes(search.toLowerCase())
   )
+
+  const COLUMNS = [
+    { header: t('teams_col_name'),    style: cols.name    },
+    { header: t('teams_col_captain'), style: cols.captain },
+    { header: t('teams_col_contact'), style: cols.contact },
+    { header: t('teams_col_status'),  style: cols.status  },
+  ]
 
   return (
     <div style={s.entitiesPage}>
-      <PageHeader title="Ομάδες" addName="Ομάδας" onAdd={() => setCreating(true)} />
+      <PageHeader title={t('teams_title')} addLabel={t('add_team')} onAdd={() => setCreating(true)} />
       <div style={st.statsGrid}>
-        <StatCard label="ΕΝΕΡΓΕΣ ΟΜΑΔΕΣ" count={24} />
-        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor="#eab308" valueColor="#eab308" />
+        <StatCard label={t('teams_active')} count={24} />
+        <StatCard label={t('teams_requests')} count="03" accentColor="#eab308" valueColor="#eab308" />
       </div>
       <DataTable
         columns={COLUMNS}

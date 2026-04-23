@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', onClose, onDelete, children }) {
   const [editing, setEditing] = useState(false)
+  const { t } = useLang()
 
   function handleDelete() {
     if (window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
@@ -39,17 +41,17 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
           {editing ? <div /> : (
             <button style={st.deleteBtn} onClick={handleDelete}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete_forever</span>
-              Διαγραφή
+              {t('modal_delete')}
             </button>
           )}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {editing ? (
               <>
-                <button style={st.cancelBtn} onClick={() => setEditing(false)}>Ακύρωση</button>
-                <button style={st.saveBtn}>Αποθήκευση</button>
+                <button style={st.cancelBtn} onClick={() => setEditing(false)}>{t('modal_cancel')}</button>
+                <button style={st.saveBtn}>{t('modal_save')}</button>
               </>
             ) : (
-              <button style={st.editBtn} onClick={() => setEditing(true)}>Επεξεργασία</button>
+              <button style={st.editBtn} onClick={() => setEditing(true)}>{t('modal_edit')}</button>
             )}
           </div>
         </div>

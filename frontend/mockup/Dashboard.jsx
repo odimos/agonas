@@ -1,15 +1,18 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { colors, fonts, radius } from './styles'
-import { StatCard } from './Buttons'
+import { StatCard, AddButton, ExportCSVButton } from './Buttons'
+import { useLang } from './LangContext'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const DAYS_GR = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο']
+const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-function formatDate(ddmmyyyy) {
+function formatDate(ddmmyyyy, lang = 'gr') {
   const [dd, mm, yyyy] = ddmmyyyy.split('/')
   const d = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd))
-  return `${DAYS_GR[d.getDay()]}, ${dd}/${mm}`
+  const days = lang === 'en' ? DAYS_EN : DAYS_GR
+  return `${days[d.getDay()]}, ${dd}/${mm}`
 }
 
 const MATCHES = [
@@ -64,9 +67,10 @@ const STATUS_STYLES = {
 // ─── Components ───────────────────────────────────────────────────────────────
 
 function MatchStatusBadge({ status }) {
+  const { t } = useLang()
   return (
     <span style={{ ...st.badge, ...(STATUS_STYLES[status] ?? STATUS_STYLES.Expected) }}>
-      {status}
+      {t('ms_' + status.toLowerCase())}
     </span>
   )
 }
@@ -83,6 +87,7 @@ function fromInputDate(yyyymmdd) {
 
 function InlineDatePicker({ value, onChange }) {
   const ref = useRef(null)
+  const { lang } = useLang()
 
   function handleClick() {
     ref.current?.showPicker?.()
@@ -91,7 +96,7 @@ function InlineDatePicker({ value, onChange }) {
   return (
     <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
       <span onClick={handleClick} style={{ ...st.inlineValue, cursor: 'pointer' }}>
-        {formatDate(value)}
+        {formatDate(value, lang)}
       </span>
       <input
         ref={ref}
@@ -142,10 +147,11 @@ function InlineTimePicker({ value, onChange }) {
   )
 }
 
-function InlineSelect({ value, options, onChange, style }) {
+function InlineSelect({ value, options, onChange, style, getLabel }) {
+  const label = getLabel ? getLabel(value) : value
   return (
     <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-      <span style={{ ...st.inlineValue, ...style }}>{value}</span>
+      <span style={{ ...st.inlineValue, ...style }}>{label}</span>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -159,7 +165,7 @@ function InlineSelect({ value, options, onChange, style }) {
           fontSize: 'inherit',
         }}
       >
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+        {options.map(o => <option key={o} value={o}>{getLabel ? getLabel(o) : o}</option>)}
       </select>
     </span>
   )
@@ -167,6 +173,7 @@ function InlineSelect({ value, options, onChange, style }) {
 
 function MatchRow({ match, isFirst, isConflict, onUpdate }) {
   const [hovered, setHovered] = useState(false)
+  const { t } = useLang()
   const baseBg = isConflict ? `${colors.errorContainer}55` : 'transparent'
   return (
     <tr
@@ -183,6 +190,7 @@ function MatchRow({ match, isFirst, isConflict, onUpdate }) {
           options={ALL_STATUSES}
           onChange={v => onUpdate({ status: v })}
           style={{ ...STATUS_STYLES[match.status], ...st.badge }}
+          getLabel={v => t('ms_' + v.toLowerCase())}
         />
       </td>
       <td style={st.td}><InlineDatePicker value={match.date} onChange={v => onUpdate({ date: v })} /></td>
@@ -229,6 +237,7 @@ function ActionBtn({ icon, title, color }) {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t, lang } = useLang()
   const [matches, setMatches] = useState(MATCHES)
   const [week, setWeek] = useState(12)
   const [activeStatuses, setActiveStatuses] = useState(new Set())
@@ -267,36 +276,34 @@ export default function Dashboard() {
       {/* Header */}
       <section style={st.header}>
         <div>
-          <h1 style={st.title}>Match Schedule</h1>
-          <p style={st.subtitle}>Executive League Management Console</p>
+          <h1 style={st.title}>{t('db_title')}</h1>
+          <p style={st.subtitle}>{t('db_subtitle')}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={st.weekNav}>
             <button style={st.weekBtn} onClick={() => setWeek(w => Math.max(1, w - 1))}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>chevron_left</span>
             </button>
-            <span style={st.weekLabel}>Week {week}</span>
+            <span style={st.weekLabel}>{t('db_week')} {week}</span>
             <button style={st.weekBtn} onClick={() => setWeek(w => w + 1)}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>chevron_right</span>
             </button>
           </div>
-          <button style={st.addBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1.25rem' }}>add_circle</span>
-            + Add Match
-          </button>
+          <ExportCSVButton />
+          <AddButton label={t('db_add_match')} />
         </div>
       </section>
 
       {/* Stat Cards */}
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <StatCard label="TOTAL MATCHES"  count="124" accentColor={colors.tertiary} />
-        <StatCard label="PENDING SCORES" count="08"  accentColor="#eab308" valueColor="#eab308" />
+        <StatCard label={t('db_total_matches')}  count="124" accentColor={colors.tertiary} />
+        <StatCard label={t('db_pending_scores')} count="08"  accentColor="#eab308" valueColor="#eab308" />
       </div>
 
       {/* Filters */}
       <div style={st.filterBar}>
         <div style={st.filterGroup}>
-          <span style={st.filterLabel}>Status</span>
+          <span style={st.filterLabel}>{t('db_f_status')}</span>
           <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
             {ALL_STATUSES.map(s => {
               const active = activeStatuses.has(s)
@@ -312,7 +319,7 @@ export default function Dashboard() {
                     borderColor: active ? colors_.backgroundColor : `${colors.outlineVariant}55`,
                   }}
                 >
-                  {s}
+                  {t('ms_' + s.toLowerCase())}
                 </button>
               )
             })}
@@ -322,21 +329,21 @@ export default function Dashboard() {
         <div style={st.filterDivider} />
 
         <div style={st.filterGroup}>
-          <span style={st.filterLabel}>Tournament</span>
+          <span style={st.filterLabel}>{t('db_f_tournament')}</span>
           <select
             value={tournamentFilter}
             onChange={e => setTournamentFilter(e.target.value)}
             style={st.select}
           >
-            <option value="">All tournaments</option>
-            {tournaments.map(t => <option key={t} value={t}>{t}</option>)}
+            <option value="">{t('db_all_tournaments')}</option>
+            {tournaments.map(tn => <option key={tn} value={tn}>{tn}</option>)}
           </select>
         </div>
 
         <div style={st.filterDivider} />
 
         <div style={st.filterGroup}>
-          <span style={st.filterLabel}>Conflicts</span>
+          <span style={st.filterLabel}>{t('db_f_conflicts')}</span>
           <button
             onClick={() => hasConflicts ? setShowConflictsOnly(v => !v) : null}
             style={{
@@ -349,13 +356,15 @@ export default function Dashboard() {
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
               {hasConflicts ? 'cancel' : 'check_circle'}
             </span>
-            {hasConflicts ? `${conflicts.length} conflict${conflicts.length > 1 ? 's' : ''}` : 'None'}
+            {hasConflicts
+              ? `${conflicts.length} ${conflicts.length > 1 ? t('db_conflict_p') : t('db_conflict_s')}`
+              : t('db_no_conflicts')}
           </button>
           {hasConflicts && (
             <button
               style={{ ...st.conflictInfoBtn }}
               onClick={() => setConflictPanelOpen(v => !v)}
-              title="Show conflict details"
+              title={t('db_conf_title')}
             >
               <span className="material-symbols-outlined" style={{ fontSize: '0.9rem' }}>info</span>
             </button>
@@ -368,7 +377,7 @@ export default function Dashboard() {
             onClick={() => { setActiveStatuses(new Set()); setTournamentFilter(''); setShowConflictsOnly(false) }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>close</span>
-            Clear
+            {t('db_clear')}
           </button>
         )}
       </div>
@@ -379,7 +388,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
             <span style={{ ...st.filterLabel, color: colors.error }}>
               <span className="material-symbols-outlined" style={{ fontSize: '0.875rem', verticalAlign: 'middle', marginRight: '0.375rem' }}>warning</span>
-              Scheduling Conflicts
+              {t('db_conf_title')}
             </span>
             <button style={{ ...st.conflictInfoBtn }} onClick={() => setConflictPanelOpen(false)}>
               <span className="material-symbols-outlined" style={{ fontSize: '0.9rem' }}>close</span>
@@ -392,7 +401,7 @@ export default function Dashboard() {
                 <span className="material-symbols-outlined" style={{ fontSize: '0.875rem', color: colors.error, flexShrink: 0 }}>error</span>
                 <div>
                   <span style={st.conflictReason}>{c.reason}</span>
-                  <span style={st.conflictDetail}> — {a.home} vs {a.away} ({formatDate(a.date)} {a.time}) &amp; {b.home} vs {b.away} ({formatDate(b.date)} {b.time})</span>
+                  <span style={st.conflictDetail}> — {a.home} vs {a.away} ({formatDate(a.date, lang)} {a.time}) &amp; {b.home} vs {b.away} ({formatDate(b.date, lang)} {b.time})</span>
                 </div>
               </div>
             )
@@ -406,8 +415,13 @@ export default function Dashboard() {
           <table style={st.table}>
             <thead>
               <tr style={{ backgroundColor: colors.surfaceContainerHigh }}>
-                {['Tournament', 'Status', 'Date', 'Time', 'Stadium', 'Home Team', 'Group', 'VS', 'Group', 'Away Team', 'Score 1', 'Score 2', 'Referee', ''].map((h, i) => (
-                  <th key={i} style={{ ...st.th, textAlign: h === 'Home Team' ? 'right' : h === 'VS' ? 'center' : 'left' }}>{h}</th>
+                {[
+                  t('db_col_tournament'), t('db_col_status'), t('db_col_date'), t('db_col_time'),
+                  t('db_col_stadium'), t('db_col_home'), t('db_col_group'), 'VS',
+                  t('db_col_group'), t('db_col_away'), t('db_col_score1'), t('db_col_score2'),
+                  t('db_col_referee'), '',
+                ].map((h, i) => (
+                  <th key={i} style={{ ...st.th, textAlign: h === t('db_col_home') ? 'right' : h === 'VS' ? 'center' : 'left' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -416,7 +430,7 @@ export default function Dashboard() {
                 ? (
                   <tr>
                     <td colSpan={13} style={{ ...st.td, textAlign: 'center', padding: '2rem', color: colors.onSurfaceVariant }}>
-                      No matches match the current filters.
+                      {t('db_no_matches')}
                     </td>
                   </tr>
                 )
@@ -430,16 +444,7 @@ export default function Dashboard() {
 
         {/* Table Footer */}
         <div style={st.tableFooter}>
-          <span>Showing {filtered.length} of {matches.length} matches this week</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button style={st.footerLink}>Export to CSV</button>
-            <button style={st.footerLink}>Print Sheet</button>
-            <div style={{ display: 'flex', gap: '0.375rem' }}>
-              {[1, 2, 3].map(n => (
-                <button key={n} style={{ ...st.pageBtn, ...(n === 1 ? st.pageBtnActive : {}) }}>{n}</button>
-              ))}
-            </div>
-          </div>
+          <span>{t('db_showing')} {filtered.length} {t('db_of')} {matches.length} {t('db_matches_week')}</span>
         </div>
       </div>
 
@@ -510,20 +515,6 @@ const st = {
     color: colors.onSurface,
     minWidth: '6rem',
     textAlign: 'center',
-  },
-  addBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.625rem 1rem',
-    backgroundColor: colors.primary,
-    color: colors.onPrimary,
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: fonts.label,
   },
 
   // Filters
@@ -755,36 +746,5 @@ const st = {
     letterSpacing: '0.08em',
     color: colors.onSurfaceVariant,
     fontFamily: fonts.label,
-  },
-  footerLink: {
-    background: 'none',
-    border: 'none',
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: colors.onSurfaceVariant,
-    cursor: 'pointer',
-    fontFamily: fonts.label,
-    padding: 0,
-  },
-  pageBtn: {
-    width: '1.5rem',
-    height: '1.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: `1px solid ${colors.outlineVariant}33`,
-    backgroundColor: colors.surfaceContainerLowest,
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-    color: colors.onSurfaceVariant,
-    fontFamily: fonts.body,
-  },
-  pageBtnActive: {
-    backgroundColor: colors.primary,
-    color: colors.onPrimary,
-    border: `1px solid ${colors.primary}`,
   },
 }

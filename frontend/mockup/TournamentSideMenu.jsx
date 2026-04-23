@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 const MOCK_TOURNAMENTS = [
   { id: 1, name: 'Tournament 1', icon: 'trophy', phases: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'] },
@@ -10,6 +11,7 @@ const MOCK_TOURNAMENTS = [
 const PHASE_ICONS = ['looks_one', 'looks_two', 'looks_3', 'looks_4', 'looks_5', 'looks_6']
 
 export default function TournamentSideMenu() {
+  const { t } = useLang()
   const navigate  = useNavigate()
   const location  = useLocation()
 
@@ -37,27 +39,27 @@ export default function TournamentSideMenu() {
     <aside style={st.aside}>
 
       <div style={st.heading}>
-        <p style={st.title}>Tournaments</p>
-        <p style={st.subtitle}>League Management</p>
+        <p style={st.title}>{t('tm_title')}</p>
+        <p style={st.subtitle}>{t('tm_subtitle')}</p>
       </div>
 
       <button style={st.newBtn}>
         <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add</span>
-        New Tournament
+        {t('tm_new')}
       </button>
 
       <nav style={st.nav}>
-        {MOCK_TOURNAMENTS.map(t => {
-          const isActive   = activeId === t.id
-          const isExpanded = expanded.has(t.id)
+        {MOCK_TOURNAMENTS.map(tour => {
+          const isActive   = activeId === tour.id
+          const isExpanded = expanded.has(tour.id)
           return (
-            <div key={t.id} style={{ marginBottom: isExpanded ? '0.25rem' : 0 }}>
+            <div key={tour.id} style={{ marginBottom: isExpanded ? '0.25rem' : 0 }}>
               <button
                 style={{ ...st.tournamentRow, ...(isActive ? st.tournamentRowActive : {}) }}
-                onClick={() => handleClick(t.id)}
+                onClick={() => handleClick(tour.id)}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>{t.icon}</span>
-                <span style={{ flex: 1, textAlign: 'left' }}>{t.name}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>{tour.icon}</span>
+                <span style={{ flex: 1, textAlign: 'left' }}>{tour.name}</span>
                 <span className="material-symbols-outlined" style={{ fontSize: '1rem', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
                   expand_more
                 </span>
@@ -65,14 +67,14 @@ export default function TournamentSideMenu() {
 
               {isExpanded && (
                 <div style={st.phaseList}>
-                  {t.phases.map((phase, i) => (
+                  {tour.phases.map((phase, i) => (
                     <button
                       key={phase}
-                      style={{ ...st.phaseLink, ...(activeId === t.id && activePhase === i + 1 ? st.phaseLinkActive : {}) }}
-                      onClick={() => navigate(`/tournaments/${t.id}/phases/${i + 1}`)}
+                      style={{ ...st.phaseLink, ...(activeId === tour.id && activePhase === i + 1 ? st.phaseLinkActive : {}) }}
+                      onClick={() => navigate(`/tournaments/${tour.id}/phases/${i + 1}`)}
                     >
                       <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>{PHASE_ICONS[i] ?? 'circle'}</span>
-                      {phase}
+                      {t('phase_label')} {i + 1}
                     </button>
                   ))}
                 </div>

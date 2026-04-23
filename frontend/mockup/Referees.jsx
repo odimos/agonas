@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
+import { useLang } from './LangContext'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import RefereeModalContent from './RefereeModalContent'
@@ -35,12 +36,6 @@ const cols = {
   status: { flex: '0 0 150px', padding: '0.875rem 1rem' },
 }
 
-const COLUMNS = [
-  { header: 'ΟΝΟΜΑ',      style: cols.name   },
-  { header: 'ΤΗΛΕΦΩΝΟ',  style: cols.phone  },
-  { header: 'EMAIL',      style: cols.email  },
-  { header: 'ΚΑΤΑΣΤΑΣΗ', style: cols.status },
-]
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
@@ -50,9 +45,10 @@ const STATUS_STYLES = {
 }
 
 function StatusBadge({ status }) {
+  const { t } = useLang()
   return (
     <span style={{ ...st.badge, ...(STATUS_STYLES[status] ?? STATUS_STYLES['ΑΝΕΝΕΡΓΟΣ']) }}>
-      {status}
+      {t(status)}
     </span>
   )
 }
@@ -95,9 +91,17 @@ function RefereeRow({ referee, isFirst, onClick }) {
 // ─── Referees Page ────────────────────────────────────────────────────────────
 
 export default function Referees() {
+  const { t } = useLang()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
+
+  const COLUMNS = [
+    { header: t('referees_col_name'),   style: cols.name   },
+    { header: t('referees_col_phone'),  style: cols.phone  },
+    { header: t('referees_col_email'),  style: cols.email  },
+    { header: t('referees_col_status'), style: cols.status },
+  ]
 
   const filtered = MOCK_REFEREES.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
@@ -105,10 +109,10 @@ export default function Referees() {
 
   return (
     <div style={s.entitiesPage}>
-      <PageHeader title="Διαιτητές" addName="Διαιτητή" onAdd={() => setCreating(true)} />
+      <PageHeader title={t('referees_title')} addLabel={t('add_referee')} onAdd={() => setCreating(true)} />
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <StatCard label="ΕΝΕΡΓΟΙ ΔΙΑΙΤΗΤΕΣ" count={42} />
-        <StatCard label="ΑΙΤΗΜΑΤΑ ΕΓΓΡΑΦΗΣ" count="03" accentColor="#eab308" valueColor="#eab308" />
+        <StatCard label={t('referees_active')} count={42} />
+        <StatCard label={t('referees_requests')} count="03" accentColor="#eab308" valueColor="#eab308" />
       </div>
       <DataTable
         columns={COLUMNS}

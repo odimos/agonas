@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
+import { useLang } from './LangContext'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import StadiumModalContent from './StadiumModalContent'
@@ -43,11 +44,6 @@ const cols = {
   cost:    { flex: 1,           padding: '0.875rem 2rem' },
 }
 
-const COLUMNS = [
-  { header: 'ΟΝΟΜΑ',       style: cols.name    },
-  { header: 'ΔΙΕΥΘΥΝΣΗ',  style: cols.address },
-  { header: 'ΚΟΣΤΟΣ/ΩΡΑ', style: cols.cost    },
-]
 
 // ─── Stadium Row ──────────────────────────────────────────────────────────────
 
@@ -86,9 +82,16 @@ function StadiumRow({ stadium, isFirst, onClick }) {
 // ─── Stadiums ─────────────────────────────────────────────────────────────────
 
 export default function Stadiums() {
+  const { t } = useLang()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
   const [creating, setCreating] = useState(false)
+
+  const COLUMNS = [
+    { header: t('stadiums_col_name'),    style: cols.name    },
+    { header: t('stadiums_col_address'), style: cols.address },
+    { header: t('stadiums_col_cost'),    style: cols.cost    },
+  ]
 
   const filtered = MOCK_STADIUMS.filter(stadium =>
     stadium.name.toLowerCase().includes(search.toLowerCase())
@@ -96,9 +99,9 @@ export default function Stadiums() {
 
   return (
     <div style={s.entitiesPage}>
-      <PageHeader title="Γήπεδα" addName="Γηπέδου" onAdd={() => setCreating(true)} />
+      <PageHeader title={t('stadiums_title')} addLabel={t('add_stadium')} onAdd={() => setCreating(true)} />
       <div style={{ alignSelf: 'flex-start' }}>
-        <StatCard label="ΕΝΕΡΓΑ ΓΗΠΕΔΑ" count={12} />
+        <StatCard label={t('stadiums_active')} count={12} />
       </div>
       <DataTable
         columns={COLUMNS}

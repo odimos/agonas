@@ -1,4 +1,5 @@
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 import PlayerModalContent  from './PlayerModalContent'
 import RefereeModalContent from './RefereeModalContent'
 import StadiumModalContent from './StadiumModalContent'
@@ -28,7 +29,8 @@ function Content({ type }) {
 }
 
 export default function CreateModal({ type, onClose }) {
-  const { title } = META[type] ?? {}
+  const { t } = useLang()
+  const titleKey = `create_${type}`
 
   return (
     <div style={st.overlay} onClick={onClose}>
@@ -36,7 +38,7 @@ export default function CreateModal({ type, onClose }) {
 
         {/* Header */}
         <div style={st.header}>
-          <h2 style={st.title}>{title}</h2>
+          <h2 style={st.title}>{t(titleKey)}</h2>
           <button style={st.closeBtn} onClick={onClose}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>close</span>
           </button>
@@ -51,10 +53,10 @@ export default function CreateModal({ type, onClose }) {
         <div style={st.footer}>
           <div />
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <button style={st.cancelBtn} onClick={onClose}>Ακύρωση</button>
+            <button style={st.cancelBtn} onClick={onClose}>{t('create_cancel')}</button>
             <button style={st.createBtn}>
               <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add</span>
-              Δημιουργία
+              {t('create_submit')}
             </button>
           </div>
         </div>

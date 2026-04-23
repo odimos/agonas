@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>League Utility - Team</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-tertiary-container": "#00422b",
+          "on-primary-fixed-variant": "#344c3e",
+          "tertiary": "#006c49",
+          "surface-container": "#edeeed",
+          "on-tertiary-fixed": "#002113",
+          "secondary-container": "#adeec4",
+          "on-error": "#ffffff",
+          "outline": "#727973",
+          "primary": "#4c6455",
+          "inverse-on-surface": "#f0f1f0",
+          "surface-tint": "#4c6455",
+          "surface-dim": "#d9dad9",
+          "secondary-fixed-dim": "#95d4ac",
+          "error": "#ba1a1a",
+          "tertiary-container": "#10b981",
+          "on-secondary": "#ffffff",
+          "on-secondary-container": "#316e4c",
+          "on-background": "#191c1c",
+          "primary-fixed": "#cee9d6",
+          "on-tertiary": "#ffffff",
+          "on-primary-fixed": "#082014",
+          "secondary-fixed": "#b0f1c7",
+          "error-container": "#ffdad6",
+          "surface-bright": "#f9f9f8",
+          "on-error-container": "#93000a",
+          "surface-container-lowest": "#ffffff",
+          "on-primary-container": "#273e31",
+          "surface-variant": "#e1e3e2",
+          "on-surface-variant": "#424844",
+          "tertiary-fixed": "#6ffbbe",
+          "surface": "#f9f9f8",
+          "secondary": "#2c6a48",
+          "inverse-surface": "#2e3131",
+          "on-surface": "#191c1c",
+          "outline-variant": "#c2c8c2",
+          "primary-fixed-dim": "#b2cdbb",
+          "on-primary": "#ffffff",
+          "inverse-primary": "#b2cdbb",
+          "surface-container-high": "#e7e8e7",
+          "on-secondary-fixed-variant": "#0f5132",
+          "surface-container-low": "#f3f4f3",
+          "surface-container-highest": "#e1e3e2",
+          "tertiary-fixed-dim": "#4edea3",
+          "on-secondary-fixed": "#002111",
+          "background": "#f9f9f8",
+          "primary-container": "#8fa998"
+        },
+        borderRadius: {
+          DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"
+        },
+        fontFamily: {
+          headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .ghost-border-b   { border-bottom: 1px solid rgba(194,200,194,0.2); }
+  .ghost-border-all { border: 1px solid rgba(194,200,194,0.2); }
+  body { min-height: max(884px, 100dvh); }
+
+  .form-badge {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .form-W { background: #006c49; }
+  .form-D { background: #727973; }
+  .form-L { background: #ba1a1a; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 h-14 bg-[#F9F9F8]/80 backdrop-blur-md border-b border-[#C2C8C2]/20">
+  <div class="w-8"></div>
+  <h1 class="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-[#4C6455]">My Team</h1>
+  <button class="text-[#4C6455] active:opacity-70 transition-opacity">
+    <span class="material-symbols-outlined">more_vert</span>
+  </button>
+</header>
+
+<main class="pt-14 pb-20">
+
+  <!-- Hero -->
+  <div class="relative">
+    <div class="h-28 bg-gradient-to-br from-primary via-secondary to-tertiary"></div>
+    <div class="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2">
+      <!-- Team Logo -->
+      <div class="w-24 h-24 rounded-2xl border-4 border-surface shadow-lg bg-[#1a3329] flex flex-col items-center justify-center gap-0.5">
+        <span class="material-symbols-outlined text-[2rem] text-secondary-container" style="font-variation-settings:'FILL' 1;">shield</span>
+        <span class="text-[0.55rem] font-black text-secondary-container tracking-widest uppercase">North</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team identity -->
+  <section class="mt-16 px-6 flex flex-col items-center text-center gap-1">
+    <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">TEAM NORTH</h2>
+    <p class="text-[0.75rem] text-on-surface-variant">Northern District · Est. 2008</p>
+    <!-- Form streak -->
+    <div class="flex items-center gap-1.5 mt-2">
+      <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant mr-1">Form</span>
+      <div class="form-badge form-L">L</div>
+      <div class="form-badge form-W">W</div>
+      <div class="form-badge form-W">W</div>
+      <div class="form-badge form-D">D</div>
+      <div class="form-badge form-W">W</div>
+    </div>
+  </section>
+
+  <!-- Season stats -->
+  <section class="px-4 mt-5">
+    <div class="grid grid-cols-3 gap-2">
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl p-3 flex flex-col items-center gap-0.5">
+        <span class="text-3xl font-black text-tertiary">12</span>
+        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">Won</span>
+      </div>
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl p-3 flex flex-col items-center gap-0.5">
+        <span class="text-3xl font-black text-on-surface-variant">4</span>
+        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">Drawn</span>
+      </div>
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl p-3 flex flex-col items-center gap-0.5">
+        <span class="text-3xl font-black text-error">2</span>
+        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">Lost</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Players -->
+  <section class="mt-5">
+    <div class="flex items-center justify-between px-4 mb-3">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings:'FILL' 1;">person</span>
+        <h2 class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Squad</h2>
+      </div>
+      <span class="text-[0.625rem] font-medium text-on-surface-variant">18 Players</span>
+    </div>
+    <!-- Horizontal scroll row -->
+    <div class="flex gap-3 overflow-x-auto px-4 pb-2 no-scrollbar" style="scrollbar-width:none">
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full overflow-hidden ghost-border-all">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBkCHnAwmADB4NVNQl029WFv6xEjDW2ujhKW1D5szW1EdUo9ag9ORUcUCLaUe9DMvbJiY8BPok1c2xCeHmNuaV5_wjrimUUTomUrObt4xbRwxFj2DFuw1lSNEZt0_G-70h4qXyNPS2zW_PnJEuAtK7mcSeHqltTrFcmOBbajPqTHtgMb5243h_kGpJAkBl_F5A7vyL2RhSR7HN4UcOQwwVi44NnCMAdi_qEEvwuYu2_sxcXoxptbfBmZPuC-HxYcsMX2BCqiHLVKw" class="w-full h-full object-cover" alt="Jordan Vance"/>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">J. Vance</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">FWD</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">M. Reyes</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">MID</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">T. Okafor</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">DEF</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">L. Petrov</span>
+        <span class="text-[0.55rem] text-on-surface-variant font-semibold uppercase">GK</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">S. Malik</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">MID</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">D. Santos</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">DEF</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">A. Flores</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">FWD</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 shrink-0 w-16">
+        <div class="w-14 h-14 rounded-full bg-surface-container ghost-border-all flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">person</span>
+        </div>
+        <span class="text-[0.6rem] font-bold text-on-surface text-center leading-tight">K. Yamada</span>
+        <span class="text-[0.55rem] text-tertiary font-semibold uppercase">DEF</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Tournaments -->
+  <section class="px-4 mt-5">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings:'FILL' 1;">emoji_events</span>
+      <h2 class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Tournaments</h2>
+    </div>
+    <div class="flex flex-col gap-3">
+
+      <!-- Northern League - active, leading -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 ghost-border-b bg-surface-container-low/60">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings:'FILL' 1;">social_leaderboard</span>
+            <span class="text-sm font-bold text-on-surface">Northern League</span>
+          </div>
+          <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">2025/26</span>
+        </div>
+        <div class="px-4 py-3 flex items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Phase</span>
+            <span class="text-sm font-bold text-on-surface">Group Stage</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Position</span>
+            <span class="text-xl font-black text-tertiary">2nd</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Points</span>
+            <span class="text-xl font-black text-on-surface">34</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Played</span>
+            <span class="text-xl font-black text-on-surface">18</span>
+          </div>
+        </div>
+        <!-- Points bar (34/51 max) -->
+        <div class="px-4 pb-3">
+          <div class="h-1.5 bg-surface-container rounded-full overflow-hidden">
+            <div class="h-full bg-tertiary rounded-full" style="width:67%"></div>
+          </div>
+          <div class="flex justify-between mt-1">
+            <span class="text-[0.55rem] text-on-surface-variant">34 pts</span>
+            <span class="text-[0.55rem] text-on-surface-variant">51 pts max</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regional Cup - active, quarter final -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 ghost-border-b bg-surface-container-low/60">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings:'FILL' 1;">workspace_premium</span>
+            <span class="text-sm font-bold text-on-surface">Regional Cup</span>
+          </div>
+          <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">2026</span>
+        </div>
+        <div class="px-4 py-3 flex items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Phase</span>
+            <span class="text-sm font-bold text-on-surface">Quarter Final</span>
+          </div>
+          <div class="flex flex-col items-end gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Next Match</span>
+            <span class="text-sm font-semibold text-on-surface">vs City FC · May 3</span>
+          </div>
+        </div>
+        <!-- Bracket progress -->
+        <div class="px-4 pb-3 flex items-center gap-1.5">
+          <div class="flex-1 h-1.5 rounded-full bg-tertiary"></div>
+          <div class="flex-1 h-1.5 rounded-full bg-tertiary"></div>
+          <div class="flex-1 h-1.5 rounded-full bg-secondary-container"></div>
+          <div class="flex-1 h-1.5 rounded-full bg-surface-container"></div>
+          <span class="text-[0.55rem] text-on-surface-variant ml-1">QF → SF → F</span>
+        </div>
+      </div>
+
+      <!-- National Championship - eliminated -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl overflow-hidden opacity-60">
+        <div class="flex items-center justify-between px-4 py-3 ghost-border-b bg-surface-container-low/60">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[1.1rem] text-on-surface-variant" style="font-variation-settings:'FILL' 1;">military_tech</span>
+            <span class="text-sm font-bold text-on-surface">National Championship</span>
+          </div>
+          <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">2026</span>
+        </div>
+        <div class="px-4 py-3 flex items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Eliminated at</span>
+            <span class="text-sm font-bold text-on-surface">Round of 16</span>
+          </div>
+          <span class="text-[0.625rem] font-bold text-error bg-error-container/50 px-2 py-1 rounded-full uppercase tracking-wide">Eliminated</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Match History -->
+  <section class="px-4 mt-5 pb-4">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-[1.1rem] text-on-surface-variant" style="font-variation-settings:'FILL' 1;">history</span>
+      <h2 class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Match History</h2>
+    </div>
+    <div class="flex flex-col gap-2">
+
+      <!-- Win -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl flex overflow-hidden border-l-4 border-l-tertiary">
+        <div class="flex-1 px-4 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-on-surface flex-1 truncate">Team North</span>
+            <span class="font-mono text-base font-black text-on-surface">2 – 0</span>
+            <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">Southern Stars</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[0.625rem] text-on-surface-variant">Away · Stars Ground</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.625rem] text-on-surface-variant">Apr 19</span>
+              <span class="text-[0.625rem] font-bold text-tertiary uppercase">Win</span>
+              <span class="text-[0.55rem] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Northern League</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Win -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl flex overflow-hidden border-l-4 border-l-tertiary">
+        <div class="flex-1 px-4 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-on-surface flex-1 truncate">Team North</span>
+            <span class="font-mono text-base font-black text-on-surface">3 – 1</span>
+            <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">Northern Hawks</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[0.625rem] text-on-surface-variant">Home · Stadium Nord</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.625rem] text-on-surface-variant">Apr 12</span>
+              <span class="text-[0.625rem] font-bold text-tertiary uppercase">Win</span>
+              <span class="text-[0.55rem] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Northern League</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Win (cup) -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl flex overflow-hidden border-l-4 border-l-tertiary">
+        <div class="flex-1 px-4 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-on-surface flex-1 truncate">Coastal Elite</span>
+            <span class="font-mono text-base font-black text-on-surface">0 – 1</span>
+            <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">Team North</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[0.625rem] text-on-surface-variant">Away · Coast Arena</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.625rem] text-on-surface-variant">Apr 8</span>
+              <span class="text-[0.625rem] font-bold text-tertiary uppercase">Win</span>
+              <span class="text-[0.55rem] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Regional Cup</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Draw -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl flex overflow-hidden border-l-4 border-l-outline">
+        <div class="flex-1 px-4 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-on-surface flex-1 truncate">Team North</span>
+            <span class="font-mono text-base font-black text-on-surface">2 – 2</span>
+            <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">Metro United</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[0.625rem] text-on-surface-variant">Home · Stadium Nord</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.625rem] text-on-surface-variant">Apr 5</span>
+              <span class="text-[0.625rem] font-bold text-on-surface-variant uppercase">Draw</span>
+              <span class="text-[0.55rem] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Northern League</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loss -->
+      <div class="bg-surface-container-lowest ghost-border-all rounded-xl flex overflow-hidden border-l-4 border-l-error">
+        <div class="flex-1 px-4 py-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-on-surface flex-1 truncate">Western Rovers</span>
+            <span class="font-mono text-base font-black text-on-surface">1 – 0</span>
+            <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">Team North</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-[0.625rem] text-on-surface-variant">Away · Rovers Park</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[0.625rem] text-on-surface-variant">Mar 28</span>
+              <span class="text-[0.625rem] font-bold text-error uppercase">Loss</span>
+              <span class="text-[0.55rem] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">Nat. Championship</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- BottomNavBar (teams active) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 bg-[#F9F9F8] dark:bg-zinc-950 pb-safe border-t border-[#C2C8C2]/20">
+  <a class="flex items-center justify-center text-[#424844] hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined">home</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="user.html">
+    <span class="material-symbols-outlined">person</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="calendar.html">
+    <span class="material-symbols-outlined">calendar_today</span>
+  </a>
+  <a class="flex items-center justify-center text-[#006C49] border-t-2 border-[#006C49] h-full active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">groups</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined">notifications</span>
+  </a>
+</nav>
+
+</body>
+</html>

@@ -1,36 +1,59 @@
+import { useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
+import { StatCard } from './Buttons'
 
 const MOCK_TOURNAMENTS = {
   '1': {
     id: 1, name: 'Tournament 1', status: 'ΕΝΕΡΓΟ',
-    progress: 60, totalTeams: 8, teamsNote: '+2 Since Phase 1',
+    progress: 60, totalTeams: 8, remainingTeams: 3,
     startDate: '12/10/2024', type: 'Knockout', visibility: 'Visible',
     description: 'Tournament 1 is currently in the late Phase 2 stage. System logs indicate all knockout brackets are synchronized with real-time server updates. Ensure all visibility settings are finalized before the weekend cutoff.',
   },
   '2': {
     id: 2, name: 'Tournament 2', status: 'ΑΝΕΝΕΡΓΟ',
-    progress: 25, totalTeams: 6, teamsNote: 'Registrations open',
+    progress: 25, totalTeams: 6, remainingTeams: 6,
     startDate: '15/01/2025', type: 'Round Robin', visibility: 'Hidden',
     description: 'Tournament 2 is in early configuration. Team registrations are open and bracket generation is pending. Confirm visibility settings before publishing.',
   },
 }
 
-function DataCell({ label, value, icon, last }) {
+function toInputDate(dmy) {
+  const [d, m, y] = dmy.split('/')
+  return `${y}-${m}-${d}`
+}
+
+function fromInputDate(ymd) {
+  const [y, m, d] = ymd.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function DataCell({ label, last, onClick, children }) {
   return (
-    <div style={{ ...st.dataCell, borderRight: last ? 'none' : `1px solid ${colors.outlineVariant}33` }}>
+    <div
+      style={{ ...st.dataCell, borderRight: last ? 'none' : `1px solid ${colors.outlineVariant}33`, cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
+      onClick={onClick}
+    >
       <span style={st.dataCellLabel}>{label}</span>
-      <div style={st.dataCellRow}>
-        <span style={st.dataCellValue}>{value}</span>
-        <span className="material-symbols-outlined" style={st.dataCellIcon}>{icon}</span>
-      </div>
+      <div style={st.dataCellRow}>{children}</div>
     </div>
   )
 }
 
 export default function TournamentOverview() {
   const { id } = useParams()
-  const t = MOCK_TOURNAMENTS[id] ?? MOCK_TOURNAMENTS['1']
+  const { t } = useLang()
+  const tour = MOCK_TOURNAMENTS[id] ?? MOCK_TOURNAMENTS['1']
+
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+  const dateInputRef = useRef(null)
+
+  function handleCancel() {
+    setDraft({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+    setEditing(false)
+  }
 
   return (
     <div style={st.page}>
@@ -39,19 +62,33 @@ export default function TournamentOverview() {
       <div style={st.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.375rem' }}>
-            <h1 style={st.title}>{t.name.toUpperCase()}</h1>
-            <div style={st.statusBadge}>
-              {t.status}
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>arrow_drop_down</span>
-            </div>
+            <h1 style={st.title}>{tour.name.toUpperCase()}</h1>
+            {editing ? (
+              <select
+                value={draft.status}
+                onChange={e => setDraft(d => ({ ...d, status: e.target.value }))}
+                style={{ ...st.statusSelect, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusSelectInactive : {}) }}
+              >
+                <option value="ΕΝΕΡΓΟ">{t('ΕΝΕΡΓΟ')}</option>
+                <option value="ΑΝΕΝΕΡΓΟ">{t('ΑΝΕΝΕΡΓΟ')}</option>
+              </select>
+            ) : (
+              <div style={{ ...st.statusBadge, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusBadgeInactive : {}) }}>
+                {t(draft.status)}
+              </div>
+            )}
           </div>
-          <p style={st.subtitle}>Configuration &amp; Management Dashboard</p>
+          <p style={st.subtitle}>{t('to_subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button style={st.primaryBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>save</span>
-            Save Changes
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {editing ? (
+            <>
+              <button style={st.cancelBtn} onClick={handleCancel}>{t('modal_cancel')}</button>
+              <button style={st.saveBtn} onClick={() => setEditing(false)}>{t('modal_save')}</button>
+            </>
+          ) : (
+            <button style={st.editBtn} onClick={() => setEditing(true)}>{t('modal_edit')}</button>
+          )}
         </div>
       </div>
 
@@ -62,34 +99,69 @@ export default function TournamentOverview() {
         <div style={st.progressCard}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <span style={st.cardLabel}>Tournament Progress</span>
-              <div style={st.progressNum}>{t.progress}%</div>
+              <span style={st.cardLabel}>{t('to_progress')}</span>
+              <div style={st.progressNum}>{tour.progress}%</div>
             </div>
             <button style={st.graphBtn}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>auto_graph</span>
-              Generate Graph
+              {t('to_gen_graph')}
             </button>
           </div>
           <div style={st.progressBarTrack}>
-            <div style={{ ...st.progressBarFill, width: `${t.progress}%` }} />
+            <div style={{ ...st.progressBarFill, width: `${tour.progress}%` }} />
           </div>
         </div>
 
-        {/* Teams stat card */}
-        <div style={st.teamsCard}>
-          <span style={st.cardLabel}>Total Teams</span>
-          <div style={st.teamsNum}>{t.totalTeams}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '0.875rem', color: colors.tertiary }}>arrow_upward</span>
-            <span style={st.teamsNote}>{t.teamsNote}</span>
-          </div>
-        </div>
+        {/* Teams stat cards */}
+        <StatCard label={t('to_total_teams')}     count={tour.totalTeams}     />
+        <StatCard label={t('to_remaining_teams')} count={tour.remainingTeams} accentColor={colors.primary} />
 
         {/* Data grid */}
         <div style={st.dataGrid}>
-          <DataCell label="Start Date"        value={t.startDate} icon="calendar_today" />
-          <DataCell label="Tournament Type"   value={t.type}      icon="schema"         />
-          <DataCell label="Visibility"        value={t.visibility} icon="visibility"    last />
+
+          {/* Start Date */}
+          <DataCell label={t('to_start_date')} onClick={editing ? () => dateInputRef.current?.showPicker?.() : undefined}>
+            <span style={st.dataCellValue}>{draft.startDate}</span>
+            {editing && (
+              <>
+                <span className="material-symbols-outlined" style={st.dataCellIcon}>calendar_today</span>
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={toInputDate(draft.startDate)}
+                  onChange={e => setDraft(d => ({ ...d, startDate: fromInputDate(e.target.value) }))}
+                  style={st.hiddenDateInput}
+                  onClick={e => e.stopPropagation()}
+                />
+              </>
+            )}
+          </DataCell>
+
+          {/* Type — always read-only */}
+          <DataCell label={t('to_type')}>
+            <span style={st.dataCellValue}>{tour.type}</span>
+            <span className="material-symbols-outlined" style={st.dataCellIcon}>schema</span>
+          </DataCell>
+
+          {/* Visibility */}
+          <DataCell label={t('to_visibility')} last>
+            {editing ? (
+              <select
+                value={draft.visibility}
+                onChange={e => setDraft(d => ({ ...d, visibility: e.target.value }))}
+                style={st.fieldSelect}
+              >
+                <option value="Visible">Visible</option>
+                <option value="Hidden">Hidden</option>
+              </select>
+            ) : (
+              <>
+                <span style={st.dataCellValue}>{draft.visibility}</span>
+                <span className="material-symbols-outlined" style={st.dataCellIcon}>visibility</span>
+              </>
+            )}
+          </DataCell>
+
         </div>
 
         {/* Decorative card */}
@@ -100,16 +172,16 @@ export default function TournamentOverview() {
             style={st.decoImg}
           />
           <div style={st.decoContent}>
-            <h3 style={st.decoTitle}>League Environment</h3>
-            <p style={st.decoText}>{t.description}</p>
+            <h3 style={st.decoTitle}>{t('to_league_env')}</h3>
+            <p style={st.decoText}>{tour.description}</p>
             <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem' }}>
               <div style={st.indicator}>
                 <span style={{ ...st.dot, backgroundColor: colors.tertiary }} />
-                Real-time Sync
+                {t('to_realtime')}
               </div>
               <div style={st.indicator}>
                 <span style={{ ...st.dot, backgroundColor: colors.outlineVariant }} />
-                Auto-Archive Enabled
+                {t('to_auto_archive')}
               </div>
             </div>
           </div>
@@ -120,12 +192,12 @@ export default function TournamentOverview() {
       {/* Danger Zone */}
       <div style={st.dangerZone}>
         <div>
-          <p style={st.dangerTitle}>Danger Zone</p>
-          <p style={st.dangerText}>Deleting a tournament is irreversible. All phases, team data, and generated reports will be permanently purged from the system.</p>
+          <p style={st.dangerTitle}>{t('to_danger_zone')}</p>
+          <p style={st.dangerText}>{t('to_danger_text')}</p>
         </div>
         <button style={st.dangerBtn}>
           <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete_forever</span>
-          Delete Tournament
+          {t('to_delete')}
         </button>
       </div>
 
@@ -168,43 +240,78 @@ const st = {
   statusBadge: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.125rem',
     backgroundColor: colors.secondaryContainer,
     color: colors.onSecondaryContainer,
-    padding: '0.1875rem 0.625rem 0.1875rem 0.75rem',
+    padding: '0.1875rem 0.75rem',
     borderRadius: radius.DEFAULT,
     fontSize: '0.625rem',
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
+    fontFamily: fonts.label,
+  },
+  statusSelect: {
+    backgroundColor: colors.secondaryContainer,
+    color: colors.onSecondaryContainer,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    padding: '0.1875rem 0.5rem',
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    fontFamily: fonts.label,
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  statusBadgeInactive: {
+    backgroundColor: colors.surfaceContainerHigh,
+    color: colors.onSurfaceVariant,
+  },
+  statusSelectInactive: {
+    backgroundColor: colors.surfaceContainerHigh,
+    color: colors.onSurfaceVariant,
+  },
+
+  // Header action buttons (modal-style)
+  editBtn: {
+    padding: '0.5rem 2rem',
+    backgroundColor: colors.primary,
+    color: colors.onPrimary,
+    border: 'none',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem',
+    fontWeight: 700,
     cursor: 'pointer',
     fontFamily: fonts.label,
   },
-  secondaryBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: colors.surfaceContainerLowest,
+  cancelBtn: {
+    padding: '0.5rem 1.25rem',
+    backgroundColor: 'transparent',
+    color: colors.onSurfaceVariant,
     border: `1px solid ${colors.outlineVariant}`,
     borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem', fontWeight: 600,
-    color: colors.onSurface,
-    cursor: 'pointer', fontFamily: fonts.label,
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
   },
-  primaryBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
+  saveBtn: {
     padding: '0.5rem 1.5rem',
-    backgroundColor: colors.tertiary,
+    backgroundColor: colors.primary,
+    color: colors.onPrimary,
     border: 'none',
     borderRadius: radius.DEFAULT,
-    fontSize: '0.875rem', fontWeight: 600,
-    color: colors.onTertiary,
-    cursor: 'pointer', fontFamily: fonts.label,
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
   },
 
   // Bento
   bentoGrid: {
     display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
+    gridTemplateColumns: '3fr 1fr 1fr',
     gridTemplateRows: 'auto auto auto',
     gap: '1.5rem',
   },
@@ -216,7 +323,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    minHeight: '7rem',
+    minHeight: 0,
   },
   cardLabel: {
     display: 'block',
@@ -263,29 +370,6 @@ const st = {
     transition: 'width 0.8s ease',
   },
 
-  teamsCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderLeft: `4px solid ${colors.primary}`,
-    padding: '1.25rem 1.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  teamsNum: {
-    fontSize: '2rem',
-    fontWeight: 800,
-    letterSpacing: '-0.04em',
-    color: colors.onSurface,
-    lineHeight: 1,
-    fontFamily: fonts.headline,
-  },
-  teamsNote: {
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    color: colors.tertiary,
-    fontFamily: fonts.label,
-  },
-
   dataGrid: {
     gridColumn: '1 / -1',
     backgroundColor: colors.surfaceContainerLowest,
@@ -319,6 +403,26 @@ const st = {
   dataCellIcon: {
     fontSize: '1.25rem',
     color: colors.onSurfaceVariant,
+  },
+  hiddenDateInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: 0,
+    height: 0,
+    pointerEvents: 'none',
+  },
+  fieldSelect: {
+    fontSize: '1.125rem',
+    fontWeight: 500,
+    color: colors.onSurface,
+    fontFamily: fonts.body,
+    background: 'none',
+    border: 'none',
+    borderBottom: `1px solid ${colors.outlineVariant}`,
+    outline: 'none',
+    padding: '0.125rem 0',
+    cursor: 'pointer',
+    width: '100%',
   },
 
   decoCard: {

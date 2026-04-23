@@ -1,30 +1,32 @@
 import { NavLink } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
 
 const MENU_LINKS = [
-  { label: 'Ομάδες',    icon: 'groups',  to: '/entities/teams' },
-  { label: 'Παίκτες',  icon: 'person',  to: '/entities/players' },
-  { label: 'Διαιτητές', icon: 'sports',  to: '/entities/referees' },
-  { label: 'Γήπεδα',    icon: 'stadium',        to: '/entities/stadiums'  },
-  { label: 'Αιτήματα', icon: 'mark_email_read', to: '/entities/requests'  },
+  { key: 'sm_teams',    icon: 'groups',           to: '/entities/teams'    },
+  { key: 'sm_players',  icon: 'person',           to: '/entities/players'  },
+  { key: 'sm_referees', icon: 'sports',           to: '/entities/referees' },
+  { key: 'sm_stadiums', icon: 'stadium',          to: '/entities/stadiums' },
+  { key: 'sm_requests', icon: 'pending_actions',  to: '/entities/requests' },
 ]
 
 export default function SideMenu() {
+  const { t } = useLang()
   return (
     <aside style={styles.aside}>
       <div style={styles.heading}>
-        <p style={styles.title}>Entities</p>
-        <p style={styles.subtitle}>Contextual Management</p>
+        <p style={styles.title}>{t('sm_title')}</p>
+        <p style={styles.subtitle}>{t('sm_subtitle')}</p>
       </div>
       <nav style={styles.nav}>
-        {MENU_LINKS.map(({ label, icon, to }) => (
+        {MENU_LINKS.map(({ key, icon, to }) => (
           <NavLink
             key={to}
             to={to}
             style={({ isActive }) => isActive ? { ...styles.link, ...styles.linkActive } : styles.link}
           >
             <span className="material-symbols-outlined" style={styles.icon}>{icon}</span>
-            <span>{label}</span>
+            <span>{t(key)}</span>
           </NavLink>
         ))}
       </nav>

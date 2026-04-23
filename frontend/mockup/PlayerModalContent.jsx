@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { colors, fonts } from './styles'
 import ModalField from './ModalField'
+import { useLang } from './LangContext'
 
 const TEAMS = ['OPA FC', 'Emerald Giants', 'Sage United', 'Coastal Rangers']
 
@@ -18,6 +19,7 @@ function initForm(player) {
 }
 
 export default function PlayerModalContent({ player, editing }) {
+  const { t } = useLang()
   const [form, setForm] = useState(() => initForm(player))
 
   useEffect(() => {
@@ -31,19 +33,19 @@ export default function PlayerModalContent({ player, editing }) {
 
       {/* Name fields */}
       <div style={st.nameGrid}>
-        <ModalField label="ΟΝΟΜΑ"     value={form.firstName} editing={editing} onChange={set('firstName')} />
-        <ModalField label="ΕΠΙΘΕΤΟ"   value={form.lastName}  editing={editing} onChange={set('lastName')}  />
-        <ModalField label="ΨΕΥΔΩΝΥΜΟ" value={form.nickname}  editing={editing} onChange={set('nickname')} span2 />
+        <ModalField label={t('modal_first_name')} value={form.firstName} editing={editing} onChange={set('firstName')} />
+        <ModalField label={t('modal_last_name')}  value={form.lastName}  editing={editing} onChange={set('lastName')}  />
+        <ModalField label={t('modal_nickname')}   value={form.nickname}  editing={editing} onChange={set('nickname')} span2 />
       </div>
 
       {/* Contact + Team */}
       <div style={st.contactGrid}>
-        <ModalField label="ΤΗΛΕΦΩΝΟ" value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   />
-        <ModalField label="Email"     value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" />
+        <ModalField label={t('modal_phone')} value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   />
+        <ModalField label="Email"            value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" />
 
-        {/* ΟΜΑΔΑ — full-width select */}
+        {/* Team — full-width select */}
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={st.selectLabel}>ΟΜΑΔΑ</label>
+          <label style={st.selectLabel}>{t('modal_team_field')}</label>
           <div style={{ position: 'relative' }}>
             <select
               style={{ ...st.select, borderBottomColor: editing ? colors.primary : `${colors.outlineVariant}4d`, cursor: editing ? 'pointer' : 'default', pointerEvents: editing ? 'auto' : 'none' }}
@@ -60,7 +62,7 @@ export default function PlayerModalContent({ player, editing }) {
 
       {/* Comments */}
       <ModalField
-        label="ΣΧΟΛΙΑ"
+        label={t('modal_comments_label')}
         value={form.comments}
         editing={editing}
         onChange={set('comments')}

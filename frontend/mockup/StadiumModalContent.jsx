@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { colors, fonts, radius } from './styles'
 import ModalField from './ModalField'
+import { useLang } from './LangContext'
 
 function initForm(stadium) {
   return {
@@ -15,6 +16,7 @@ function initForm(stadium) {
 }
 
 export default function StadiumModalContent({ stadium, editing }) {
+  const { t } = useLang()
   const [form, setForm] = useState(() => initForm(stadium))
 
   useEffect(() => {
@@ -28,28 +30,28 @@ export default function StadiumModalContent({ stadium, editing }) {
 
       {/* Row 1 — Name + Phone */}
       <div style={st.grid2}>
-        <ModalField label="ΟΝΟΜΑ ΓΗΠΕΔΟΥ" value={form.name}  editing={editing} onChange={set('name')}  />
-        <ModalField label="ΤΗΛΕΦΩΝΟ"      value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel" />
+        <ModalField label={t('modal_stadium_name')} value={form.name}  editing={editing} onChange={set('name')}  />
+        <ModalField label={t('modal_phone')}        value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel" />
       </div>
 
       {/* Row 2 — Address full width */}
-      <ModalField label="ΔΙΕΥΘΥΝΣΗ" value={form.address} editing={editing} onChange={set('address')} icon="location_on" />
+      <ModalField label={t('modal_address')} value={form.address} editing={editing} onChange={set('address')} icon="location_on" />
 
       {/* Row 3 — Email + Cost */}
       <div style={st.grid2}>
-        <ModalField label="EMAIL"         value={form.email}       editing={editing} onChange={set('email')}       icon="mail" type="email" />
-        <ModalField label="ΚΟΣΤΟΣ/ΩΡΑ (€)" value={form.costPerHour} editing={editing} onChange={set('costPerHour')} type="number" />
+        <ModalField label="Email"               value={form.email}       editing={editing} onChange={set('email')}       icon="mail" type="email" />
+        <ModalField label={t('modal_cost_hour')} value={form.costPerHour} editing={editing} onChange={set('costPerHour')} type="number" />
       </div>
 
       {/* Row 4 — Location mapping */}
       <div>
-        <label style={st.mapLabel}>ΧΑΡΤΗΣ</label>
+        <label style={st.mapLabel}>{t('modal_map')}</label>
         <div style={st.mapPreview}>
           <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.tertiary }}>location_on</span>
           {form.mapUrl ? (
             <span style={st.mapText}>Map Linked: {form.address || '—'}</span>
           ) : (
-            <span style={{ ...st.mapText, color: colors.outline, fontStyle: 'italic' }}>Δεν έχει οριστεί χάρτης</span>
+            <span style={{ ...st.mapText, color: colors.outline, fontStyle: 'italic' }}>{t('modal_no_map')}</span>
           )}
         </div>
         <input
@@ -68,7 +70,7 @@ export default function StadiumModalContent({ stadium, editing }) {
 
       {/* Row 5 — Comments */}
       <ModalField
-        label="ΣΧΟΛΙΑ"
+        label={t('modal_comments_label')}
         value={form.comments}
         editing={editing}
         onChange={set('comments')}

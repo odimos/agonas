@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>League Utility - User Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#00422b",
+                    "on-primary-fixed-variant": "#344c3e",
+                    "tertiary": "#006c49",
+                    "surface-container": "#edeeed",
+                    "on-tertiary-fixed": "#002113",
+                    "secondary-container": "#adeec4",
+                    "on-error": "#ffffff",
+                    "outline": "#727973",
+                    "primary": "#4c6455",
+                    "inverse-on-surface": "#f0f1f0",
+                    "surface-tint": "#4c6455",
+                    "surface-dim": "#d9dad9",
+                    "secondary-fixed-dim": "#95d4ac",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#10b981",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-container": "#316e4c",
+                    "on-background": "#191c1c",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "primary-fixed": "#cee9d6",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#082014",
+                    "secondary-fixed": "#b0f1c7",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f9f9f8",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#273e31",
+                    "surface-variant": "#e1e3e2",
+                    "on-surface-variant": "#424844",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface": "#f9f9f8",
+                    "secondary": "#2c6a48",
+                    "inverse-surface": "#2e3131",
+                    "on-surface": "#191c1c",
+                    "outline-variant": "#c2c8c2",
+                    "primary-fixed-dim": "#b2cdbb",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#b2cdbb",
+                    "surface-container-high": "#e7e8e7",
+                    "on-secondary-fixed-variant": "#0f5132",
+                    "surface-container-low": "#f3f4f3",
+                    "surface-container-highest": "#e1e3e2",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed": "#002111",
+                    "background": "#f9f9f8",
+                    "primary-container": "#8fa998"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "display": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ghost-border-b {
+            border-bottom: 1px solid rgba(194, 200, 194, 0.2);
+        }
+        .ghost-border-r {
+            border-right: 1px solid rgba(194, 200, 194, 0.2);
+        }
+        .ghost-border-all {
+            border: 1px solid rgba(194, 200, 194, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center px-4 h-14 bg-[#F9F9F8]/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-[#C2C8C2]/20">
+<div class="flex items-center w-full justify-between">
+  <button id="btn-cancel" class="hidden text-[0.8rem] font-semibold text-on-surface-variant active:opacity-70 transition-opacity duration-150">Cancel</button>
+  <button id="btn-edit" class="text-[0.8rem] font-semibold text-[#4C6455] dark:text-[#8FA998] active:opacity-70 transition-opacity duration-150">Edit</button>
+  <button id="btn-save" class="hidden text-[0.8rem] font-bold text-tertiary active:opacity-70 transition-opacity duration-150">Save</button>
+  <button id="btn-settings" class="text-[#4C6455] dark:text-[#8FA998] active:opacity-70 transition-opacity duration-150">
+    <span class="material-symbols-outlined">settings</span>
+  </button>
+</div>
+</header>
+<main class="pt-14 pb-20">
+
+  <!-- Hero: banner + avatar -->
+  <div class="relative">
+    <div class="h-32 bg-gradient-to-br from-primary via-secondary to-tertiary"></div>
+    <div class="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2">
+      <div id="photo-wrapper" class="relative w-24 h-24 rounded-full overflow-hidden border-4 border-surface shadow-lg cursor-default">
+        <img id="profile-photo" alt="Profile photo" class="w-full h-full object-cover"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBkCHnAwmADB4NVNQl029WFv6xEjDW2ujhKW1D5szW1EdUo9ag9ORUcUCLaUe9DMvbJiY8BPok1c2xCeHmNuaV5_wjrimUUTomUrObt4xbRwxFj2DFuw1lSNEZt0_G-70h4qXyNPS2zW_PnJEuAtK7mcSeHqltTrFcmOBbajPqTHtgMb5243h_kGpJAkBl_F5A7vyL2RhSR7HN4UcOQwwVi44NnCMAdi_qEEvwuYu2_sxcXoxptbfBmZPuC-HxYcsMX2BCqiHLVKw"/>
+        <div id="photo-overlay" class="hidden absolute inset-0 bg-black/40 flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+        </div>
+        <input type="file" id="photo-input" class="hidden" accept="image/*"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Identity -->
+  <section class="mt-16 px-6 flex flex-col items-center text-center gap-2">
+    <h2 id="username-text" class="text-2xl font-extrabold tracking-tight text-on-surface">JORDAN VANCE</h2>
+    <input id="username-input" class="hidden text-2xl font-extrabold tracking-tight text-on-surface text-center bg-surface-container rounded-lg px-3 py-1 w-full max-w-xs outline-none border border-outline/30 focus:border-tertiary transition-colors uppercase" value="JORDAN VANCE"/>
+
+    <p id="bio-text" class="text-sm text-on-surface-variant leading-snug max-w-xs">
+      Lead forward for Northern Districts. Focused on precision striking and tactical positioning. 3-year league veteran.
+    </p>
+    <textarea id="bio-input" class="hidden text-sm text-on-surface-variant leading-snug max-w-xs w-full text-center bg-surface-container rounded-lg px-3 py-2 resize-none outline-none border border-outline/30 focus:border-tertiary transition-colors" rows="3">Lead forward for Northern Districts. Focused on precision striking and tactical positioning. 3-year league veteran.</textarea>
+
+    <button id="team-badge" class="flex items-center gap-1.5 mt-1 px-3 py-1 bg-secondary-container rounded-full cursor-default">
+      <span class="material-symbols-outlined text-[1rem] text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">shield</span>
+      <span id="team-name" class="text-[0.75rem] font-bold text-on-secondary-container uppercase tracking-wider">Team North</span>
+    </button>
+    <!-- Team picker (edit mode) -->
+    <div id="team-picker" class="hidden w-full max-w-xs">
+      <select id="team-select" class="w-full text-sm font-bold text-on-surface bg-surface-container border border-outline/30 rounded-lg px-3 py-2 outline-none focus:border-tertiary transition-colors uppercase tracking-wider">
+        <option>Team North</option>
+        <option>Coastal Elite</option>
+        <option>Metro United</option>
+        <option>Western Rovers</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="px-4 mt-6 grid grid-cols-2 gap-3">
+    <!-- Goals -->
+    <div class="bg-surface-container-lowest ghost-border-all rounded-xl p-4 flex flex-col gap-1">
+      <div class="flex items-center gap-1.5 text-tertiary mb-1">
+        <span class="material-symbols-outlined text-[1.1rem]" style="font-variation-settings: 'FILL' 1;">sports_soccer</span>
+        <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Goals</span>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-5xl font-black text-on-surface leading-none">42</span>
+      </div>
+      <span class="text-[0.625rem] font-bold text-tertiary uppercase tracking-widest mt-1">Level 08</span>
+    </div>
+
+    <!-- Awards -->
+    <div class="bg-surface-container-lowest ghost-border-all rounded-xl p-4 flex flex-col gap-3">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+        <span class="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">Awards</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[1rem] text-tertiary" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+            <span class="text-xs text-on-surface-variant">Titles</span>
+          </div>
+          <span class="text-sm font-bold text-on-surface">04</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[1rem] text-tertiary" style="font-variation-settings: 'FILL' 1;">stars</span>
+            <span class="text-xs text-on-surface-variant">MVP</span>
+          </div>
+          <span class="text-sm font-bold text-on-surface">12</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[1rem] text-tertiary" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+            <span class="text-xs text-on-surface-variant">Medal</span>
+          </div>
+          <span class="text-sm font-bold text-on-surface">01</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Matches -->
+  <section class="px-4 mt-4 pb-2">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Recent Matches</span>
+      <span class="text-[0.625rem] font-medium text-on-surface-variant">SEASON 24/25</span>
+    </div>
+    <div class="flex flex-col gap-2">
+
+      <!-- Win -->
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden flex border-l-4 border-l-tertiary ghost-border-all">
+        <div class="flex-1 px-4 py-3 flex flex-col gap-0.5">
+          <span class="text-sm font-bold text-on-surface">Coastal Elite</span>
+          <span class="text-[0.625rem] text-on-surface-variant">12 OCT 2023</span>
+        </div>
+        <div class="flex items-center gap-3 px-4">
+          <span class="font-mono text-sm font-bold text-on-surface">3 – 1</span>
+          <span class="text-[0.625rem] font-bold text-tertiary uppercase tracking-wide">Win</span>
+        </div>
+      </div>
+
+      <!-- Draw -->
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden flex border-l-4 border-l-outline ghost-border-all">
+        <div class="flex-1 px-4 py-3 flex flex-col gap-0.5">
+          <span class="text-sm font-bold text-on-surface">Metro United</span>
+          <span class="text-[0.625rem] text-on-surface-variant">05 OCT 2023</span>
+        </div>
+        <div class="flex items-center gap-3 px-4">
+          <span class="font-mono text-sm font-bold text-on-surface">2 – 2</span>
+          <span class="text-[0.625rem] font-bold text-on-surface-variant uppercase tracking-wide">Draw</span>
+        </div>
+      </div>
+
+      <!-- Loss -->
+      <div class="bg-surface-container-lowest rounded-xl overflow-hidden flex border-l-4 border-l-error ghost-border-all">
+        <div class="flex-1 px-4 py-3 flex flex-col gap-0.5">
+          <span class="text-sm font-bold text-on-surface">Western Rovers</span>
+          <span class="text-[0.625rem] text-on-surface-variant">28 SEP 2023</span>
+        </div>
+        <div class="flex items-center gap-3 px-4">
+          <span class="font-mono text-sm font-bold text-on-surface">0 – 1</span>
+          <span class="text-[0.625rem] font-bold text-error uppercase tracking-wide">Loss</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 bg-[#F9F9F8] dark:bg-zinc-950 pb-safe border-t border-[#C2C8C2]/20">
+<a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] dark:hover:text-[#8FA998] active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<a class="flex items-center justify-center text-[#006C49] dark:text-[#00E676] border-t-2 border-[#006C49] dark:border-[#00E676] h-full active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+</a>
+<a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] dark:hover:text-[#8FA998] active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+</a>
+<a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] dark:hover:text-[#8FA998] active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined">groups</span>
+</a>
+<a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] dark:hover:text-[#8FA998] active:scale-95 transition-transform duration-100" href="#">
+<span class="material-symbols-outlined">notifications</span>
+</a>
+</nav>
+
+<script>
+  const btnEdit     = document.getElementById('btn-edit');
+  const btnCancel   = document.getElementById('btn-cancel');
+  const btnSave     = document.getElementById('btn-save');
+  const btnSettings = document.getElementById('btn-settings');
+
+  const photoWrapper  = document.getElementById('photo-wrapper');
+  const photoOverlay  = document.getElementById('photo-overlay');
+  const photoInput    = document.getElementById('photo-input');
+  const profilePhoto  = document.getElementById('profile-photo');
+
+  const usernameText  = document.getElementById('username-text');
+  const usernameInput = document.getElementById('username-input');
+
+  const bioText  = document.getElementById('bio-text');
+  const bioInput = document.getElementById('bio-input');
+
+  const teamBadge  = document.getElementById('team-badge');
+  const teamPicker = document.getElementById('team-picker');
+  const teamName   = document.getElementById('team-name');
+  const teamSelect = document.getElementById('team-select');
+
+  // snapshot for cancel
+  let snapshot = {};
+
+  function enterEdit() {
+    snapshot = {
+      photo:    profilePhoto.src,
+      username: usernameText.textContent.trim(),
+      bio:      bioText.textContent.trim(),
+      team:     teamName.textContent.trim(),
+    };
+
+    btnEdit.classList.add('hidden');
+    btnSettings.classList.add('hidden');
+    btnCancel.classList.remove('hidden');
+    btnSave.classList.remove('hidden');
+
+    // photo
+    photoOverlay.classList.remove('hidden');
+    photoWrapper.classList.replace('cursor-default', 'cursor-pointer');
+    photoWrapper.addEventListener('click', onPhotoClick);
+
+    // username
+    usernameInput.value = usernameText.textContent.trim();
+    usernameText.classList.add('hidden');
+    usernameInput.classList.remove('hidden');
+
+    // bio
+    bioInput.value = bioText.textContent.trim();
+    bioText.classList.add('hidden');
+    bioInput.classList.remove('hidden');
+
+    // team
+    teamBadge.classList.add('hidden');
+    teamSelect.value = teamName.textContent.trim();
+    teamPicker.classList.remove('hidden');
+  }
+
+  function exitEdit(save) {
+    if (save) {
+      usernameText.textContent = usernameInput.value.trim();
+      bioText.textContent = bioInput.value.trim();
+      teamName.textContent = teamSelect.value;
+    } else {
+      profilePhoto.src = snapshot.photo;
+      usernameText.textContent = snapshot.username;
+      bioText.textContent = snapshot.bio;
+      teamName.textContent = snapshot.team;
+    }
+
+    btnEdit.classList.remove('hidden');
+    btnSettings.classList.remove('hidden');
+    btnCancel.classList.add('hidden');
+    btnSave.classList.add('hidden');
+
+    photoOverlay.classList.add('hidden');
+    photoWrapper.classList.replace('cursor-pointer', 'cursor-default');
+    photoWrapper.removeEventListener('click', onPhotoClick);
+
+    usernameInput.classList.add('hidden');
+    usernameText.classList.remove('hidden');
+
+    bioInput.classList.add('hidden');
+    bioText.classList.remove('hidden');
+
+    teamPicker.classList.add('hidden');
+    teamBadge.classList.remove('hidden');
+  }
+
+  function onPhotoClick() {
+    photoInput.click();
+  }
+
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { profilePhoto.src = e.target.result; };
+    reader.readAsDataURL(file);
+  });
+
+  btnEdit.addEventListener('click', enterEdit);
+  btnSave.addEventListener('click', () => exitEdit(true));
+  btnCancel.addEventListener('click', () => exitEdit(false));
+</script>
+
+</body></html>

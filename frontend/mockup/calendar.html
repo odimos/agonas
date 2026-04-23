@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>League Utility - Calendar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-tertiary-container": "#00422b",
+          "on-primary-fixed-variant": "#344c3e",
+          "tertiary": "#006c49",
+          "surface-container": "#edeeed",
+          "on-tertiary-fixed": "#002113",
+          "secondary-container": "#adeec4",
+          "on-error": "#ffffff",
+          "outline": "#727973",
+          "primary": "#4c6455",
+          "inverse-on-surface": "#f0f1f0",
+          "surface-tint": "#4c6455",
+          "surface-dim": "#d9dad9",
+          "secondary-fixed-dim": "#95d4ac",
+          "error": "#ba1a1a",
+          "tertiary-container": "#10b981",
+          "on-secondary": "#ffffff",
+          "on-secondary-container": "#316e4c",
+          "on-background": "#191c1c",
+          "on-tertiary-fixed-variant": "#005236",
+          "primary-fixed": "#cee9d6",
+          "on-tertiary": "#ffffff",
+          "on-primary-fixed": "#082014",
+          "secondary-fixed": "#b0f1c7",
+          "error-container": "#ffdad6",
+          "surface-bright": "#f9f9f8",
+          "on-error-container": "#93000a",
+          "surface-container-lowest": "#ffffff",
+          "on-primary-container": "#273e31",
+          "surface-variant": "#e1e3e2",
+          "on-surface-variant": "#424844",
+          "tertiary-fixed": "#6ffbbe",
+          "surface": "#f9f9f8",
+          "secondary": "#2c6a48",
+          "inverse-surface": "#2e3131",
+          "on-surface": "#191c1c",
+          "outline-variant": "#c2c8c2",
+          "primary-fixed-dim": "#b2cdbb",
+          "on-primary": "#ffffff",
+          "inverse-primary": "#b2cdbb",
+          "surface-container-high": "#e7e8e7",
+          "on-secondary-fixed-variant": "#0f5132",
+          "surface-container-low": "#f3f4f3",
+          "surface-container-highest": "#e1e3e2",
+          "tertiary-fixed-dim": "#4edea3",
+          "on-secondary-fixed": "#002111",
+          "background": "#f9f9f8",
+          "primary-container": "#8fa998"
+        },
+        borderRadius: {
+          DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"
+        },
+        fontFamily: {
+          headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .ghost-border-b   { border-bottom: 1px solid rgba(194,200,194,0.2); }
+  .ghost-border-all { border: 1px solid rgba(194,200,194,0.2); }
+  body { min-height: max(884px, 100dvh); }
+
+  /* ── Day number base ── */
+  .day-num {
+    width: 1.75rem; height: 1.75rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.875rem; font-weight: 600;
+    border-radius: 50%;
+    line-height: 1;
+  }
+
+  /* Today (no match) — green */
+  .day-cell.is-today .day-num {
+    background: #4c6455; color: #fff;
+  }
+
+  /* Upcoming match — solid red */
+  .day-cell.has-upcoming .day-num {
+    background: #ba1a1a; color: #fff;
+  }
+
+  /* Past match — muted/translucent red */
+  .day-cell.has-past .day-num {
+    background: rgba(186,26,26,0.22); color: #ba1a1a;
+  }
+
+  /* Today + match — layered rings */
+  .today-match-wrap {
+    position: relative;
+    width: 2.1rem; height: 2.1rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .today-match-outer {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: #ba1a1a;
+  }
+  .today-match-inner {
+    position: relative; z-index: 1;
+    width: 1.35rem; height: 1.35rem;
+    border-radius: 50%;
+    background: #4c6455;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 800; color: #fff;
+  }
+
+  /* Modal sheet */
+  #modal-sheet {
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  }
+  #modal-sheet.open { transform: translateY(0); }
+  #modal-backdrop {
+    background: transparent;
+    transition: background 0.32s ease;
+  }
+  #modal-backdrop.open { background: rgba(0,0,0,0.4); }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<!-- TopAppBar: month navigation -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 h-14 bg-[#F9F9F8]/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-[#C2C8C2]/20">
+  <button id="prev-month" class="text-[#4C6455] active:opacity-60 transition-opacity">
+    <span class="material-symbols-outlined">chevron_left</span>
+  </button>
+  <div class="flex flex-col items-center">
+    <span id="month-title" class="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-[#4C6455]"></span>
+  </div>
+  <button id="next-month" class="text-[#4C6455] active:opacity-60 transition-opacity">
+    <span class="material-symbols-outlined">chevron_right</span>
+  </button>
+</header>
+
+<main class="pt-14 pb-20">
+
+  <!-- Calendar grid -->
+  <section class="px-3 pt-3 pb-2 bg-surface-container-lowest ghost-border-b">
+    <!-- Weekday headers -->
+    <div class="grid grid-cols-7 mb-1">
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Mo</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Tu</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">We</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Th</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Fr</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Sa</span>
+      <span class="text-center text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant py-1">Su</span>
+    </div>
+    <div id="calendar-grid" class="grid grid-cols-7 gap-y-1"></div>
+  </section>
+
+  <!-- Legend -->
+  <div class="flex items-center gap-4 px-4 py-2 ghost-border-b">
+    <div class="flex items-center gap-1.5">
+      <div class="w-2 h-2 rounded-full bg-tertiary"></div>
+      <span class="text-[0.625rem] text-on-surface-variant font-medium">Upcoming</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <div class="w-2 h-2 rounded-full bg-outline"></div>
+      <span class="text-[0.625rem] text-on-surface-variant font-medium">Past</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <div class="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+        <span class="text-[0.5rem] font-bold text-white leading-none">22</span>
+      </div>
+      <span class="text-[0.625rem] text-on-surface-variant font-medium">Today</span>
+    </div>
+  </div>
+
+  <!-- Upcoming matches -->
+  <section class="px-4 pt-5 pb-2" id="upcoming-section">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-[1.1rem] text-tertiary" style="font-variation-settings:'FILL' 1;">upcoming</span>
+      <h2 class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Upcoming</h2>
+    </div>
+    <div id="upcoming-list" class="flex flex-col gap-3"></div>
+  </section>
+
+  <!-- Divider -->
+  <div class="mx-4 my-2 border-t border-[#C2C8C2]/30"></div>
+
+  <!-- Past results -->
+  <section class="px-4 pt-3 pb-4" id="past-section">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-[1.1rem] text-on-surface-variant" style="font-variation-settings:'FILL' 1;">history</span>
+      <h2 class="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-on-surface">Results</h2>
+    </div>
+    <div id="past-list" class="flex flex-col gap-3"></div>
+  </section>
+
+</main>
+
+<!-- Match Modal -->
+<div id="match-modal" class="fixed inset-0 z-[100] pointer-events-none">
+  <div id="modal-backdrop" class="absolute inset-0"></div>
+  <div id="modal-sheet" class="absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl shadow-2xl">
+    <!-- handle -->
+    <div class="flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+    </div>
+    <div id="modal-content" class="px-5 pt-3 pb-24"></div>
+  </div>
+</div>
+
+<!-- BottomNavBar (calendar active) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 bg-[#F9F9F8] dark:bg-zinc-950 pb-safe border-t border-[#C2C8C2]/20">
+  <a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined">home</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="user.html">
+    <span class="material-symbols-outlined">person</span>
+  </a>
+  <a class="flex items-center justify-center text-[#006C49] border-t-2 border-[#006C49] h-full active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">calendar_today</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined">groups</span>
+  </a>
+  <a class="flex items-center justify-center text-[#424844] dark:text-zinc-500 hover:text-[#4C6455] active:scale-95 transition-transform duration-100" href="#">
+    <span class="material-symbols-outlined">notifications</span>
+  </a>
+</nav>
+
+<script>
+  const MY_TEAM = 'Team North';
+  const TODAY   = new Date(2026, 3, 22);
+
+  const matches = [
+    { date: new Date(2026,2,28), opponent:'Western Rovers', home:false, score:[0,1], result:'loss', venue:'Rovers Park',   time:'16:00' },
+    { date: new Date(2026,3,5),  opponent:'Metro United',   home:true,  score:[2,2], result:'draw', venue:'Stadium Nord',  time:'15:00' },
+    { date: new Date(2026,3,8),  opponent:'Coastal Elite',  home:false, score:[1,0], result:'win',  venue:'Coast Arena',   time:'19:00' },
+    { date: new Date(2026,3,12), opponent:'Northern Hawks', home:true,  score:[3,1], result:'win',  venue:'Stadium Nord',  time:'15:00' },
+    { date: new Date(2026,3,19), opponent:'Southern Stars', home:false, score:[2,0], result:'win',  venue:'Stars Ground',  time:'17:00' },
+    { date: new Date(2026,3,22), opponent:'FC Riviera',     home:true,  time:'20:45', venue:'Stadium Nord' },
+    { date: new Date(2026,3,26), opponent:'Bay United',     home:true,  time:'15:00', venue:'Stadium Nord' },
+    { date: new Date(2026,4,3),  opponent:'City FC',        home:false, time:'17:00', venue:'City Stadium' },
+    { date: new Date(2026,4,10), opponent:'Eastern Lions',  home:true,  time:'15:00', venue:'Stadium Nord' },
+    { date: new Date(2026,4,17), opponent:'Metro United',   home:false, time:'19:00', venue:'Metro Park'   },
+    { date: new Date(2026,4,24), opponent:'Northern Hawks', home:true,  time:'16:00', venue:'Stadium Nord' },
+  ];
+
+  const MONTHS       = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WEEKDAYS     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function sameDay(a, b) {
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function isPast(d)   { return d < TODAY && !sameDay(d, TODAY); }
+  function isToday(d)  { return sameDay(d, TODAY); }
+  function matchKey(d) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
+
+  function daysUntil(d) {
+    const diff = Math.round((d - TODAY) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    if (diff <= 7)  return `In ${diff} days`;
+    return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`;
+  }
+
+  let viewYear  = TODAY.getFullYear();
+  let viewMonth = TODAY.getMonth();
+
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  const modal    = document.getElementById('match-modal');
+  const backdrop = document.getElementById('modal-backdrop');
+  const sheet    = document.getElementById('modal-sheet');
+  const content  = document.getElementById('modal-content');
+
+  function openModal(m) {
+    const past      = isPast(m.date);
+    const todayMatch = isToday(m.date);
+    const homeTeam  = m.home ? MY_TEAM : m.opponent;
+    const awayTeam  = m.home ? m.opponent : MY_TEAM;
+    const dateStr   = `${WEEKDAYS[m.date.getDay()]}, ${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}, ${m.date.getFullYear()}`;
+
+    let badge = '', middle = '';
+
+    if (past) {
+      const cfg = {
+        win:  { bg:'bg-secondary-container',      text:'text-tertiary',          label:'Win'  },
+        loss: { bg:'bg-error-container/50',        text:'text-error',             label:'Loss' },
+        draw: { bg:'bg-surface-container',         text:'text-on-surface-variant',label:'Draw' },
+      }[m.result];
+      badge  = `<span class="text-[0.7rem] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${cfg.bg} ${cfg.text}">${cfg.label}</span>
+                <span class="text-[0.7rem] text-on-surface-variant">${m.time}</span>`;
+      const hs = m.home ? m.score[0] : m.score[1];
+      const as = m.home ? m.score[1] : m.score[0];
+      middle = `<span class="text-4xl font-black text-on-surface">${hs}</span>
+                <span class="text-xl font-bold text-on-surface-variant mx-1">–</span>
+                <span class="text-4xl font-black text-on-surface">${as}</span>`;
+    } else {
+      const label = todayMatch ? 'Today' : daysUntil(m.date);
+      badge  = `<span class="text-[0.7rem] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-secondary-container text-tertiary">${label}</span>
+                <span class="text-[0.7rem] text-on-surface-variant">${m.time}</span>`;
+      middle = `<span class="text-xl font-bold text-on-surface-variant">vs</span>`;
+    }
+
+    content.innerHTML = `
+      <div class="flex flex-col items-center gap-5 py-2">
+        <div class="flex items-center gap-3">${badge}</div>
+        <div class="flex items-center justify-center gap-4 w-full px-2">
+          <span class="text-sm font-bold text-on-surface text-right flex-1 leading-tight">${homeTeam}</span>
+          <div class="flex items-center shrink-0">${middle}</div>
+          <span class="text-sm font-bold text-on-surface text-left flex-1 leading-tight">${awayTeam}</span>
+        </div>
+        <div class="flex items-center gap-4 text-[0.7rem] text-on-surface-variant flex-wrap justify-center">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[1rem]">location_on</span>${m.venue}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[1rem]">${m.home ? 'home' : 'flight_takeoff'}</span>${m.home ? 'Home' : 'Away'}
+          </span>
+        </div>
+        <p class="text-[0.65rem] text-on-surface-variant">${dateStr}</p>
+      </div>`;
+
+    modal.classList.remove('pointer-events-none');
+    backdrop.classList.add('open');
+    requestAnimationFrame(() => sheet.classList.add('open'));
+  }
+
+  function closeModal() {
+    sheet.classList.remove('open');
+    backdrop.classList.remove('open');
+    setTimeout(() => modal.classList.add('pointer-events-none'), 320);
+  }
+
+  backdrop.addEventListener('click', closeModal);
+
+  // ── Calendar ───────────────────────────────────────────────────────────────
+  function renderCalendar() {
+    document.getElementById('month-title').textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+
+    const startOffset = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    // match day lookup for this month
+    const dayMap = {};
+    matches.forEach(m => {
+      if (m.date.getFullYear()===viewYear && m.date.getMonth()===viewMonth) {
+        dayMap[matchKey(m.date)] = m;
+      }
+    });
+
+    for (let i = 0; i < startOffset; i++) {
+      const e = document.createElement('div'); e.className = 'h-10';
+      grid.appendChild(e);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date  = new Date(viewYear, viewMonth, d);
+      const key   = matchKey(date);
+      const match = dayMap[key];
+      const today = isToday(date);
+      const past  = match && isPast(match.date);
+
+      const cell = document.createElement('div');
+      cell.className = 'day-cell flex flex-col items-center justify-start h-10 select-none';
+
+      if (today && match) {
+        // Layered: big red ring + small green circle
+        cell.classList.add('cursor-pointer');
+        const wrap  = document.createElement('div');
+        wrap.className = 'today-match-wrap';
+        const outer = document.createElement('div');
+        outer.className = 'today-match-outer';
+        const inner = document.createElement('span');
+        inner.className = 'today-match-inner';
+        inner.textContent = d;
+        wrap.appendChild(outer);
+        wrap.appendChild(inner);
+        cell.appendChild(wrap);
+      } else {
+        if (today)              cell.classList.add('is-today');
+        if (match && past)      cell.classList.add('has-past');
+        if (match && !past)     cell.classList.add('has-upcoming');
+        if (match)              cell.classList.add('cursor-pointer');
+
+        const num = document.createElement('span');
+        num.className = 'day-num' + (today || match ? '' : ' text-on-surface');
+        num.textContent = d;
+        cell.appendChild(num);
+      }
+
+      if (match) {
+        cell.addEventListener('click', () => openModal(match));
+      }
+
+      grid.appendChild(cell);
+    }
+  }
+
+  // ── Match list ─────────────────────────────────────────────────────────────
+  function resultCfg(r) {
+    return { win:  { border:'border-l-tertiary', label:'Win',  cls:'text-tertiary' },
+             loss: { border:'border-l-error',    label:'Loss', cls:'text-error'    },
+             draw: { border:'border-l-outline',  label:'Draw', cls:'text-on-surface-variant' } }[r];
+  }
+
+  function renderMatches() {
+    const upcoming = matches.filter(m => !isPast(m.date)).sort((a,b) => a.date-b.date);
+    const past     = matches.filter(m =>  isPast(m.date)).sort((a,b) => b.date-a.date);
+
+    document.getElementById('upcoming-list').innerHTML = upcoming.length
+      ? upcoming.map(m => {
+          const home = m.home ? MY_TEAM : m.opponent;
+          const away = m.home ? m.opponent : MY_TEAM;
+          const ds   = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`;
+          return `<div class="bg-surface-container-lowest ghost-border-all rounded-xl overflow-hidden cursor-pointer active:opacity-80"
+                       onclick="openModal(matches.find(x=>x.date-new Date(${m.date})==0))">
+            <div class="flex items-center justify-between px-4 pt-3 pb-1">
+              <span class="text-[0.625rem] font-bold text-tertiary uppercase tracking-widest">${daysUntil(m.date)}</span>
+              <span class="text-[0.625rem] text-on-surface-variant">${ds} · ${m.time}</span>
+            </div>
+            <div class="px-4 pb-3 flex items-center justify-between gap-2">
+              <span class="text-sm font-bold text-on-surface flex-1 truncate">${home}</span>
+              <span class="text-xs font-bold text-on-surface-variant">vs</span>
+              <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">${away}</span>
+            </div>
+          </div>`;
+        }).join('')
+      : '<p class="text-sm text-on-surface-variant text-center py-4">No upcoming matches</p>';
+
+    document.getElementById('past-list').innerHTML = past.length
+      ? past.map(m => {
+          const { border, label, cls } = resultCfg(m.result);
+          const home = m.home ? MY_TEAM : m.opponent;
+          const away = m.home ? m.opponent : MY_TEAM;
+          const hs   = m.home ? m.score[0] : m.score[1];
+          const as   = m.home ? m.score[1] : m.score[0];
+          const ds   = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`;
+          return `<div class="bg-surface-container-lowest ghost-border-all rounded-xl overflow-hidden flex border-l-4 ${border} cursor-pointer active:opacity-80"
+                       onclick="openModal(matches.find(x=>x.date-new Date(${m.date})==0))">
+            <div class="flex-1 px-4 py-3">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm font-bold text-on-surface flex-1 truncate">${home}</span>
+                <span class="font-mono text-base font-black text-on-surface">${hs} – ${as}</span>
+                <span class="text-sm font-bold text-on-surface flex-1 truncate text-right">${away}</span>
+              </div>
+              <div class="flex items-center justify-between mt-1.5">
+                <span class="text-[0.625rem] text-on-surface-variant">${m.venue} · ${m.home?'Home':'Away'}</span>
+                <span class="text-[0.625rem] font-bold ${cls} uppercase tracking-wide">${label} · ${ds}</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<p class="text-sm text-on-surface-variant text-center py-4">No past matches</p>';
+  }
+
+  // ── Month nav ──────────────────────────────────────────────────────────────
+  document.getElementById('prev-month').addEventListener('click', () => {
+    if (--viewMonth < 0) { viewMonth = 11; viewYear--; }
+    renderCalendar();
+  });
+  document.getElementById('next-month').addEventListener('click', () => {
+    if (++viewMonth > 11) { viewMonth = 0; viewYear++; }
+    renderCalendar();
+  });
+
+  renderCalendar();
+  renderMatches();
+</script>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { colors, radius, fonts } from './styles'
 import ModalField from './ModalField'
+import { useLang } from './LangContext'
 
 function initForm(team) {
   return {
@@ -12,7 +13,7 @@ function initForm(team) {
   }
 }
 
-function OfficerCard({ circleColor, icon, label, playerId, players, editing, onChange }) {
+function OfficerCard({ circleColor, icon, label, playerId, players, editing, onChange, t }) {
   const selected = players.find(p => p.id === playerId)
 
   return (
@@ -23,7 +24,7 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
       </div>
       {editing ? (
         players.length === 0 ? (
-          <p style={st.cardEmpty}>Δεν υπάρχουν παίκτες</p>
+          <p style={st.cardEmpty}>{t('modal_no_players')}</p>
         ) : (
           <div style={{ position: 'relative' }}>
             <select
@@ -31,7 +32,7 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
               value={playerId}
               onChange={e => onChange(e.target.value)}
             >
-              <option value="">— Επιλογή παίκτη —</option>
+              <option value="">{t('modal_select_player')}</option>
               {players.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -51,6 +52,7 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
 }
 
 export default function TeamModalContent({ team, editing }) {
+  const { t } = useLang()
   const [form, setForm] = useState(() => initForm(team))
 
   useEffect(() => {
@@ -101,26 +103,28 @@ export default function TeamModalContent({ team, editing }) {
         <OfficerCard
           circleColor={colors.tertiary}
           icon="stars"
-          label="ΑΡΧΗΓΟΣ"
+          label={t('modal_captain')}
           playerId={form.captainId}
           players={players}
           editing={editing}
           onChange={set('captainId')}
+          t={t}
         />
         <OfficerCard
           circleColor={colors.primaryContainer}
           icon="star_half"
-          label="ΥΠΑΡΧΗΓΟΣ"
+          label={t('modal_vice')}
           playerId={form.viceId}
           players={players}
           editing={editing}
           onChange={set('viceId')}
+          t={t}
         />
       </div>
 
       {/* Comments */}
       <div>
-        <label style={st.sectionLabel}>ΣΧΟΛΙΑ</label>
+        <label style={st.sectionLabel}>{t('modal_comments_label')}</label>
         {editing ? (
           <ModalField value={form.comments} editing onChange={set('comments')} multiline rows={3}
             placeholder="Enter administrative notes, sportsmanship records, or scheduling details..." />
@@ -136,10 +140,10 @@ export default function TeamModalContent({ team, editing }) {
         {players.length > 0 ? (
           <div style={st.playerList}>
             <div style={st.playerListHeader}>
-              <span style={st.sectionLabel}>ΠΑΙΚΤΕΣ ({players.length})</span>
+              <span style={st.sectionLabel}>{t('modal_players_label')} ({players.length})</span>
               <button style={st.addBtn}>
                 <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
-                ΠΡΟΣΘΗΚΗ ΠΑΙΚΤΗ
+                {t('modal_add_player')}
               </button>
             </div>
             {players.map(p => (
@@ -158,15 +162,15 @@ export default function TeamModalContent({ team, editing }) {
         ) : (
           <div style={st.playerList}>
             <div style={st.playerListHeader}>
-              <span style={st.sectionLabel}>ΠΑΙΚΤΕΣ (0)</span>
+              <span style={st.sectionLabel}>{t('modal_players_label')} (0)</span>
               <button style={st.addBtn}>
                 <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
-                ΠΡΟΣΘΗΚΗ ΠΑΙΚΤΗ
+                {t('modal_add_player')}
               </button>
             </div>
             <div style={st.emptyPlayers}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', color: colors.onSurfaceVariant }}>group</span>
-              <p style={st.emptyText}>Δεν υπάρχουν εγγεγραμμένοι παίκτες</p>
+              <p style={st.emptyText}>{t('modal_no_reg_players')}</p>
             </div>
           </div>
         )}
