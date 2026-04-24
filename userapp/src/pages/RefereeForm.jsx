@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 
@@ -95,6 +96,7 @@ function CardRow({ entry, players, onChange, onRemove }) {
 }
 
 export default function RefereeForm() {
+  const navigate = useNavigate()
   const [homeScore, setHomeScore] = useState(0)
   const [awayScore, setAwayScore] = useState(0)
   const [goals, setGoals] = useState([])
@@ -133,8 +135,12 @@ export default function RefereeForm() {
   if (submitted) {
     return (
       <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+        <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+          <button onClick={() => navigate('/forms')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', alignItems: 'center', padding: '0.25rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>arrow_back</span>
+          </button>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>Referee Form</span>
+          <div style={{ width: '1.9rem' }} />
         </header>
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3.5rem 2rem 5rem' }}>
           <div style={{ width: '4rem', height: '4rem', borderRadius: '50%', background: colors.secondaryContainer, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -153,9 +159,15 @@ export default function RefereeForm() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, overflowX: 'hidden' }}>
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
-        <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>Referee Form</span>
-        <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant, marginTop: '0.1rem' }}>{DATE_STR} · {MATCH.tournament}</span>
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+        <button onClick={() => navigate('/forms')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', alignItems: 'center', padding: '0.25rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>arrow_back</span>
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>Referee Form</span>
+          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant, marginTop: '0.1rem' }}>{DATE_STR} · {MATCH.tournament}</span>
+        </div>
+        <div style={{ width: '1.9rem' }} />
       </header>
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
