@@ -38,12 +38,10 @@ export default function Team() {
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* TopAppBar */}
-      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
+      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', boxSizing: 'border-box', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
         <div style={{ width: '2rem' }} />
         <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>My Team</h1>
-        <button style={{ color: colors.primary, background: 'none', border: `1.5px solid ${colors.primary}`, borderRadius: '1rem', cursor: 'pointer', padding: '0.3rem 0.9rem', fontSize: '0.75rem', fontWeight: 600, lineHeight: 1 }}>
-          Edit
-        </button>
+        <button style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
       </header>
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
