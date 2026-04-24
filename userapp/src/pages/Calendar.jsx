@@ -186,7 +186,7 @@ export default function Calendar() {
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* TopAppBar */}
-      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <button onClick={prevMonth} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
@@ -294,15 +294,15 @@ export default function Calendar() {
                   const ds   = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`
                   return (
                     <div key={i} onClick={() => { setSelectedMatch(m); setModalOpen(true) }} style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, overflow: 'hidden', display: 'flex', borderLeft: `4px solid ${cfg.border}`, cursor: 'pointer' }}>
-                      <div style={{ flex: 1, padding: '0.75rem 1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home}</span>
-                          <span style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: 900, color: colors.onSurface }}>{hs} – {as}</span>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{away}</span>
+                      <div style={{ flex: 1, padding: '0.6rem 0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.1rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', fontWeight: 900, color: colors.onSurface, flexShrink: 0 }}>{hs} – {as}</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{away}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.375rem' }}>
-                          <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.home ? 'Home' : 'Away'}</span>
-                          <span style={{ fontSize: '0.625rem', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cfg.label} · {ds}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.3rem' }}>
+                          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.home ? 'Home' : 'Away'}</span>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cfg.label} · {ds}</span>
                         </div>
                       </div>
                     </div>
