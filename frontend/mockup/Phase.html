@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#4c6455",
+                    "inverse-surface": "#2e3131",
+                    "tertiary": "#006c49",
+                    "secondary-container": "#adeec4",
+                    "on-primary-fixed-variant": "#344c3e",
+                    "secondary-fixed-dim": "#95d4ac",
+                    "primary-fixed-dim": "#b2cdbb",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e1e3e2",
+                    "on-tertiary-container": "#00422b",
+                    "inverse-primary": "#b2cdbb",
+                    "surface-container-highest": "#e1e3e2",
+                    "on-secondary-container": "#316e4c",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-secondary-fixed-variant": "#0f5132",
+                    "surface-container-high": "#e7e8e7",
+                    "secondary-fixed": "#b0f1c7",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#edeeed",
+                    "on-secondary-fixed": "#002111",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#2c6a48",
+                    "on-tertiary-fixed": "#002113",
+                    "on-surface": "#191c1c",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#cee9d6",
+                    "on-background": "#191c1c",
+                    "surface-dim": "#d9dad9",
+                    "surface-container-low": "#f3f4f3",
+                    "outline-variant": "#c2c8c2",
+                    "surface-bright": "#f9f9f8",
+                    "on-primary-fixed": "#082014",
+                    "outline": "#727973",
+                    "tertiary-fixed": "#6ffbbe",
+                    "background": "#f9f9f8",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#10b981",
+                    "surface": "#f9f9f8",
+                    "on-primary-container": "#273e31",
+                    "inverse-on-surface": "#f0f1f0",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "primary": "#4c6455",
+                    "on-surface-variant": "#424844",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#8fa998",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ghost-border {
+            border-bottom: 1px solid rgba(194, 200, 194, 0.2);
+        }
+        .sidebar-active {
+            box-shadow: inset 4px 0 0 0 #006c49;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopNavBar Shell -->
+
+<div class="flex min-h-screen pt-16">
+<!-- SideNavBar Shell -->
+
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 p-8 bg-surface">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-10 pb-6 border-b border-outline-variant/20">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-tertiary">Current Management</span>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface mt-1">02 Phase Two</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative inline-block text-left">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant/30 text-sm font-medium">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                            Status: Active
+                            <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Teams Section -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Qualified Teams</h3>
+<span class="text-xs text-outline">4 total participating</span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4">
+<!-- Team A -->
+<div class="min-w-[240px] bg-surface-container-lowest p-5 border border-outline-variant/20 hover:border-tertiary/30 transition-all cursor-pointer group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">shield</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant/40">ID: TA-01</span>
+</div>
+<h4 class="font-bold text-on-surface">Team A</h4>
+<p class="text-xs text-on-surface-variant mt-1">League Points: 1,420</p>
+</div>
+<!-- Team B (Selected) -->
+<div class="min-w-[240px] bg-surface-container-lowest p-5 border-2 border-tertiary ring-4 ring-tertiary/5 transition-all cursor-pointer relative shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-weight="fill">shield</span>
+</div>
+<button class="flex items-center gap-1 text-error hover:bg-error-container px-2 py-1 rounded transition-colors">
+<span class="material-symbols-outlined text-sm">delete</span>
+<span class="text-[10px] font-bold uppercase">Delete</span>
+</button>
+</div>
+<h4 class="font-bold text-on-surface">Team B</h4>
+<p class="text-xs text-on-surface-variant mt-1">League Points: 1,385</p>
+<div class="absolute -top-2 -right-2 bg-tertiary text-on-primary text-[8px] font-black px-2 py-0.5 uppercase tracking-tighter">Selected</div>
+</div>
+<!-- Team C (Eliminated) -->
+<div class="min-w-[240px] bg-surface-container-low p-5 border border-outline-variant/10 opacity-60 grayscale transition-all cursor-pointer">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-surface-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">close</span>
+</div>
+<span class="text-[10px] font-bold text-error uppercase">Eliminated</span>
+</div>
+<h4 class="font-bold text-on-surface">Team C</h4>
+<p class="text-xs text-on-surface-variant mt-1">League Points: 890</p>
+</div>
+<!-- Team D -->
+<div class="min-w-[240px] bg-surface-container-lowest p-5 border border-outline-variant/20 hover:border-tertiary/30 transition-all cursor-pointer group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">shield</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant/40">ID: TD-04</span>
+</div>
+<h4 class="font-bold text-on-surface">Team D</h4>
+<p class="text-xs text-on-surface-variant mt-1">League Points: 1,210</p>
+</div>
+</div>
+</section>
+<!-- Matches Section -->
+<section class="mb-12">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Scheduled Matches</h3>
+<div class="flex gap-2">
+<button class="p-1 hover:bg-surface-container text-on-surface-variant"><span class="material-symbols-outlined text-sm">grid_view</span></button>
+<button class="p-1 hover:bg-surface-container text-outline"><span class="material-symbols-outlined text-sm">list</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+<!-- Match Card 1 -->
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-col justify-between h-32 hover:bg-surface-container-low transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-2 w-full">
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team A</span>
+<span class="text-sm font-mono font-bold">2</span>
+</div>
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team B</span>
+<span class="text-sm font-mono font-bold">1</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase text-tertiary">Final</span>
+<span class="text-[10px] text-outline">Mar 12, 18:00</span>
+</div>
+</div>
+<!-- Match Card 2 -->
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-col justify-between h-32 hover:bg-surface-container-low transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-2 w-full">
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team C</span>
+<span class="text-sm font-mono font-bold">0</span>
+</div>
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team D</span>
+<span class="text-sm font-mono font-bold">3</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase text-tertiary">Final</span>
+<span class="text-[10px] text-outline">Mar 12, 20:30</span>
+</div>
+</div>
+<!-- Match Card 3 -->
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-col justify-between h-32 hover:bg-surface-container-low transition-colors border-l-4 border-l-emerald-500">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-2 w-full">
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team B</span>
+<span class="text-sm font-mono text-outline italic">Live</span>
+</div>
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team D</span>
+<span class="text-sm font-mono text-outline italic">Live</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase text-emerald-600 animate-pulse">In Progress</span>
+<span class="text-[10px] text-outline">Pitch 01</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-col justify-between h-32 opacity-40">
+<div class="flex flex-col gap-2 w-full">
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team A</span>
+<span class="text-sm font-mono text-outline">--</span>
+</div>
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team D</span>
+<span class="text-sm font-mono text-outline">--</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase text-outline">Scheduled</span>
+<span class="text-[10px] text-outline">Mar 14, 15:00</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-col justify-between h-32 opacity-40">
+<div class="flex flex-col gap-2 w-full">
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team B</span>
+<span class="text-sm font-mono text-outline">--</span>
+</div>
+<div class="flex justify-between items-center w-full">
+<span class="text-sm font-semibold">Team C</span>
+<span class="text-sm font-mono text-outline">--</span>
+</div>
+</div>
+<div class="flex justify-between items-center mt-4 pt-2 border-t border-outline-variant/10">
+<span class="text-[10px] font-bold uppercase text-outline">Scheduled</span>
+<span class="text-[10px] text-outline">Mar 14, 17:30</span>
+</div>
+</div>
+<div class="border border-dashed border-outline-variant/40 flex flex-col items-center justify-center h-32 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-tertiary">add_circle</span>
+<span class="text-[10px] font-bold uppercase text-outline-variant mt-2">Add Match</span>
+</div>
+</div>
+</section>
+<!-- Footer Actions -->
+<div class="fixed bottom-0 left-64 right-0 p-6 bg-surface/90 backdrop-blur-sm border-t border-outline-variant/20 flex justify-between items-center">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest border border-outline-variant text-sm font-bold uppercase tracking-tight hover:bg-surface-container-low transition-colors">
+                        Generate Program
+                        <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface text-sm font-medium px-4 py-2">Preview Ruleset</button>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-2.5 bg-stone-100 text-stone-900 border border-stone-300 text-sm font-bold uppercase tracking-tight hover:bg-stone-200">Discard Changes</button>
+<button class="px-8 py-2.5 bg-tertiary text-on-tertiary text-sm font-bold uppercase tracking-tight shadow-sm hover:brightness-110 transition-all">Finish Phase</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Background Decor (Architectural/Editorial style) -->
+<div class="fixed top-0 right-0 -z-10 w-1/3 h-full opacity-[0.03] pointer-events-none">
+<svg class="w-full h-full" viewbox="0 0 100 100">
+<line stroke="currentColor" stroke-width="0.1" x1="10" x2="10" y1="0" y2="100"></line>
+<line stroke="currentColor" stroke-width="0.1" x1="20" x2="20" y1="0" y2="100"></line>
+<line stroke="currentColor" stroke-width="0.1" x1="30" x2="30" y1="0" y2="100"></line>
+<line stroke="currentColor" stroke-width="0.1" x1="40" x2="40" y1="0" y2="100"></line>
+<line stroke="currentColor" stroke-width="0.1" x1="50" x2="50" y1="0" y2="100"></line>
+</svg>
+</div>
+</body></html>

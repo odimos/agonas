@@ -18,6 +18,7 @@ export default function Modal({ title, onClose, children, footer, width = 420 })
           maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
           boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         }}
         onClick={e => e.stopPropagation()}

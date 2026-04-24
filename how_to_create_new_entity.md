@@ -1,46 +1,35 @@
-## i Want to create the CRUD endpoint for Match
+## i Want to create the CRUD endpoint for MATCH_PLAYER_CARD and MATCH_PLAYER_GOAL
 ## i need the db model, ninja schema, ninja api, the frontend and tests.
  
-
-MATCH		DB MODEL:		
+MATCH_PLAYER_CARD
 name,type,required,can_be_empty,validator
-status,enum,YES,NO,"[draft, canceled, finished, expected]"
-home_team_id -> team.id,FK,NO,,"must be different from away_team_id"
-away_team_id -> team.id,FK,NO,,"must be different from home_team_id"
-home_score,IntegerField,NO,,">= 0"
-away_score,IntegerField,NO,,">= 0"
-home_fair_play,IntegerField,NO,,"[-5 ~ 5]"
-away_fair_play,IntegerField,NO,,"[-5 ~ 5]"
-referee_id -> referee.id,FK,NO,,
-stadium_id -> stadium.id,FK,NO,,
-scheduled_at,DateTimeField,NO,,
+team_id -> team.id,FK,YES,-,"team must be one of the two from the match id"
+player_id -> player.id,FK,YES,-,"player must belong to team"
+match_id -> match.id,FK,YES,-,-
+card_type,CharField(10),YES,NO,"[yellow, red]"
+minute,IntegerField,YES,-,"[0–130]"
 comments,TextField,NO,YES,Trim
-tournament_id,FK,NO,,	
 
-Constraints you must enforce (both frontend and backend):
-    status expected: 
-    required: home_team_id, away_team_id, referee_id, stadium_id, scheduled_at
-    and 
-    home_team_id != away_team_id, scores/fair_play should be null
+MATCH_PLAYER_GOAL
+name,type,required,can_be_empty,validator
+team_id -> team.id,FK,YES,-,"team must be one of the two from the match id"
+player_id -> player.id,FK,YES,-,"player must belong to the team"
+match_id -> match.id,FK,YES,-,-
+own_goal,BooleanField,YES,-,-
+minute,IntegerField,YES,-,"[0–130]"
 
-    status finished:
-    required: home_team_id, away_team_id, referee_id, stadium_id, scheduled_at, home_score, away_score, referee_id, stadium_id, home_fair_play, away_fair_play
+These will be handled from:
+There must be a Match Goals area inside match details for every status FINISHED match, the way there is a players area inside the Team details. 
+And a Match Cards area.
 
-    status canceled or draft:
-    required: None except status
+And each area will have the option Add New Goal or Add New Card.
+With the add button a modal will open having the fields that must be inserted, and button options "add" and "cancel".
+While the modal is open the "add new card/goal" should not be visible. 
+The match field should be not visible but prefilled from the match we are inside of, and the available teams should be only the two of the specific match and the players only the ones from the teams and if team selected the selected team.
 
-Continuing
+After creating these and the respective tests, run the tests yourself (u can see README.md for how), and fix any problems on the spot. 
 
-Tournament FK null means the match is friendly
-
-Use similar UI for the front end as we did for referees. You can see the wireframes in frontend\wireframes\referee or directly in the frontend\src\pages\RefereesPage.jsx
-Also use similar structure as we did for referees, you can see a summary of the previous work in the following example. Dont overstretch with tests, just important ones, this is an mvp. 
-In the end RUN YOURSELF the tests and if any errors arise FIX them.
-
-### For FKs, like home_team and away_team make them appear as clickable names that will open a new tab and navigate to the already existing details for them
-
- ## Example from referee:
- Everything is written. Here's a summary of what was created and what you need to do to run it:
+ ## Example work from referee:
 
   What was created
 
