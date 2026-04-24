@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 
@@ -32,14 +33,16 @@ const RESULT_COLOR  = { win: colors.tertiary, draw: colors.onSurfaceVariant, los
 const RESULT_LABEL  = { win: 'Win',           draw: 'Draw',                  loss: 'Loss'      }
 
 export default function Team() {
+  const [squadOpen, setSquadOpen] = useState(false)
+
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* TopAppBar */}
       <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
         <div style={{ width: '2rem' }} />
         <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>My Team</h1>
-        <button style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
-          <span className="material-symbols-outlined">more_vert</span>
+        <button style={{ color: colors.primary, background: 'none', border: `1.5px solid ${colors.primary}`, borderRadius: '1rem', cursor: 'pointer', padding: '0.3rem 0.9rem', fontSize: '0.75rem', fontWeight: 600, lineHeight: 1 }}>
+          Edit
         </button>
       </header>
 
@@ -58,7 +61,6 @@ export default function Team() {
         {/* Team identity */}
         <section style={{ marginTop: '4rem', padding: '0 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.25rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.025em', color: colors.onSurface, margin: 0 }}>TEAM NORTH</h2>
-          <p style={{ fontSize: '0.75rem', color: colors.onSurfaceVariant, margin: 0 }}>Northern District · Est. 2008</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.5rem' }}>
             <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant, marginRight: '0.25rem' }}>Form</span>
             {FORM.map((f, i) => (
@@ -84,28 +86,27 @@ export default function Team() {
         </section>
 
         {/* Squad */}
-        <section style={{ marginTop: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', marginBottom: '0.75rem' }}>
+        <section style={{ marginTop: '1.25rem', padding: '0 1rem' }}>
+          <button
+            onClick={() => setSquadOpen(o => !o)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: colors.surfaceContainerLowest, border: GHOST, borderRadius: squadOpen ? `${radius.xl} ${radius.xl} 0 0` : radius.xl, padding: '0.75rem 1rem', cursor: 'pointer' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>person</span>
-              <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>Squad</h2>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface }}>Squad</span>
+              <span style={{ fontSize: '0.625rem', fontWeight: 500, color: colors.onSurfaceVariant }}>{SQUAD.length} Players</span>
             </div>
-            <span style={{ fontSize: '0.625rem', fontWeight: 500, color: colors.onSurfaceVariant }}>18 Players</span>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', padding: '0 1rem 0.5rem', scrollbarWidth: 'none' }}>
-            {SQUAD.map((p, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.375rem', flexShrink: 0, width: '4rem' }}>
-                <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', overflow: 'hidden', border: GHOST, background: colors.surfaceContainer, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {p.photo
-                    ? <img src={p.photo} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', color: colors.onSurfaceVariant }}>person</span>
-                  }
+            <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant, transition: 'transform 0.2s', transform: squadOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>expand_more</span>
+          </button>
+          {squadOpen && (
+            <div style={{ background: colors.surfaceContainerLowest, border: GHOST, borderTop: 'none', borderRadius: `0 0 ${radius.xl} ${radius.xl}`, overflow: 'hidden' }}>
+              {SQUAD.map((p, i) => (
+                <div key={i} style={{ padding: '0.625rem 1rem', borderTop: i === 0 ? 'none' : GHOST, fontSize: '0.875rem', fontWeight: 500, color: colors.onSurface }}>
+                  {p.name}
                 </div>
-                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: colors.onSurface, textAlign: 'center', lineHeight: 1.3 }}>{p.name}</span>
-                <span style={{ fontSize: '0.55rem', fontWeight: 600, color: p.posColor || colors.tertiary, textTransform: 'uppercase' }}>{p.pos}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Tournaments */}
