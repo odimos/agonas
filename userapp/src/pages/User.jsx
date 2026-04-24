@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 
@@ -27,6 +28,7 @@ const AWARDS = [
 ]
 
 export default function User() {
+  const navigate = useNavigate()
   const [editing,  setEditing]  = useState(false)
   const [username, setUsername] = useState('JORDAN VANCE')
   const [bio,      setBio]      = useState('Lead forward for Northern Districts. Focused on precision striking and tactical positioning. 3-year league veteran.')
@@ -68,9 +70,14 @@ export default function User() {
         ) : (
           <>
             <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
-            <button style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
-              <span className="material-symbols-outlined">settings</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <button onClick={() => navigate('/referee-form')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+                <span className="material-symbols-outlined">assignment</span>
+              </button>
+              <button style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+                <span className="material-symbols-outlined">settings</span>
+              </button>
+            </div>
           </>
         )}
       </header>
