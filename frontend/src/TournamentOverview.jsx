@@ -1,32 +1,32 @@
-import { useState, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
 import { StatCard } from './Buttons'
+import { fetchTournaments, createTournament } from './api/tournaments'
+import { fetchPhases } from './api/phases'
 
-const MOCK_TOURNAMENTS = {
-  '1': {
-    id: 1, name: 'Tournament 1', status: 'ΕΝΕΡΓΟ',
-    progress: 60, totalTeams: 8, remainingTeams: 3,
-    startDate: '12/10/2024', type: 'Knockout', visibility: 'Visible',
-    description: 'Tournament 1 is currently in the late Phase 2 stage. System logs indicate all knockout brackets are synchronized with real-time server updates. Ensure all visibility settings are finalized before the weekend cutoff.',
-  },
-  '2': {
-    id: 2, name: 'Tournament 2', status: 'ΑΝΕΝΕΡΓΟ',
-    progress: 25, totalTeams: 6, remainingTeams: 6,
-    startDate: '15/01/2025', type: 'Round Robin', visibility: 'Hidden',
-    description: 'Tournament 2 is in early configuration. Team registrations are open and bracket generation is pending. Confirm visibility settings before publishing.',
-  },
+const BASE = import.meta.env.VITE_API_URL
+
+async function getTournament(id) {
+  const res = await fetch(`${BASE}/tournaments/${id}`)
+  if (!res.ok) throw new Error('Failed to fetch tournament')
+  return res.json()
 }
 
-function toInputDate(dmy) {
-  const [d, m, y] = dmy.split('/')
-  return `${y}-${m}-${d}`
+async function saveTournament(id, data) {
+  const res = await fetch(`${BASE}/tournaments/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to save tournament')
+  return res.json()
 }
 
-function fromInputDate(ymd) {
-  const [y, m, d] = ymd.split('-')
-  return `${d}/${m}/${y}`
+async function deleteTournament(id) {
+  const res = await fetch(`${BASE}/tournaments/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete tournament')
 }
 
 function DataCell({ label, last, onClick, children }) {
@@ -44,39 +44,99 @@ function DataCell({ label, last, onClick, children }) {
 export default function TournamentOverview() {
   const { id } = useParams()
   const { t } = useLang()
-  const tour = MOCK_TOURNAMENTS[id] ?? MOCK_TOURNAMENTS['1']
-
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+  const navigate = useNavigate()
   const dateInputRef = useRef(null)
 
+  const [tour,    setTour]    = useState(null)
+  const [phases,  setPhases]  = useState([])
+  const [editing, setEditing] = useState(false)
+  const [draft,   setDraft]   = useState(null)
+  const [confirm, setConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    getTournament(id).then(data => { setTour(data); setDraft(data) }).catch(() => {})
+    fetchPhases(id).then(setPhases).catch(() => {})
+  }, [id])
+
   function handleCancel() {
-    setDraft({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+    setDraft(tour)
     setEditing(false)
   }
 
+  async function handleSave() {
+    const updated = await saveTournament(id, {
+      name:       draft.name,
+      started:    draft.started || null,
+      type:       draft.type,
+      active:     draft.active,
+      visibility: draft.visibility,
+    })
+    setTour(updated)
+    setDraft(updated)
+    setEditing(false)
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await deleteTournament(id)
+      navigate('/tournaments')
+    } catch {
+      setDeleting(false)
+    }
+  }
+
+  if (!tour || !draft) return null
+
+  const sortedPhases   = [...phases].sort((a, b) => a.order - b.order)
+  const phase1         = sortedPhases[0]
+  const allTeams       = phase1 ? phase1.team_ids.length : 0
+  const openPhases     = sortedPhases.filter(p => p.is_open)
+  const lastOpenPhase  = openPhases[openPhases.length - 1]
+  const remainingTeams = lastOpenPhase ? lastOpenPhase.team_ids.length : 0
+  const progress       = allTeams > 0
+    ? Math.round(((allTeams - remainingTeams) / allTeams) * 10) * 10
+    : 0
+
   return (
     <div style={st.page}>
+
+      {/* Confirm delete modal */}
+      {confirm && (
+        <div style={ms.overlay} onClick={() => setConfirm(false)}>
+          <div style={ms.modal} onClick={e => e.stopPropagation()}>
+            <div style={ms.header}>
+              <span className="material-symbols-outlined" style={{ color: colors.error, fontSize: '1.5rem' }}>warning</span>
+              <h3 style={ms.title}>Διαγραφή τουρνουά</h3>
+            </div>
+            <p style={ms.body}>Είσαι σίγουρος; Η ενέργεια είναι μη αναστρέψιμη. Θα διαγραφούν επίσης όλες οι φάσεις του τουρνουά.</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button style={ms.cancelBtn} onClick={() => setConfirm(false)}>Ακύρωση</button>
+              <button style={ms.deleteBtn} onClick={handleDelete} disabled={deleting}>
+                {deleting ? '...' : 'Διαγραφή'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div style={st.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.375rem' }}>
-            <h1 style={st.title}>{tour.name.toUpperCase()}</h1>
             {editing ? (
-              <select
-                value={draft.status}
-                onChange={e => setDraft(d => ({ ...d, status: e.target.value }))}
-                style={{ ...st.statusSelect, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusSelectInactive : {}) }}
-              >
-                <option value="ΕΝΕΡΓΟ">{t('ΕΝΕΡΓΟ')}</option>
-                <option value="ΑΝΕΝΕΡΓΟ">{t('ΑΝΕΝΕΡΓΟ')}</option>
-              </select>
+              <input
+                style={st.nameInput}
+                value={draft.name}
+                onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
+              />
             ) : (
-              <div style={{ ...st.statusBadge, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusBadgeInactive : {}) }}>
-                {t(draft.status)}
-              </div>
+              <h1 style={st.title}>{tour.name.toUpperCase()}</h1>
             )}
+            <div style={{ ...st.statusBadge, ...(!draft.active ? st.statusBadgeInactive : {}) }}>
+              {draft.active ? 'Ενεργό' : 'Ανενεργό'}
+            </div>
           </div>
           <p style={st.subtitle}>{t('to_subtitle')}</p>
         </div>
@@ -84,7 +144,7 @@ export default function TournamentOverview() {
           {editing ? (
             <>
               <button style={st.cancelBtn} onClick={handleCancel}>{t('modal_cancel')}</button>
-              <button style={st.saveBtn} onClick={() => setEditing(false)}>{t('modal_save')}</button>
+              <button style={st.saveBtn} onClick={handleSave}>{t('modal_save')}</button>
             </>
           ) : (
             <button style={st.editBtn} onClick={() => setEditing(true)}>{t('modal_edit')}</button>
@@ -97,39 +157,33 @@ export default function TournamentOverview() {
 
         {/* Progress card */}
         <div style={st.progressCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <span style={st.cardLabel}>{t('to_progress')}</span>
-              <div style={st.progressNum}>{tour.progress}%</div>
-            </div>
-            <button style={st.graphBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>auto_graph</span>
-              {t('to_gen_graph')}
-            </button>
+          <div>
+            <span style={st.cardLabel}>{t('to_progress')}</span>
+            <div style={st.progressNum}>{progress}%</div>
           </div>
           <div style={st.progressBarTrack}>
-            <div style={{ ...st.progressBarFill, width: `${tour.progress}%` }} />
+            <div style={{ ...st.progressBarFill, width: `${progress}%` }} />
           </div>
         </div>
 
-        {/* Teams stat cards */}
-        <StatCard label={t('to_total_teams')}     count={tour.totalTeams}     />
-        <StatCard label={t('to_remaining_teams')} count={tour.remainingTeams} accentColor={colors.primary} />
+        {/* Stat cards */}
+        <StatCard label={t('to_total_teams')} count={allTeams} />
+        <StatCard label="Εναπομείναντες" count={remainingTeams} accentColor={colors.primary} />
 
         {/* Data grid */}
         <div style={st.dataGrid}>
 
           {/* Start Date */}
           <DataCell label={t('to_start_date')} onClick={editing ? () => dateInputRef.current?.showPicker?.() : undefined}>
-            <span style={st.dataCellValue}>{draft.startDate}</span>
+            <span style={st.dataCellValue}>{draft.started ?? '—'}</span>
             {editing && (
               <>
                 <span className="material-symbols-outlined" style={st.dataCellIcon}>calendar_today</span>
                 <input
                   ref={dateInputRef}
                   type="date"
-                  value={toInputDate(draft.startDate)}
-                  onChange={e => setDraft(d => ({ ...d, startDate: fromInputDate(e.target.value) }))}
+                  value={draft.started ?? ''}
+                  onChange={e => setDraft(d => ({ ...d, started: e.target.value || null }))}
                   style={st.hiddenDateInput}
                   onClick={e => e.stopPropagation()}
                 />
@@ -137,22 +191,26 @@ export default function TournamentOverview() {
             )}
           </DataCell>
 
-          {/* Type — always read-only */}
+          {/* Type */}
           <DataCell label={t('to_type')}>
-            <span style={st.dataCellValue}>{tour.type}</span>
-            <span className="material-symbols-outlined" style={st.dataCellIcon}>schema</span>
+            {editing ? (
+              <select style={st.fieldSelect} value={draft.type} onChange={e => setDraft(d => ({ ...d, type: e.target.value }))}>
+                <option value="knockout">Knockout</option>
+              </select>
+            ) : (
+              <>
+                <span style={st.dataCellValue}>{draft.type}</span>
+                <span className="material-symbols-outlined" style={st.dataCellIcon}>schema</span>
+              </>
+            )}
           </DataCell>
 
           {/* Visibility */}
           <DataCell label={t('to_visibility')} last>
             {editing ? (
-              <select
-                value={draft.visibility}
-                onChange={e => setDraft(d => ({ ...d, visibility: e.target.value }))}
-                style={st.fieldSelect}
-              >
-                <option value="Visible">Visible</option>
-                <option value="Hidden">Hidden</option>
+              <select style={st.fieldSelect} value={draft.visibility} onChange={e => setDraft(d => ({ ...d, visibility: e.target.value }))}>
+                <option value="public">Δημόσιο</option>
+                <option value="private">Ιδιωτικό</option>
               </select>
             ) : (
               <>
@@ -164,29 +222,6 @@ export default function TournamentOverview() {
 
         </div>
 
-        {/* Decorative card */}
-        <div style={st.decoCard}>
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDUKDE6blm6pJmeS_ira6JCjiBQCoPJZNHmDPn3q6oFKVeW1UKST3y4s7yBLhaXj4d8_ttMieYE5eLJYedlEWvcCVnQL84Uu2qaprwHT1soL1L-vkvI8rFSjZqwd79BIa_oHrXghxDQ0n2KGWxZvQzHusWd_D3ZVUTE5YYuCpUJX_daDRsBJHBNoP93bCkM_XWumIuBSDTpAi-O1tA1-6NLTUr9P8c1GFvsB0jobPP00CxMin07rfENwSwmyooSuJMq2cekjNkYlY"
-            alt=""
-            style={st.decoImg}
-          />
-          <div style={st.decoContent}>
-            <h3 style={st.decoTitle}>{t('to_league_env')}</h3>
-            <p style={st.decoText}>{tour.description}</p>
-            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem' }}>
-              <div style={st.indicator}>
-                <span style={{ ...st.dot, backgroundColor: colors.tertiary }} />
-                {t('to_realtime')}
-              </div>
-              <div style={st.indicator}>
-                <span style={{ ...st.dot, backgroundColor: colors.outlineVariant }} />
-                {t('to_auto_archive')}
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       {/* Danger Zone */}
@@ -195,7 +230,7 @@ export default function TournamentOverview() {
           <p style={st.dangerTitle}>{t('to_danger_zone')}</p>
           <p style={st.dangerText}>{t('to_danger_text')}</p>
         </div>
-        <button style={st.dangerBtn}>
+        <button style={st.dangerBtn} onClick={() => setConfirm(true)}>
           <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete_forever</span>
           {t('to_delete')}
         </button>
@@ -214,8 +249,6 @@ const st = {
     flexDirection: 'column',
     gap: '2rem',
   },
-
-  // Header
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -230,6 +263,18 @@ const st = {
     color: colors.onSurface,
     margin: 0,
     fontFamily: fonts.headline,
+  },
+  nameInput: {
+    fontSize: '2rem',
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: colors.onSurface,
+    fontFamily: fonts.headline,
+    border: 'none',
+    borderBottom: `2px solid ${colors.primary}`,
+    background: 'none',
+    outline: 'none',
+    padding: '0 0 0.125rem',
   },
   subtitle: {
     fontSize: '0.875rem',
@@ -250,30 +295,10 @@ const st = {
     letterSpacing: '0.08em',
     fontFamily: fonts.label,
   },
-  statusSelect: {
-    backgroundColor: colors.secondaryContainer,
-    color: colors.onSecondaryContainer,
-    border: `1px solid ${colors.outlineVariant}`,
-    borderRadius: radius.DEFAULT,
-    padding: '0.1875rem 0.5rem',
-    fontSize: '0.625rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    fontFamily: fonts.label,
-    cursor: 'pointer',
-    outline: 'none',
-  },
   statusBadgeInactive: {
     backgroundColor: colors.surfaceContainerHigh,
     color: colors.onSurfaceVariant,
   },
-  statusSelectInactive: {
-    backgroundColor: colors.surfaceContainerHigh,
-    color: colors.onSurfaceVariant,
-  },
-
-  // Header action buttons (modal-style)
   editBtn: {
     padding: '0.5rem 2rem',
     backgroundColor: colors.primary,
@@ -307,15 +332,11 @@ const st = {
     cursor: 'pointer',
     fontFamily: fonts.label,
   },
-
-  // Bento
   bentoGrid: {
     display: 'grid',
     gridTemplateColumns: '3fr 1fr 1fr',
-    gridTemplateRows: 'auto auto auto',
     gap: '1.5rem',
   },
-
   progressCard: {
     backgroundColor: colors.surfaceContainerLowest,
     borderLeft: `4px solid ${colors.tertiary}`,
@@ -323,7 +344,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    minHeight: 0,
+    gap: '1rem',
   },
   cardLabel: {
     display: 'block',
@@ -343,25 +364,12 @@ const st = {
     lineHeight: 1,
     fontFamily: fonts.headline,
   },
-  graphBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: `${colors.primaryContainer}33`,
-    color: colors.primary,
-    border: 'none',
-    borderRadius: radius.DEFAULT,
-    fontSize: '0.6875rem', fontWeight: 700,
-    textTransform: 'uppercase', letterSpacing: '0.06em',
-    cursor: 'pointer', fontFamily: fonts.label,
-    flexShrink: 0,
-  },
   progressBarTrack: {
     width: '100%',
     height: '4px',
     backgroundColor: colors.surfaceContainer,
     borderRadius: radius.full,
     overflow: 'hidden',
-    marginTop: '1rem',
   },
   progressBarFill: {
     height: '100%',
@@ -369,7 +377,6 @@ const st = {
     borderRadius: radius.full,
     transition: 'width 0.8s ease',
   },
-
   dataGrid: {
     gridColumn: '1 / -1',
     backgroundColor: colors.surfaceContainerLowest,
@@ -377,9 +384,7 @@ const st = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr',
   },
-  dataCell: {
-    padding: '1.5rem',
-  },
+  dataCell: { padding: '1.5rem' },
   dataCellLabel: {
     display: 'block',
     fontSize: '0.625rem',
@@ -424,63 +429,6 @@ const st = {
     cursor: 'pointer',
     width: '100%',
   },
-
-  decoCard: {
-    gridColumn: '1 / -1',
-    position: 'relative',
-    height: '16rem',
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceContainerLowest,
-  },
-  decoImg: {
-    position: 'absolute',
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    opacity: 0.1,
-    filter: 'grayscale(1)',
-  },
-  decoContent: {
-    position: 'relative',
-    zIndex: 1,
-    padding: '2.5rem',
-    maxWidth: '40rem',
-  },
-  decoTitle: {
-    fontSize: '1.25rem',
-    fontWeight: 800,
-    letterSpacing: '-0.03em',
-    textTransform: 'uppercase',
-    color: colors.onSurface,
-    margin: '0 0 0.75rem',
-    fontFamily: fonts.headline,
-  },
-  decoText: {
-    fontSize: '0.875rem',
-    color: colors.onSurfaceVariant,
-    lineHeight: 1.6,
-    margin: 0,
-  },
-  indicator: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.6875rem',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    color: colors.primary,
-    fontFamily: fonts.label,
-  },
-  dot: {
-    width: '0.5rem',
-    height: '0.5rem',
-    borderRadius: radius.full,
-    flexShrink: 0,
-  },
-
-  // Danger Zone
   dangerZone: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -516,5 +464,43 @@ const st = {
     color: colors.error,
     cursor: 'pointer', fontFamily: fonts.label,
     flexShrink: 0,
+  },
+}
+
+const ms = {
+  overlay: {
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    width: '420px', padding: '2rem', fontFamily: fonts.body,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', gap: '1rem',
+  },
+  header: {
+    display: 'flex', alignItems: 'center', gap: '0.75rem',
+  },
+  title: {
+    fontSize: '1rem', fontWeight: 700, color: colors.onSurface, margin: 0,
+    fontFamily: fonts.headline,
+  },
+  body: {
+    fontSize: '0.875rem', color: colors.onSurfaceVariant, margin: 0, lineHeight: 1.5,
+  },
+  cancelBtn: {
+    padding: '0.5rem 1.25rem',
+    background: 'none',
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem', fontWeight: 500,
+    color: colors.onSurface, cursor: 'pointer', fontFamily: fonts.label,
+  },
+  deleteBtn: {
+    padding: '0.5rem 1.5rem',
+    backgroundColor: colors.error,
+    border: 'none',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem', fontWeight: 700,
+    color: colors.onError, cursor: 'pointer', fontFamily: fonts.label,
   },
 }

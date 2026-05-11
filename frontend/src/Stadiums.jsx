@@ -131,7 +131,7 @@ export default function Stadiums() {
           onEditingChange={editing => { if (!editing) setSelectedForm(initStadiumForm(selected)) }}
         >
           {(editing) => (
-            <StadiumModalContent form={selectedForm} setForm={setSelectedForm} editing={editing} />
+            <StadiumModalContent form={selectedForm} setForm={setSelectedForm} editing={editing} stadiumId={selected.id} />
           )}
         </ItemModal>
       )}

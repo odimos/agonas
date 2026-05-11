@@ -3,35 +3,6 @@ import { test, expect } from '@playwright/test'
 
 const API = 'http://localhost:8000/api'
 
-async function getOrCreateTeam(request, name) {
-  const res = await request.get(`${API}/teams/?search=${encodeURIComponent(name)}`)
-  const list = await res.json()
-  const found = list.find(t => t.name === name)
-  if (found) return found.id
-  const created = await request.post(`${API}/teams/`, { data: { name, is_active: true } })
-  return (await created.json()).id
-}
-
-async function getOrCreateReferee(request) {
-  const res = await request.get(`${API}/referees/?search=Spec`)
-  const list = await res.json()
-  if (list.length) return list[0].id
-  const created = await request.post(`${API}/referees/`, {
-    data: { first_name: 'Spec', last_name: 'Ref', phone: '6900000099' },
-  })
-  return (await created.json()).id
-}
-
-async function getOrCreateStadium(request) {
-  const res = await request.get(`${API}/stadiums/?search=SpecStad`)
-  const list = await res.json()
-  if (list.length) return list[0].id
-  const created = await request.post(`${API}/stadiums/`, {
-    data: { name: 'SpecStad', phone: '2100000099', address: 'Stadium St 1' },
-  })
-  return (await created.json()).id
-}
-
 async function apiCreateDraft(request) {
   const res = await request.post(`${API}/matches/`, { data: { status: 'draft' } })
   return (await res.json()).id
@@ -41,119 +12,251 @@ async function apiDelete(request, id) {
   await request.delete(`${API}/matches/${id}`)
 }
 
-function clickRow(page, text) {
-  return page.getByTestId('match-row').filter({ hasText: text }).first().click()
+async function apiCleanupDrafts(request) {
+  const res = await request.get(`${API}/matches/?status=draft`)
+  const all = await res.json()
+  for (const m of all) await apiDelete(request, m.id)
 }
 
-// ─── list ─────────────────────────────────────────────────────────────────────
+// ─── list / heading ───────────────────────────────────────────────────────────
 
-test('list page renders heading and add button', async ({ page }) => {
-  await page.goto('/matches')
-  await expect(page.getByRole('heading', { name: 'Matches' })).toBeVisible()
+test('dashboard renders heading, add button, and week navigation', async ({ page }) => {
+  await page.goto('/dashboard')
+  await expect(page.getByRole('heading', { name: 'Πρόγραμμα Αγώνων' })).toBeVisible()
   await expect(page.getByTestId('add-match-btn')).toBeVisible()
-  await expect(page.getByTestId('search-input')).toBeVisible()
+  // week nav shows two dates separated by —
+  await expect(page.locator('text=—').first()).toBeVisible()
 })
 
 // ─── add draft ────────────────────────────────────────────────────────────────
 
 test('add draft match creates a new row', async ({ page, request }) => {
-  await page.goto('/matches')
+  await apiCleanupDrafts(request)
 
+  await page.goto('/dashboard')
   await page.getByTestId('add-match-btn').click()
-  await expect(page.getByTestId('modal-title')).toHaveText('Add Match')
 
-  // status is already draft by default — just save
+  // modal opens
+  await expect(page.locator('h2').filter({ hasText: 'Προσθήκη Αγώνα' })).toBeVisible()
+  // status is already draft by default — submit
   await page.getByTestId('btn-save').click()
 
-  await expect(page.getByTestId('modal-title')).not.toBeVisible()
-  // draft row appears (shows "— draft —")
-  const rows = page.getByTestId('match-row')
-  await expect(rows.first()).toBeVisible()
+  await expect(page.locator('h2').filter({ hasText: 'Προσθήκη Αγώνα' })).not.toBeVisible()
+  // draft row appears
+  await expect(page.getByTestId('match-row').first()).toBeVisible()
 
-  // cleanup — delete any draft matches we just created
-  const res = await request.get(`${API}/matches/`)
-  const all = await res.json()
-  for (const m of all.filter(m => m.status === 'draft')) await apiDelete(request, m.id)
+  await apiCleanupDrafts(request)
 })
 
-// ─── details ──────────────────────────────────────────────────────────────────
+// ─── add expected match ───────────────────────────────────────────────────────
 
-test('clicking a row opens details modal', async ({ page, request }) => {
-  const id = await apiCreateDraft(request)
+test('add expected match with all required fields succeeds', async ({ page, request }) => {
+  // ensure teams, referee, stadium exist
+  const homeRes = await request.post(`${API}/teams/`, { data: { name: 'DashHome', is_active: true } })
+  const awayRes = await request.post(`${API}/teams/`, { data: { name: 'DashAway', is_active: true } })
+  const homeId  = (await homeRes.json()).id
+  const awayId  = (await awayRes.json()).id
+  const refRes  = await request.post(`${API}/referees/`, { data: { first_name: 'DashRef', last_name: 'One', phone: '6900000099' } })
+  const refId   = (await refRes.json()).id
+  const stRes   = await request.post(`${API}/stadiums/`, { data: { name: 'DashStad', phone: '2100000099', address: 'St 1' } })
+  const stId    = (await stRes.json()).id
 
-  await page.goto('/matches')
-  await page.getByTestId('match-row').first().click()
+  await page.goto('/dashboard')
+  await page.getByTestId('add-match-btn').click()
 
-  await expect(page.getByTestId('modal-title')).toHaveText('Match Details')
-  await expect(page.getByTestId('btn-edit')).toBeVisible()
-  await expect(page.getByTestId('btn-delete')).toBeVisible()
+  await page.getByTestId('input-status').selectOption('expected')
+  await page.getByTestId('input-home-team').selectOption({ value: String(homeId) })
+  await page.getByTestId('input-away-team').selectOption({ value: String(awayId) })
+  await page.getByTestId('input-referee').selectOption({ value: String(refId) })
+  await page.getByTestId('input-stadium').selectOption({ value: String(stId) })
+  await page.getByTestId('input-scheduled-at').fill('2026-08-01T18:00')
 
-  await apiDelete(request, id)
+  await page.getByTestId('btn-save').click()
+  await expect(page.locator('h2').filter({ hasText: 'Προσθήκη Αγώνα' })).not.toBeVisible()
+
+  // cleanup
+  const all = await (await request.get(`${API}/matches/`)).json()
+  for (const m of all.filter(m => m.home_team_id === homeId)) await apiDelete(request, m.id)
+  await request.delete(`${API}/teams/${homeId}`)
+  await request.delete(`${API}/teams/${awayId}`)
+  await request.delete(`${API}/referees/${refId}`)
+  await request.delete(`${API}/stadiums/${stId}`)
 })
 
-// ─── edit ─────────────────────────────────────────────────────────────────────
+// ─── inline status change ─────────────────────────────────────────────────────
 
-test('edit modal changes status to canceled', async ({ page, request }) => {
+test('inline status dropdown updates match status', async ({ page, request }) => {
   const id = await apiCreateDraft(request)
 
-  await page.goto('/matches')
-  await page.getByTestId('match-row').first().click()
-  await page.getByTestId('btn-edit').click()
+  await page.goto('/dashboard')
 
-  await expect(page.getByTestId('modal-title')).toHaveText('Edit Match')
-  await page.getByTestId('input-status').selectOption('canceled')
-  await page.getByTestId('btn-save-changes').click()
+  // Target the exact row by match ID
+  const row = page.locator(`[data-match-id="${id}"]`)
+  await expect(row).toBeVisible()
 
-  await expect(page.getByTestId('modal-title')).not.toBeVisible()
-  await expect(page.getByTestId('match-row').filter({ hasText: 'Canceled' }).first()).toBeVisible()
+  await row.getByTestId('inline-status-select').selectOption('canceled', { force: true })
+  await page.waitForTimeout(1200)
+
+  const check = await request.get(`${API}/matches/${id}`)
+  expect((await check.json()).status).toBe('canceled')
 
   await apiDelete(request, id)
 })
 
 // ─── delete ───────────────────────────────────────────────────────────────────
 
-test('delete modal removes the match', async ({ page, request }) => {
+test('delete button removes the match', async ({ page, request }) => {
   const id = await apiCreateDraft(request)
-  const countBefore = (await (await request.get(`${API}/matches/`)).json()).length
 
-  await page.goto('/matches')
-  await page.getByTestId('match-row').first().click()
-  await page.getByTestId('btn-delete').click()
+  await page.goto('/dashboard')
 
-  await expect(page.getByTestId('modal-title')).toHaveText('Delete Match')
-  await page.getByTestId('btn-confirm-delete').click()
+  const row = page.locator(`[data-match-id="${id}"]`)
+  await expect(row).toBeVisible()
 
-  await expect(page.getByTestId('modal-title')).not.toBeVisible()
+  page.once('dialog', dialog => dialog.accept())
+  await row.locator('button[title="Delete"]').click()
+  await page.waitForTimeout(1200)
 
-  const countAfter = (await (await request.get(`${API}/matches/`)).json()).length
-  expect(countAfter).toBe(countBefore - 1)
+  const check = await request.get(`${API}/matches/${id}`)
+  expect(check.status()).toBe(404)
 })
 
-// ─── add expected ─────────────────────────────────────────────────────────────
+// ─── week navigation ──────────────────────────────────────────────────────────
 
-test('add expected match with all required fields succeeds', async ({ page, request }) => {
-  const homeId = await getOrCreateTeam(request, 'SpecHome')
-  const awayId = await getOrCreateTeam(request, 'SpecAway')
-  await getOrCreateReferee(request)
-  await getOrCreateStadium(request)
+test('week navigation changes the displayed date range', async ({ page }) => {
+  await page.goto('/dashboard')
+  const weekLabel = page.getByTestId('week-label')
+  const initial = await weekLabel.textContent()
 
-  await page.goto('/matches')
+  // navigate forward one week — the > button is the last chevron_right button
+  await page.getByRole('button', { name: '' }).filter({ has: page.locator('text=chevron_right') }).last().click()
+  await page.waitForTimeout(500)
+
+  const next = await weekLabel.textContent()
+  expect(next).not.toBe(initial)
+})
+
+// ─── status filter ────────────────────────────────────────────────────────────
+
+test('status filter dropdown hides non-matching rows', async ({ page, request }) => {
+  const draftId = await apiCreateDraft(request)
+
+  await page.goto('/dashboard')
+  const draftRow = page.locator(`[data-match-id="${draftId}"]`)
+  await expect(draftRow).toBeVisible()
+
+  // Open status dropdown and tick "Αναμενόμενο" — hides the draft row
+  await page.locator('button').filter({ hasText: 'ΚΑΤΑΣΤΑΣΗ' }).click()
+  await page.locator('button').filter({ hasText: 'Αναμενομενο' }).click()
+  await page.keyboard.press('Escape')
+
+  await expect(draftRow).not.toBeVisible()
+
+  // Clear all filters
+  await page.locator('button').filter({ hasText: 'ΚΑΘΑΡΙΣΜΟΣ' }).click()
+  await expect(draftRow).toBeVisible()
+
+  await apiDelete(request, draftId)
+})
+
+// ─── modal close ─────────────────────────────────────────────────────────────
+
+test('create modal closes when X is clicked', async ({ page }) => {
+  await page.goto('/dashboard')
   await page.getByTestId('add-match-btn').click()
+  await expect(page.locator('h2').filter({ hasText: 'Προσθήκη Αγώνα' })).toBeVisible()
+  await page.getByTestId('modal-close').click()
+  await expect(page.locator('h2').filter({ hasText: 'Προσθήκη Αγώνα' })).not.toBeVisible()
+})
 
-  await page.getByTestId('input-status').selectOption('expected')
-  await page.getByTestId('input-home-team').selectOption({ value: String(homeId) })
-  await page.getByTestId('input-away-team').selectOption({ value: String(awayId) })
-  await page.getByTestId('input-referee').selectOption({ index: 1 })
-  await page.getByTestId('input-stadium').selectOption({ index: 1 })
-  await page.getByTestId('input-scheduled-at').fill('2026-08-01T18:00')
+// ─── view modal (eye icon) ────────────────────────────────────────────────────
 
-  await page.getByTestId('btn-save').click()
+test('eye icon opens the match detail modal with all fields', async ({ page, request }) => {
+  const id = await apiCreateDraft(request)
+
+  await page.goto('/dashboard')
+  const row = page.locator(`[data-match-id="${id}"]`)
+  await expect(row).toBeVisible()
+
+  await row.locator('button[title="View"]').click()
+
+  await expect(page.getByTestId('modal-title')).toHaveText('Λεπτομέρειες Αγώνα')
+  await expect(page.getByTestId('btn-edit')).toBeVisible()
+  await expect(page.getByTestId('btn-delete')).toBeVisible()
+
+  // All key fields visible
+  await expect(page.getByTestId('input-status')).toBeVisible()
+  await expect(page.getByTestId('input-tournament')).toBeVisible()
+  await expect(page.getByTestId('input-home-team')).toBeVisible()
+  await expect(page.getByTestId('input-away-team')).toBeVisible()
+  await expect(page.getByTestId('input-referee')).toBeVisible()
+  await expect(page.getByTestId('input-stadium')).toBeVisible()
+  await expect(page.getByTestId('input-comments')).toBeVisible()
+
+  await apiDelete(request, id)
+})
+
+// ─── edit via modal ───────────────────────────────────────────────────────────
+
+test('edit modal updates match and row reflects change', async ({ page, request }) => {
+  const id = await apiCreateDraft(request)
+
+  await page.goto('/dashboard')
+  await page.locator(`[data-match-id="${id}"]`).locator('button[title="View"]').click()
+  await expect(page.getByTestId('modal-title')).toHaveText('Λεπτομέρειες Αγώνα')
+
+  await page.getByTestId('btn-edit').click()
+
+  // SelectField has pointerEvents toggled — use force
+  await page.getByTestId('input-status').selectOption('canceled', { force: true })
+  await page.getByTestId('btn-save-changes').click()
+
   await expect(page.getByTestId('modal-title')).not.toBeVisible()
 
-  await expect(page.getByTestId('match-row').filter({ hasText: 'SpecHome' }).first()).toBeVisible()
+  const check = await request.get(`${API}/matches/${id}`)
+  expect((await check.json()).status).toBe('canceled')
 
-  // cleanup
-  const res = await request.get(`${API}/matches/`)
-  const all = await res.json()
-  for (const m of all.filter(m => m.home_team_id === homeId)) await apiDelete(request, m.id)
+  await apiDelete(request, id)
+})
+
+// ─── delete via modal ─────────────────────────────────────────────────────────
+
+test('delete via detail modal removes the match', async ({ page, request }) => {
+  const id = await apiCreateDraft(request)
+
+  await page.goto('/dashboard')
+  await page.locator(`[data-match-id="${id}"]`).locator('button[title="View"]').click()
+  await expect(page.getByTestId('modal-title')).toHaveText('Λεπτομέρειες Αγώνα')
+
+  // Register BEFORE clicking — ItemModal uses window.confirm
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByTestId('btn-delete').click()
+
+  await expect(page.getByTestId('modal-title')).not.toBeVisible()
+
+  const check = await request.get(`${API}/matches/${id}`)
+  expect(check.status()).toBe(404)
+})
+
+// ─── comments field visible in modal ─────────────────────────────────────────
+
+test('comments field is editable in the detail modal', async ({ page, request }) => {
+  const id = await apiCreateDraft(request)
+
+  await page.goto('/dashboard')
+  await page.locator(`[data-match-id="${id}"]`).locator('button[title="View"]').click()
+  await page.getByTestId('btn-edit').click()
+
+  // textarea is visible and writable in edit mode
+  const comments = page.getByTestId('input-comments')
+  await comments.fill('Test comment from Playwright')
+  await page.getByTestId('btn-save-changes').click()
+
+  await page.waitForTimeout(800)
+  await expect(page.getByTestId('modal-title')).not.toBeVisible()
+
+  const check = await request.get(`${API}/matches/${id}`)
+  expect((await check.json()).comments).toBe('Test comment from Playwright')
+
+  await apiDelete(request, id)
 })

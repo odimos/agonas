@@ -1,8 +1,14 @@
 const BASE = import.meta.env.VITE_API_URL
 
-export async function fetchMatches(search = '') {
-  const params = search ? `?search=${encodeURIComponent(search)}` : ''
-  const res = await fetch(`${BASE}/matches/${params}`)
+export async function fetchMatches({ search = '', status = '', scheduledFrom = '', scheduledTo = '', phaseId = null } = {}) {
+  const p = new URLSearchParams()
+  if (search)        p.set('search', search)
+  if (status)        p.set('status', status)
+  if (scheduledFrom) p.set('scheduled_from', scheduledFrom)
+  if (scheduledTo)   p.set('scheduled_to', scheduledTo)
+  if (phaseId)       p.set('phase_id', phaseId)
+  const qs = p.toString() ? `?${p}` : ''
+  const res = await fetch(`${BASE}/matches/${qs}`)
   if (!res.ok) throw new Error('Failed to fetch matches')
   return res.json()
 }

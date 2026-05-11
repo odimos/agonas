@@ -49,6 +49,47 @@ class Stadium(models.Model):
         return self.name
 
 
+class StadiumAvailability(models.Model):
+    DAY_CHOICES = [
+        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'), (3, 'Thursday'),
+        (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday'),
+    ]
+    stadium    = models.ForeignKey(Stadium, on_delete=models.CASCADE, related_name='availabilities')
+    day        = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    quantity   = models.PositiveSmallIntegerField(default=1)
+
+    class Meta:
+        ordering = ['day', 'start_time']
+
+    def __str__(self):
+        return f"{self.stadium.name} — Day {self.day} {self.start_time}"
+
+
+class TeamPreference(models.Model):
+    team         = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='preferences')
+    availability = models.ForeignKey(StadiumAvailability, on_delete=models.CASCADE, related_name='preferences')
+    score        = models.PositiveSmallIntegerField(default=0)  # 0-3
+
+    class Meta:
+        unique_together = [('team', 'availability')]
+
+    def __str__(self):
+        return f"{self.team} — {self.availability} — {self.score}"
+
+
+class RefereePreference(models.Model):
+    referee      = models.ForeignKey('Referee', on_delete=models.CASCADE, related_name='preferences')
+    availability = models.ForeignKey(StadiumAvailability, on_delete=models.CASCADE, related_name='referee_preferences')
+    score        = models.PositiveSmallIntegerField(default=0)  # 0-3
+
+    class Meta:
+        unique_together = [('referee', 'availability')]
+
+    def __str__(self):
+        return f"{self.referee} — {self.availability} — {self.score}"
+
+
 class Referee(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -95,7 +136,14 @@ class Player(models.Model):
 
 
 class Tournament(models.Model):
-    name = models.CharField(max_length=150)
+    TYPE_CHOICES = [('knockout', 'Knockout'), ('league', 'League')]
+    VISIBILITY_CHOICES = [('public', 'Public'), ('private', 'Private')]
+
+    name       = models.CharField(max_length=150)
+    started    = models.DateField(null=True, blank=True)
+    type       = models.CharField(max_length=20, choices=TYPE_CHOICES, default='league')
+    active     = models.BooleanField(default=True)
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
 
     def save(self, *args, **kwargs):
         self.name = self.name.strip()
@@ -103,6 +151,20 @@ class Tournament(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Phase(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='phases')
+    order      = models.PositiveSmallIntegerField(default=1)
+    is_open    = models.BooleanField(default=False)
+    teams      = models.ManyToManyField('Team', blank=True, related_name='phases')
+
+    class Meta:
+        ordering = ['tournament', 'order']
+        unique_together = [('tournament', 'order')]
+
+    def __str__(self):
+        return f"{self.tournament.name} — Phase {self.order}"
 
 
 class Match(models.Model):
@@ -134,6 +196,9 @@ class Match(models.Model):
     comments = models.TextField(blank=True, null=True)
     tournament = models.ForeignKey(
         Tournament, null=True, blank=True, on_delete=models.SET_NULL,
+    )
+    phase = models.ForeignKey(
+        'Phase', null=True, blank=True, on_delete=models.SET_NULL,
     )
 
     def save(self, *args, **kwargs):

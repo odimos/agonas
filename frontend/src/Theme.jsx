@@ -13,6 +13,7 @@ import Players            from './Players'
 import Referees           from './Referees'
 import Stadiums           from './Stadiums'
 import Requests           from './Requests'
+import Tournaments        from './Tournaments'
 
 const styles = {
   // Break out of #root's 1126px centered constraint without transform
@@ -45,7 +46,7 @@ export default function Theme() {
           <Route path="/"            element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard"   element={<Dashboard />} />
           <Route path="/tournaments" element={<Tournament />}>
-            <Route index             element={<Navigate to="/tournaments/1" replace />} />
+            <Route index             element={<Tournaments />} />
             <Route path=":id"                    element={<TournamentOverview />} />
             <Route path=":id/phases/:phaseId"   element={<Phase />} />
           </Route>

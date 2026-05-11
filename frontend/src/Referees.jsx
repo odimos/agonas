@@ -129,7 +129,7 @@ export default function Referees() {
           onEditingChange={editing => { if (!editing) setSelectedForm(initRefereeForm(selected)) }}
         >
           {(editing) => (
-            <RefereeModalContent form={selectedForm} setForm={setSelectedForm} editing={editing} />
+            <RefereeModalContent form={selectedForm} setForm={setSelectedForm} editing={editing} refereeId={selected.id} />
           )}
         </ItemModal>
       )}

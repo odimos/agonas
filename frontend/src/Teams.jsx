@@ -232,6 +232,7 @@ export default function Teams() {
               availablePlayers={availablePlayers}
               onAddPlayer={handleAddPlayer}
               onRemovePlayer={handleRemovePlayer}
+              teamId={selected.id}
             />
           )}
         </ItemModal>

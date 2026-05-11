@@ -1,202 +1,361 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
+import { fetchPhase, fetchPhases, createPhase, updatePhase } from './api/phases'
+import { fetchMatches, updateMatch } from './api/matches'
+import { fetchTeams } from './api/teams'
 
-const MOCK_PHASES = {
-  '1-1': {
-    name: 'Phase One', number: '01', status: 'Active',
-    teams: [
-      { id: 'TA-01', name: 'Team Alpha',   leaguePoints: 1420, status: 'normal' },
-      { id: 'TB-02', name: 'Team Bravo',   leaguePoints: 1385, status: 'selected' },
-      { id: 'TC-03', name: 'Team Charlie', leaguePoints: 890,  status: 'eliminated' },
-      { id: 'TD-04', name: 'Team Delta',   leaguePoints: 1210, status: 'normal' },
-      { id: 'TE-05', name: 'Team Echo',    leaguePoints: 1050, status: 'normal' },
-      { id: 'TF-06', name: 'Team Foxtrot', leaguePoints: 970,  status: 'eliminated' },
-      { id: 'TG-07', name: 'Team Golf',    leaguePoints: 1300, status: 'normal' },
-      { id: 'TH-08', name: 'Team Hotel',   leaguePoints: 1140, status: 'normal' },
-    ],
-    matches: [
-      { teamA: 'Team Alpha',   teamB: 'Team Bravo',   scoreA: 2, scoreB: 1, status: 'Final',     datetime: 'Mar 12, 18:00' },
-      { teamA: 'Team Charlie', teamB: 'Team Delta',   scoreA: 0, scoreB: 3, status: 'Final',     datetime: 'Mar 12, 20:30' },
-      { teamA: 'Team Echo',    teamB: 'Team Foxtrot', scoreA: 1, scoreB: 1, status: 'Final',     datetime: 'Mar 13, 17:00' },
-      { teamA: 'Team Golf',    teamB: 'Team Hotel',   scoreA: 4, scoreB: 2, status: 'Final',     datetime: 'Mar 13, 19:30' },
-      { teamA: 'Team Bravo',   teamB: 'Team Delta',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 15, 18:00' },
-      { teamA: 'Team Alpha',   teamB: 'Team Golf',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 15, 20:00' },
-      { teamA: 'Team Echo',    teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 16, 17:30' },
-      { teamA: 'Team Charlie', teamB: 'Team Foxtrot', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 16, 19:00' },
-      { teamA: 'Team Alpha',   teamB: 'Team Echo',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 17, 17:00' },
-      { teamA: 'Team Delta',   teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 17, 19:00' },
-      { teamA: 'Team Bravo',   teamB: 'Team Foxtrot', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 18, 18:00' },
-      { teamA: 'Team Golf',    teamB: 'Team Charlie', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 18, 20:00' },
-      { teamA: 'Team Alpha',   teamB: 'Team Hotel',   scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 19, 18:00' },
-    ],
-  },
-  '1-2': {
-    name: 'Phase Two', number: '02', status: 'Active',
-    teams: [
-      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1520, status: 'selected' },
-      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1385, status: 'normal' },
-      { id: 'TD-04', name: 'Team Delta', leaguePoints: 1310, status: 'normal' },
-      { id: 'TG-07', name: 'Team Golf',  leaguePoints: 1280, status: 'normal' },
-      { id: 'TH-08', name: 'Team Hotel', leaguePoints: 1140, status: 'eliminated' },
-    ],
-    matches: [
-      { teamA: 'Team Alpha', teamB: 'Team Delta', scoreA: 3, scoreB: 0, status: 'Final',     datetime: 'Apr 02, 17:00' },
-      { teamA: 'Team Bravo', teamB: 'Team Golf',  scoreA: 2, scoreB: 2, status: 'Final',     datetime: 'Apr 02, 19:30' },
-      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 05, 17:00' },
-      { teamA: 'Team Delta', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 05, 19:30' },
-      { teamA: 'Team Hotel', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 06, 18:00' },
-    ],
-  },
-  '1-3': {
-    name: 'Phase Three', number: '03', status: 'Inactive',
-    teams: [
-      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1620, status: 'normal' },
-      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1490, status: 'normal' },
-      { id: 'TG-07', name: 'Team Golf',  leaguePoints: 1350, status: 'normal' },
-    ],
-    matches: [
-      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 10, 18:00' },
-      { teamA: 'Team Alpha', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 10, 20:00' },
-      { teamA: 'Team Bravo', teamB: 'Team Golf',  scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'May 11, 18:00' },
-    ],
-  },
-  '1-4': {
-    name: 'Phase Four', number: '04', status: 'Inactive',
-    teams: [
-      { id: 'TA-01', name: 'Team Alpha', leaguePoints: 1620, status: 'normal' },
-      { id: 'TB-02', name: 'Team Bravo', leaguePoints: 1490, status: 'normal' },
-    ],
-    matches: [
-      { teamA: 'Team Alpha', teamB: 'Team Bravo', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Jun 01, 18:00' },
-    ],
-  },
-  '2-1': {
-    name: 'Phase One', number: '01', status: 'Active',
-    teams: [
-      { id: 'TI-01', name: 'Team India',   leaguePoints: 980,  status: 'normal' },
-      { id: 'TJ-02', name: 'Team Juliet',  leaguePoints: 1100, status: 'selected' },
-      { id: 'TK-03', name: 'Team Kilo',    leaguePoints: 870,  status: 'eliminated' },
-      { id: 'TL-04', name: 'Team Lima',    leaguePoints: 1050, status: 'normal' },
-      { id: 'TM-05', name: 'Team Mike',    leaguePoints: 1190, status: 'normal' },
-      { id: 'TN-06', name: 'Team November',leaguePoints: 930,  status: 'eliminated' },
-    ],
-    matches: [
-      { teamA: 'Team India',   teamB: 'Team Juliet',  scoreA: 1, scoreB: 2, status: 'Final',     datetime: 'Mar 20, 18:00' },
-      { teamA: 'Team Kilo',    teamB: 'Team Lima',    scoreA: 0, scoreB: 1, status: 'Final',     datetime: 'Mar 20, 20:00' },
-      { teamA: 'Team Mike',    teamB: 'Team November',scoreA: 3, scoreB: 1, status: 'Final',     datetime: 'Mar 21, 18:00' },
-      { teamA: 'Team Juliet',  teamB: 'Team Lima',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 23, 17:00' },
-      { teamA: 'Team India',   teamB: 'Team Mike',    scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Mar 23, 19:30' },
-    ],
-  },
-  '2-2': {
-    name: 'Phase Two', number: '02', status: 'Inactive',
-    teams: [
-      { id: 'TJ-02', name: 'Team Juliet', leaguePoints: 1200, status: 'normal' },
-      { id: 'TL-04', name: 'Team Lima',   leaguePoints: 1080, status: 'normal' },
-      { id: 'TM-05', name: 'Team Mike',   leaguePoints: 1190, status: 'normal' },
-    ],
-    matches: [
-      { teamA: 'Team Juliet', teamB: 'Team Lima', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 15, 18:00' },
-      { teamA: 'Team Juliet', teamB: 'Team Mike', scoreA: null, scoreB: null, status: 'Scheduled', datetime: 'Apr 15, 20:00' },
-    ],
-  },
-}
+const BASE = import.meta.env.VITE_API_URL
 
-function TeamCard({ team, isSelected, onSelect, t }) {
-  const isEliminated = team.status === 'eliminated'
+const DAY_NAMES = ['Δευτ', 'Τρίτ', 'Τετ', 'Πέμπ', 'Παρ', 'Σαββ', 'Κυρ']
 
-  const cardStyle = {
-    ...st.teamCard,
-    ...(isSelected   ? st.teamCardSelected   : {}),
-    ...(isEliminated ? st.teamCardEliminated : {}),
+function ScheduleModal({ phaseId, teams, onClose, onApplied }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)
+
+  const [startDate, setStartDate] = useState(today)
+  const [endDate,   setEndDate]   = useState(twoWeeks)
+  const [mode,      setMode]      = useState('league')
+  const [loading,   setLoading]   = useState(false)
+  const [applying,  setApplying]  = useState(false)
+  const [preview,   setPreview]   = useState(null)
+  const [error,     setError]     = useState('')
+
+  async function handleGenerate() {
+    setLoading(true); setError(''); setPreview(null)
+    try {
+      const res = await fetch(`${BASE}/schedule/generate?phase_id=${phaseId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_date: startDate, end_date: endDate, mode }),
+      })
+      if (!res.ok) { setError('Σφάλμα κατά τη δημιουργία προγράμματος.'); return }
+      setPreview(await res.json())
+    } catch { setError('Σφάλμα σύνδεσης.') }
+    finally { setLoading(false) }
   }
 
+  async function handleApply() {
+    if (!preview) return
+    setApplying(true)
+    try {
+      const res = await fetch(`${BASE}/schedule/apply?phase_id=${phaseId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suggestions: preview.suggestions }),
+      })
+      if (!res.ok) { setError('Σφάλμα κατά την εφαρμογή.'); return }
+      onApplied(); onClose()
+    } catch { setError('Σφάλμα σύνδεσης.') }
+    finally { setApplying(false) }
+  }
+
+  function teamName(id) { return id ? (teams.find(t => t.id === id)?.name ?? `#${id}`) : 'BYE' }
+
+  function formatDt(iso) {
+    const d = new Date(iso)
+    const dow = (d.getDay() + 6) % 7
+    return `${DAY_NAMES[dow]} ${d.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit' })} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+  }
+
+  function scoreBadge(score, isBye) {
+    if (isBye) return <span style={{ fontSize:'0.625rem', fontWeight:700, color:'#9e9e9e', fontFamily:fonts.label }}>BYE</span>
+    const max = 9
+    const pct = Math.round((score / max) * 100)
+    const color = score >= 7 ? '#4caf50' : score >= 4 ? '#ff9800' : score >= 1 ? '#ffc107' : '#9e9e9e'
+    return <span style={{ fontSize:'0.625rem', fontWeight:700, color, fontFamily:fonts.label }}>{pct}%</span>
+  }
+
+  const totalScheduled = preview ? preview.suggestions.length : 0
+  const totalUnscheduled = preview ? preview.unscheduled.length : 0
+
   return (
-    <div style={cardStyle} onClick={() => !isEliminated && onSelect(team.id)}>
-      <div style={st.teamCardTop}>
-        <div style={{ ...st.teamIcon, ...(isSelected ? st.teamIconSelected : {}) }}>
-          <span className="material-symbols-outlined" style={{ color: isEliminated ? colors.outline : isSelected ? colors.tertiary : colors.outline }}>
-            {isEliminated ? 'close' : 'shield'}
-          </span>
-        </div>
-        {isSelected ? (
-          <button style={st.deleteBtn} onClick={e => e.stopPropagation()}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>delete</span>
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase' }}>{t('ph_delete')}</span>
+    <div style={sm.overlay} onClick={onClose}>
+      <div style={sm.modal} onClick={e => e.stopPropagation()}>
+        <div style={sm.header}>
+          <h2 style={sm.title}>Δημιουργία Προγράμματος</h2>
+          <button style={sm.closeBtn} onClick={onClose}>
+            <span className="material-symbols-outlined">close</span>
           </button>
-        ) : (
-          <span style={st.teamId}>{isEliminated ? t('ph_eliminated') : `ID: ${team.id}`}</span>
-        )}
+        </div>
+
+        <div style={sm.body}>
+          {/* Mode + date range */}
+          <div style={{ display:'flex', gap:'0.75rem', alignItems:'flex-end', flexWrap:'wrap' }}>
+            <div style={sm.field}>
+              <label style={sm.label}>Τύπος</label>
+              <select style={sm.input} value={mode} onChange={e => { setMode(e.target.value); setPreview(null) }}>
+                <option value="league">League (round-robin)</option>
+                <option value="knockout">Knockout</option>
+              </select>
+            </div>
+            <div style={sm.field}>
+              <label style={sm.label}>Από</label>
+              <input type="date" style={sm.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
+            </div>
+            <div style={sm.field}>
+              <label style={sm.label}>Έως</label>
+              <input type="date" style={sm.input} value={endDate} onChange={e => setEndDate(e.target.value)} />
+            </div>
+            <button style={sm.generateBtn} onClick={handleGenerate} disabled={loading}>
+              {loading ? '...' : 'Δημιουργία'}
+            </button>
+          </div>
+
+          {mode === 'knockout' && (
+            <p style={{ margin:0, fontSize:'0.8125rem', color:colors.onSurfaceVariant, backgroundColor:colors.surfaceContainerLow, padding:'0.5rem 0.75rem', borderRadius:radius.DEFAULT }}>
+              Knockout: κάθε ομάδα παίζει έναν αγώνα. Αν ο αριθμός ομάδων είναι μονός, μία ομάδα προχωράει αυτόματα (BYE).
+            </p>
+          )}
+
+          {error && <p style={{ color: colors.error, fontSize:'0.875rem', margin:0 }}>{error}</p>}
+
+          {/* Preview */}
+          {preview && (
+            <div style={{ display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+              <p style={{ margin:0, fontSize:'0.8125rem', color:colors.onSurfaceVariant }}>
+                {totalScheduled} αγώνες προγραμματίστηκαν
+                {totalUnscheduled > 0 && ` · ${totalUnscheduled} δεν βρέθηκε θέση`}
+              </p>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:'0.375rem', maxHeight:'16rem', overflowY:'auto' }}>
+                {preview.suggestions.map((s, i) => (
+                  <div key={i} style={{ ...sm.row, ...(s.is_bye ? { opacity: 0.7 } : {}) }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <span style={sm.matchLabel}>
+                        {teamName(s.home_team_id)} vs {teamName(s.away_team_id)}
+                        {s.is_bye && <span style={{ fontSize:'0.625rem', color:'#9e9e9e', marginLeft:'0.375rem' }}>(BYE)</span>}
+                      </span>
+                      <span style={sm.slotLabel}>{formatDt(s.scheduled_at)} · {s.stadium_name}</span>
+                    </div>
+                    {scoreBadge(s.score, s.is_bye)}
+                  </div>
+                ))}
+              </div>
+
+              {preview.unscheduled.length > 0 && (
+                <div style={{ padding:'0.5rem 0.75rem', backgroundColor:`${colors.error}0d`, borderRadius:radius.DEFAULT, border:`1px solid ${colors.error}33` }}>
+                  <p style={{ margin:0, fontSize:'0.8125rem', color:colors.error, fontWeight:600 }}>
+                    Δεν βρέθηκε θέση για {preview.unscheduled.length} αγώνα(ες). Προσθέστε περισσότερες διαθεσιμότητες γηπέδων.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div style={sm.footer}>
+          <button style={sm.cancelBtn} onClick={onClose}>Ακύρωση</button>
+          {preview && preview.suggestions.length > 0 && (
+            <button style={sm.applyBtn} onClick={handleApply} disabled={applying}>
+              {applying ? '...' : `Εφαρμογή (${preview.suggestions.length} αγώνες)`}
+            </button>
+          )}
+        </div>
       </div>
-      <h4 style={st.teamName}>{team.name}</h4>
-      <p style={st.teamPoints}>{t('ph_points')} {team.leaguePoints.toLocaleString()}</p>
     </div>
   )
 }
 
-function MatchCard({ match, t }) {
-  const isFinal     = match.status === 'Final'
-  const isScheduled = match.status === 'Scheduled'
+function TeamCard({ team, isSelected, isOpen, onSelect, onDelete, t }) {
+  return (
+    <div style={{ ...st.teamCard, ...(isSelected ? st.teamCardSelected : {}) }} onClick={() => isOpen && onSelect(team.id)}>
+      <div style={st.teamCardTop}>
+        <div style={{ ...st.teamIcon, ...(isSelected ? st.teamIconSelected : {}) }}>
+          <span className="material-symbols-outlined" style={{ color: isSelected ? colors.tertiary : colors.outline }}>shield</span>
+        </div>
+        {isOpen && isSelected ? (
+          <button style={st.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(team.id) }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>delete</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase' }}>{t('ph_delete')}</span>
+          </button>
+        ) : (
+          <span style={st.teamId}>ID: {team.id}</span>
+        )}
+      </div>
+      <h4 style={st.teamName}>{team.name}</h4>
+    </div>
+  )
+}
+
+function MatchCard({ match, teams, t }) {
+  const isFinal  = match.status === 'finished'
+  const isPending = match.status !== 'finished'
+  const homeTeam = teams.find(t => t.id === match.home_team_id)
+  const awayTeam = teams.find(t => t.id === match.away_team_id)
+  const datetime = match.scheduled_at
+    ? new Date(match.scheduled_at).toLocaleString('el-GR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '—'
 
   return (
-    <div style={{ ...st.matchCard, ...(isScheduled ? st.matchCardScheduled : {}) }}>
+    <div style={st.matchCard}>
+      {/* Teams + scores */}
       <div style={st.matchTeams}>
         <div style={st.matchRow}>
-          <span style={st.matchTeamName}>{match.teamA}</span>
-          <span style={{ ...st.matchScore, ...(isScheduled ? st.matchScoreMuted : {}) }}>
-            {isFinal ? match.scoreA : '--'}
+          <span style={st.matchTeamName}>{homeTeam?.name ?? '—'}</span>
+          <span style={{ ...st.matchScore, ...(isPending ? st.matchScoreMuted : {}) }}>
+            {isFinal ? match.home_score : '--'}
           </span>
         </div>
         <div style={st.matchRow}>
-          <span style={st.matchTeamName}>{match.teamB}</span>
-          <span style={{ ...st.matchScore, ...(isScheduled ? st.matchScoreMuted : {}) }}>
-            {isFinal ? match.scoreB : '--'}
+          <span style={st.matchTeamName}>{awayTeam?.name ?? '—'}</span>
+          <span style={{ ...st.matchScore, ...(isPending ? st.matchScoreMuted : {}) }}>
+            {isFinal ? match.away_score : '--'}
           </span>
         </div>
       </div>
       <div style={st.matchFooter}>
-        {isFinal     && <span style={st.matchStatusFinal}>{t('ph_final')}</span>}
-        {isScheduled && <span style={st.matchStatusScheduled}>{t('ph_scheduled')}</span>}
-        <span style={st.matchMeta}>{match.datetime}</span>
+        {isFinal  && <span style={st.matchStatusFinal}>{t('ph_final')}</span>}
+        {isPending && <span style={st.matchStatusScheduled}>{t('ph_scheduled')}</span>}
+        <span style={st.matchMeta}>{datetime}</span>
       </div>
     </div>
   )
 }
 
 export default function Phase() {
-  const { id, phaseId } = useParams()
+  const { id: tournamentId, phaseId } = useParams()
   const { t } = useLang()
-  const key   = `${id}-${phaseId}`
-  const phase = MOCK_PHASES[key] ?? MOCK_PHASES['1-1']
-  const [teamSearch, setTeamSearch] = useState('')
-  const [selectedTeamId, setSelectedTeamId] = useState(
-    () => phase.teams.find(t => t.status === 'selected')?.id ?? null
-  )
+  const navigate = useNavigate()
+
+  const [phase,        setPhase]        = useState(null)
+  const [teams,        setTeams]        = useState([])
+  const [matches,      setMatches]      = useState([])
+  const [teamSearch,   setTeamSearch]   = useState('')
+  const [selectedTeamId, setSelectedTeamId] = useState(null)
+  const [completing,     setCompleting]     = useState(false)
+  const [notPlayedModal, setNotPlayedModal] = useState(null)
+  const [addingTeam,     setAddingTeam]     = useState(false)
+  const [teamPickSearch, setTeamPickSearch] = useState('')
+  const [showSchedule,   setShowSchedule]   = useState(false)
+
+  useEffect(() => {
+    fetchPhase(phaseId).then(setPhase).catch(() => {})
+    fetchMatches({ phaseId }).then(ms => setMatches(ms.filter(m => m.status === 'expected' || m.status === 'finished'))).catch(() => {})
+    fetchTeams().then(setTeams).catch(() => {})
+  }, [phaseId])
 
   function handleSelectTeam(teamId) {
     setSelectedTeamId(prev => prev === teamId ? null : teamId)
   }
 
-  const filteredTeams = phase.teams.filter(t =>
+  async function handleAddTeam(teamId) {
+    const newTeamIds = [...phase.team_ids, teamId]
+    const updated = await updatePhase(phase.id, { order: phase.order, is_open: phase.is_open, team_ids: newTeamIds })
+    setPhase(updated)
+    setAddingTeam(false)
+    setTeamPickSearch('')
+  }
+
+  async function handleDeleteTeam(teamId) {
+    const newTeamIds = phase.team_ids.filter(id => id !== teamId)
+    const updated = await updatePhase(phase.id, { order: phase.order, is_open: phase.is_open, team_ids: newTeamIds })
+    setPhase(updated)
+    setSelectedTeamId(null)
+  }
+
+  async function handleCompletePhase() {
+    if (!phase) return
+    setCompleting(true)
+    try {
+      // fetch all finished matches in this phase
+      const allMatches = await fetchMatches({ phaseId })
+      const finishedMatches = allMatches.filter(m => m.status === 'finished')
+
+      // teams that have played = appeared in at least one finished match
+      const playedTeamIds = new Set()
+      for (const m of finishedMatches) {
+        if (m.home_team_id) playedTeamIds.add(m.home_team_id)
+        if (m.away_team_id) playedTeamIds.add(m.away_team_id)
+      }
+
+      const phaseTeamIds = phase.team_ids
+      const notPlayed = phaseTeamIds.filter(id => !playedTeamIds.has(id))
+
+      if (notPlayed.length > 0) {
+        setNotPlayedModal(notPlayed)
+        return
+      }
+
+      // Determine winners from finished matches, but only teams still in the phase
+      const currentTeamIds = new Set(phase.team_ids)
+      const winnerIds = new Set()
+      for (const m of finishedMatches) {
+        const isBye = !m.home_team_id || !m.away_team_id
+        if (isBye) {
+          // bye: the one team advances only if still in the phase
+          if (m.home_team_id && currentTeamIds.has(m.home_team_id)) winnerIds.add(m.home_team_id)
+          if (m.away_team_id && currentTeamIds.has(m.away_team_id)) winnerIds.add(m.away_team_id)
+        } else {
+          if (m.home_score > m.away_score && currentTeamIds.has(m.home_team_id)) winnerIds.add(m.home_team_id)
+          else if (m.away_score > m.home_score && currentTeamIds.has(m.away_team_id)) winnerIds.add(m.away_team_id)
+          else {
+            // draw: both advance if still in the phase
+            if (currentTeamIds.has(m.home_team_id)) winnerIds.add(m.home_team_id)
+            if (currentTeamIds.has(m.away_team_id)) winnerIds.add(m.away_team_id)
+          }
+        }
+      }
+
+      // Close this phase
+      await updatePhase(phase.id, { order: phase.order, is_open: false, team_ids: phase.team_ids })
+      setPhase(p => ({ ...p, is_open: false }))
+
+      // Create next phase with winners
+      const existing = await fetchPhases(tournamentId)
+      const nextOrder = Math.max(...existing.map(p => p.order)) + 1
+      const newPhase = await createPhase(tournamentId, nextOrder)
+      // Set winners as teams of new phase and open it
+      await updatePhase(newPhase.id, { order: nextOrder, is_open: true, team_ids: [...winnerIds] })
+
+      navigate(`/tournaments/${tournamentId}/phases/${newPhase.id}`)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setCompleting(false)
+    }
+  }
+
+  if (!phase) return null
+
+  const phaseTeams    = teams.filter(t => phase.team_ids.includes(t.id))
+  const filteredTeams = phaseTeams.filter(t =>
     t.name.toLowerCase().includes(teamSearch.toLowerCase())
   )
 
   return (
     <div style={st.page}>
+
+      {/* Not-played warning modal */}
+      {notPlayedModal && (
+        <div style={ms.overlay} onClick={() => setNotPlayedModal(null)}>
+          <div style={ms.modal} onClick={e => e.stopPropagation()}>
+            <div style={ms.header}>
+              <span className="material-symbols-outlined" style={{ color: colors.error, fontSize: '1.5rem' }}>warning</span>
+              <h3 style={ms.title}>Δεν μπορεί να ολοκληρωθεί η φάση</h3>
+            </div>
+            <p style={ms.body}>Οι παρακάτω ομάδες δεν έχουν παίξει αγώνα σε αυτή τη φάση:</p>
+            <ul style={ms.list}>
+              {notPlayedModal.map(id => {
+                const team = teams.find(t => t.id === id)
+                return <li key={id} style={ms.listItem}>{team?.name ?? `ID ${id}`}</li>
+              })}
+            </ul>
+            <button style={ms.closeBtn} onClick={() => setNotPlayedModal(null)}>Κλείσιμο</button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={st.header}>
         <div>
           <span style={st.headerLabel}>{t('ph_label')}</span>
-          <h1 style={st.title}>{t('phase_label')} {phase.number}</h1>
+          <h1 style={st.title}>{t('phase_label')} {phase.order}</h1>
         </div>
-        <div style={st.headerRight}>
-          <button style={st.statusBadge}>
-            <span style={{ ...st.statusDot, backgroundColor: phase.status === 'Active' ? colors.tertiary : colors.outline }} />
-            {t('ph_status')}: {t(phase.status === 'Active' ? 'ph_status_active' : 'ph_status_inactive')}
-            <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>expand_more</span>
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ ...st.statusDot, backgroundColor: phase.is_open ? colors.tertiary : colors.outline }} />
+          <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: phase.is_open ? colors.tertiary : colors.outline }}>
+            {phase.is_open ? 'Ανοιχτή' : 'Κλειστή'}
+          </span>
         </div>
       </div>
 
@@ -205,12 +364,42 @@ export default function Phase() {
         <div style={st.sectionHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <h3 style={st.sectionTitle}>{t('ph_qual_teams')}</h3>
-            <span style={st.sectionCount}>{phase.teams.length} {t('ph_participating')}</span>
+            <span style={st.sectionCount}>{phaseTeams.length} {t('ph_participating')}</span>
           </div>
-          <button style={st.addTeamBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>add</span>
-            {t('ph_add_team')}
-          </button>
+          {phase.is_open && (
+            <div style={{ position: 'relative' }}>
+              <button style={st.addTeamBtn} onClick={() => { setAddingTeam(v => !v); setTeamPickSearch('') }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>add</span>
+                {t('ph_add_team')}
+              </button>
+              {addingTeam && (
+                <div style={st.teamPicker}>
+                  <input
+                    autoFocus
+                    style={st.teamPickerInput}
+                    placeholder="Αναζήτηση..."
+                    value={teamPickSearch}
+                    onChange={e => setTeamPickSearch(e.target.value)}
+                  />
+                  <div style={st.teamPickerList}>
+                    {teams
+                      .filter(t => !phase.team_ids.includes(t.id) && t.name.toLowerCase().includes(teamPickSearch.toLowerCase()))
+                      .map(t => (
+                        <button key={t.id} style={st.teamPickerItem} onClick={() => handleAddTeam(t.id)}>
+                          {t.name}
+                        </button>
+                      ))
+                    }
+                    {teams.filter(t => !phase.team_ids.includes(t.id)).length === 0 && (
+                      <span style={{ fontSize: '0.8125rem', color: colors.outline, padding: '0.5rem 0.75rem', display: 'block' }}>
+                        Δεν υπάρχουν διαθέσιμες ομάδες.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div style={st.teamsSearchWrap}>
           <span className="material-symbols-outlined" style={st.teamsSearchIcon}>search</span>
@@ -228,7 +417,9 @@ export default function Phase() {
               key={team.id}
               team={team}
               isSelected={selectedTeamId === team.id}
+              isOpen={phase.is_open}
               onSelect={handleSelectTeam}
+              onDelete={handleDeleteTeam}
               t={t}
             />
           ))}
@@ -239,34 +430,40 @@ export default function Phase() {
       <section style={st.section}>
         <div style={st.sectionHeader}>
           <h3 style={st.sectionTitle}>{t('ph_matches')}</h3>
-          <div style={{ display: 'flex', gap: '0.25rem' }}>
-            <button style={st.viewBtn}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>grid_view</span>
-            </button>
-            <button style={{ ...st.viewBtn, color: colors.outline }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>list</span>
-            </button>
-          </div>
         </div>
         <div style={st.matchGrid}>
-          {phase.matches.map((match, i) => <MatchCard key={i} match={match} t={t} />)}
+          {matches.map(match => <MatchCard key={match.id} match={match} teams={teams} t={t} />)}
         </div>
       </section>
 
       {/* Footer spacer so content isn't hidden behind fixed bar */}
       <div style={{ height: '5rem' }} />
 
+      {/* Schedule modal */}
+      {showSchedule && (
+        <ScheduleModal
+          phaseId={phaseId}
+          teams={teams}
+          onClose={() => setShowSchedule(false)}
+          onApplied={() => {
+            fetchMatches({ phaseId }).then(ms => setMatches(ms.filter(m => m.status === 'expected' || m.status === 'finished'))).catch(() => {})
+          }}
+        />
+      )}
+
       {/* Fixed footer */}
       <div style={st.footer}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button style={st.footerOutlineBtn}>
+          <button style={st.footerOutlineBtn} onClick={() => setShowSchedule(true)}>
             {t('ph_gen_program')}
-            <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>expand_more</span>
           </button>
-          <button style={st.footerGhostBtn}>{t('ph_preview')}</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button style={st.footerFinishBtn}>{t('ph_finish')}</button>
+          {phase.is_open && (
+            <button style={st.footerFinishBtn} onClick={handleCompletePhase} disabled={completing}>
+              {completing ? '...' : t('ph_finish')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -419,6 +616,47 @@ const st = {
     alignItems: 'flex-start',
     marginBottom: '0.5rem',
   },
+  teamPicker: {
+    position: 'absolute',
+    top: 'calc(100% + 0.375rem)',
+    right: 0,
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+    zIndex: 60,
+    minWidth: '14rem',
+    maxHeight: '16rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  teamPickerInput: {
+    padding: '0.5rem 0.75rem',
+    border: 'none',
+    borderBottom: `1px solid ${colors.outlineVariant}33`,
+    fontSize: '0.875rem',
+    color: colors.onSurface,
+    backgroundColor: 'transparent',
+    outline: 'none',
+    fontFamily: fonts.body,
+  },
+  teamPickerList: {
+    overflowY: 'auto',
+    flex: 1,
+  },
+  teamPickerItem: {
+    display: 'block',
+    width: '100%',
+    padding: '0.5rem 0.875rem',
+    background: 'none',
+    border: 'none',
+    textAlign: 'left',
+    fontSize: '0.8125rem',
+    color: colors.onSurface,
+    cursor: 'pointer',
+    fontFamily: fonts.body,
+    borderBottom: `1px solid ${colors.outlineVariant}1a`,
+  },
   addTeamBtn: {
     display: 'flex',
     alignItems: 'center',
@@ -497,10 +735,9 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    height: '5.5rem',
+    minHeight: '6.5rem',
   },
   matchCardScheduled: {
-    opacity: 0.4,
   },
   matchTeams: {
     display: 'flex',
@@ -517,12 +754,17 @@ const st = {
     fontWeight: 600,
     color: colors.onSurface,
     fontFamily: fonts.body,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    marginRight: '0.25rem',
   },
   matchScore: {
     fontSize: '0.75rem',
     fontWeight: 700,
     fontFamily: 'monospace',
     color: colors.onSurface,
+    flexShrink: 0,
   },
   matchScoreMuted: {
     color: colors.outline,
@@ -532,27 +774,31 @@ const st = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: '0.5rem',
+    paddingTop: '0.375rem',
     borderTop: `1px solid ${colors.outlineVariant}1a`,
+    lineHeight: 1,
   },
   matchStatusFinal: {
-    fontSize: '0.625rem',
+    fontSize: '0.5625rem',
     fontWeight: 700,
     textTransform: 'uppercase',
     color: colors.tertiary,
     fontFamily: fonts.label,
+    lineHeight: 1,
   },
   matchStatusScheduled: {
-    fontSize: '0.625rem',
+    fontSize: '0.5625rem',
     fontWeight: 700,
     textTransform: 'uppercase',
     color: colors.outline,
     fontFamily: fonts.label,
+    lineHeight: 1,
   },
   matchMeta: {
-    fontSize: '0.625rem',
+    fontSize: '0.5625rem',
     color: colors.outline,
     fontFamily: fonts.label,
+    lineHeight: 1,
   },
   // Footer
   footer: {
@@ -607,5 +853,109 @@ const st = {
     color: colors.onTertiary,
     cursor: 'pointer',
     fontFamily: fonts.label,
+  },
+}
+
+const ms = {
+  overlay: {
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    width: '400px', padding: '2rem', fontFamily: fonts.body,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', gap: '1rem',
+  },
+  header: {
+    display: 'flex', alignItems: 'center', gap: '0.75rem',
+  },
+  title: {
+    fontSize: '1rem', fontWeight: 700, color: colors.onSurface, margin: 0,
+    fontFamily: fonts.headline,
+  },
+  body: {
+    fontSize: '0.875rem', color: colors.onSurfaceVariant, margin: 0,
+  },
+  list: {
+    margin: 0, paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem',
+  },
+  listItem: {
+    fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface,
+  },
+  closeBtn: {
+    alignSelf: 'flex-end', padding: '0.5rem 1.25rem',
+    backgroundColor: colors.primary, color: colors.onPrimary,
+    border: 'none', borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: fonts.label,
+  },
+}
+
+const sm = {
+  overlay: {
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
+    zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    width: '540px', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+    fontFamily: fonts.body, boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+  },
+  header: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '1.25rem 1.5rem', borderBottom: `1px solid ${colors.outlineVariant}33`,
+  },
+  title: {
+    margin: 0, fontSize: '1.125rem', fontWeight: 700,
+    color: colors.onSurface, fontFamily: fonts.headline,
+  },
+  closeBtn: {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.onSurfaceVariant, display: 'flex', padding: '0.25rem',
+  },
+  body: {
+    padding: '1.25rem 1.5rem', overflowY: 'auto',
+    display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1,
+  },
+  field: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
+  label: {
+    fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase',
+    letterSpacing: '0.08em', color: colors.onSurfaceVariant, fontFamily: fonts.label,
+  },
+  input: {
+    padding: '0.5rem 0.75rem', border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT, fontSize: '0.875rem', color: colors.onSurface,
+    backgroundColor: colors.surfaceContainerLowest, outline: 'none', fontFamily: fonts.body,
+  },
+  generateBtn: {
+    padding: '0.5rem 1.25rem', backgroundColor: colors.primary, border: 'none',
+    borderRadius: radius.DEFAULT, fontSize: '0.875rem', fontWeight: 600,
+    color: colors.onPrimary, cursor: 'pointer', fontFamily: fonts.label, alignSelf: 'flex-end',
+  },
+  row: {
+    display: 'flex', alignItems: 'center', gap: '0.75rem',
+    padding: '0.5rem 0.75rem', borderRadius: radius.DEFAULT,
+    backgroundColor: colors.surfaceContainerLow,
+    border: `1px solid ${colors.outlineVariant}33`,
+  },
+  matchLabel: {
+    display: 'block', fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface,
+  },
+  slotLabel: {
+    display: 'block', fontSize: '0.75rem', color: colors.onSurfaceVariant, marginTop: '0.125rem',
+  },
+  footer: {
+    display: 'flex', justifyContent: 'flex-end', gap: '0.75rem',
+    padding: '1rem 1.5rem', borderTop: `1px solid ${colors.outlineVariant}33`,
+  },
+  cancelBtn: {
+    padding: '0.5rem 1.25rem', background: 'none',
+    border: `1px solid ${colors.outlineVariant}`, borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem', fontWeight: 500, color: colors.onSurface,
+    cursor: 'pointer', fontFamily: fonts.label,
+  },
+  applyBtn: {
+    padding: '0.5rem 1.5rem', backgroundColor: colors.tertiary, border: 'none',
+    borderRadius: radius.DEFAULT, fontSize: '0.875rem', fontWeight: 700,
+    color: colors.onTertiary, cursor: 'pointer', fontFamily: fonts.label,
   },
 }
