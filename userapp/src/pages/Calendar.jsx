@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
+import { useLang } from '../LangContext'
 
 const MY_TEAM = 'Team North'
 const TODAY = new Date(2026, 3, 22)
@@ -19,30 +20,11 @@ const MATCHES = [
   { date: new Date(2026,4,24), opponent:'Northern Hawks', home:true,  time:'16:00', venue:'Stadium Nord' },
 ]
 
-const MONTHS       = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const WEEKDAYS     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
-const DAY_LABELS   = ['Mo','Tu','We','Th','Fr','Sa','Su']
-
 function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 const isPast  = d => d < TODAY && !sameDay(d, TODAY)
 const isToday = d => sameDay(d, TODAY)
-
-function daysUntil(d) {
-  const diff = Math.round((d - TODAY) / 86400000)
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Tomorrow'
-  if (diff <= 7)  return `In ${diff} days`
-  return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`
-}
-
-const RESULT_CFG = {
-  win:  { border: colors.tertiary,        label: 'Win',  color: colors.tertiary        },
-  loss: { border: colors.error,           label: 'Loss', color: colors.error           },
-  draw: { border: colors.outline,         label: 'Draw', color: colors.onSurfaceVariant },
-}
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 
@@ -74,7 +56,7 @@ function DayCell({ day, match, date }) {
   )
 }
 
-function MatchModal({ match, open, onClose }) {
+function MatchModal({ match, open, onClose, t }) {
   const [rendered, setRendered] = useState(false)
   const [visible,  setVisible]  = useState(false)
 
@@ -84,12 +66,15 @@ function MatchModal({ match, open, onClose }) {
       requestAnimationFrame(() => setVisible(true))
     } else {
       setVisible(false)
-      const t = setTimeout(() => setRendered(false), 320)
-      return () => clearTimeout(t)
+      const timer = setTimeout(() => setRendered(false), 320)
+      return () => clearTimeout(timer)
     }
   }, [open])
 
   if (!rendered || !match) return null
+
+  const WEEKDAYS    = t('cal_weekdays').split(',')
+  const SHORT_MONTHS = t('cal_months_short').split(',')
 
   const past       = isPast(match.date)
   const todayMatch = isToday(match.date)
@@ -97,13 +82,21 @@ function MatchModal({ match, open, onClose }) {
   const awayTeam   = match.home ? match.opponent : MY_TEAM
   const dateStr    = `${WEEKDAYS[match.date.getDay()]}, ${SHORT_MONTHS[match.date.getMonth()]} ${match.date.getDate()}, ${match.date.getFullYear()}`
 
+  function daysUntil(d) {
+    const diff = Math.round((d - TODAY) / 86400000)
+    if (diff === 0) return t('cal_today')
+    if (diff === 1) return t('cal_tomorrow')
+    if (diff <= 7)  return t('cal_in_days').replace('{n}', diff)
+    return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`
+  }
+
   let badgeLabel, badgeColor, badgeBg, middle
 
   if (past) {
     const cfg = {
-      win:  { bg: colors.secondaryContainer,  color: colors.tertiary,        label: 'Win'  },
-      loss: { bg: colors.errorContainer,      color: colors.error,           label: 'Loss' },
-      draw: { bg: colors.surfaceContainer,    color: colors.onSurfaceVariant, label: 'Draw' },
+      win:  { bg: colors.secondaryContainer,  color: colors.tertiary,        label: t('result_win')  },
+      loss: { bg: colors.errorContainer,      color: colors.error,           label: t('result_loss') },
+      draw: { bg: colors.surfaceContainer,    color: colors.onSurfaceVariant, label: t('result_draw') },
     }[match.result]
     badgeLabel = cfg.label; badgeColor = cfg.color; badgeBg = cfg.bg
     const hs = match.home ? match.score[0] : match.score[1]
@@ -116,7 +109,7 @@ function MatchModal({ match, open, onClose }) {
       </>
     )
   } else {
-    badgeLabel = todayMatch ? 'Today' : daysUntil(match.date)
+    badgeLabel = todayMatch ? t('cal_today') : daysUntil(match.date)
     badgeColor = colors.tertiary
     badgeBg    = colors.secondaryContainer
     middle = <span style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.onSurfaceVariant }}>vs</span>
@@ -146,7 +139,7 @@ function MatchModal({ match, open, onClose }) {
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>{match.home ? 'home' : 'flight_takeoff'}</span>
-              {match.home ? 'Home' : 'Away'}
+              {match.home ? t('cal_home') : t('cal_away')}
             </span>
           </div>
           <p style={{ fontSize: '0.65rem', color: colors.onSurfaceVariant, margin: 0 }}>{dateStr}</p>
@@ -157,10 +150,29 @@ function MatchModal({ match, open, onClose }) {
 }
 
 export default function Calendar() {
+  const { t } = useLang()
   const [viewYear,  setViewYear]  = useState(TODAY.getFullYear())
   const [viewMonth, setViewMonth] = useState(TODAY.getMonth())
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [modalOpen,     setModalOpen]     = useState(false)
+
+  const MONTHS       = t('cal_months').split(',')
+  const SHORT_MONTHS = t('cal_months_short').split(',')
+  const DAY_LABELS   = t('cal_day_labels').split(',')
+
+  function daysUntil(d) {
+    const diff = Math.round((d - TODAY) / 86400000)
+    if (diff === 0) return t('cal_today')
+    if (diff === 1) return t('cal_tomorrow')
+    if (diff <= 7)  return t('cal_in_days').replace('{n}', diff)
+    return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`
+  }
+
+  const RESULT_CFG = {
+    win:  { border: colors.tertiary,        label: t('result_win'),  color: colors.tertiary        },
+    loss: { border: colors.error,           label: t('result_loss'), color: colors.error           },
+    draw: { border: colors.outline,         label: t('result_draw'), color: colors.onSurfaceVariant },
+  }
 
   function prevMonth() {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1) }
@@ -229,17 +241,17 @@ export default function Calendar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem 1rem', borderBottom: GHOST }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: colors.tertiary }} />
-            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>Upcoming</span>
+            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>{t('cal_legend_upcoming')}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: colors.outline }} />
-            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>Past</span>
+            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>{t('cal_legend_past')}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <div style={{ width: '1rem', height: '1rem', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>22</span>
             </div>
-            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>Today</span>
+            <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>{t('cal_legend_today')}</span>
           </div>
         </div>
 
@@ -247,11 +259,11 @@ export default function Calendar() {
         <section style={{ padding: '1.25rem 1rem 0.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>upcoming</span>
-            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>Upcoming</h2>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>{t('cal_upcoming')}</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {upcoming.length === 0
-              ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>No upcoming matches</p>
+              ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>{t('cal_no_upcoming')}</p>
               : upcoming.map((m, i) => {
                   const home = m.home ? MY_TEAM : m.opponent
                   const away = m.home ? m.opponent : MY_TEAM
@@ -280,11 +292,11 @@ export default function Calendar() {
         <section style={{ padding: '0.75rem 1rem 1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant, fontVariationSettings: "'FILL' 1" }}>history</span>
-            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>Results</h2>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>{t('cal_results')}</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {past.length === 0
-              ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>No past matches</p>
+              ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>{t('cal_no_past')}</p>
               : past.map((m, i) => {
                   const cfg  = RESULT_CFG[m.result]
                   const home = m.home ? MY_TEAM : m.opponent
@@ -301,7 +313,7 @@ export default function Calendar() {
                           <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{away}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.3rem' }}>
-                          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.home ? 'Home' : 'Away'}</span>
+                          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.home ? t('cal_home') : t('cal_away')}</span>
                           <span style={{ fontSize: '0.6rem', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cfg.label} · {ds}</span>
                         </div>
                       </div>
@@ -313,7 +325,7 @@ export default function Calendar() {
         </section>
       </main>
 
-      <MatchModal match={selectedMatch} open={modalOpen} onClose={() => setModalOpen(false)} />
+      <MatchModal match={selectedMatch} open={modalOpen} onClose={() => setModalOpen(false)} t={t} />
       <BottomNav />
     </div>
   )

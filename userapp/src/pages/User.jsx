@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
+import { useLang } from '../LangContext'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 
@@ -15,24 +16,25 @@ const RECENT_MATCHES = [
   { opponent: 'Western Rovers', date: '28 SEP 2023', score: '0 – 1', result: 'loss' },
 ]
 
-const RESULT_CFG = {
-  win:  { border: colors.tertiary,        color: colors.tertiary,        label: 'Win'  },
-  draw: { border: colors.outline,         color: colors.onSurfaceVariant, label: 'Draw' },
-  loss: { border: colors.error,           color: colors.error,           label: 'Loss' },
-}
-
-const AWARDS = [
-  { icon: 'workspace_premium', label: 'Titles', value: '04' },
-  { icon: 'stars',             label: 'MVP',    value: '12' },
-  { icon: 'military_tech',     label: 'Medal',  value: '01' },
-]
-
 export default function User() {
   const navigate = useNavigate()
+  const { t } = useLang()
+
+  const RESULT_CFG = {
+    win:  { border: colors.tertiary,        color: colors.tertiary,        label: t('result_win')  },
+    draw: { border: colors.outline,         color: colors.onSurfaceVariant, label: t('result_draw') },
+    loss: { border: colors.error,           color: colors.error,           label: t('result_loss') },
+  }
+
+  const AWARDS = [
+    { icon: 'workspace_premium', label: t('user_titles'), value: '04' },
+    { icon: 'stars',             label: t('user_mvp'),    value: '12' },
+    { icon: 'military_tech',     label: t('user_medal'),  value: '01' },
+  ]
   const [editing,  setEditing]  = useState(false)
-  const [username, setUsername] = useState('JORDAN VANCE')
-  const [bio,      setBio]      = useState('Lead forward for Northern Districts. Focused on precision striking and tactical positioning. 3-year league veteran.')
-  const [team,     setTeam]     = useState('Team North')
+  const [username, setUsername] = useState('ΔΗΜΗΤΡΗΣ')
+  const [bio,      setBio]      = useState('20 χρόνια επιτυχίες')
+  const [team,     setTeam]     = useState('ΟΠΑ FC')
   const [photo,    setPhoto]    = useState(PHOTO_URL)
   const [draft,    setDraft]    = useState({})
   const fileRef = useRef(null)
@@ -64,17 +66,17 @@ export default function User() {
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         {editing ? (
           <>
-            <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={saveEdit}   style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary,        background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Save</button>
+            <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
+            <button onClick={saveEdit}   style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary,        background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
           </>
         ) : (
           <>
-            <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+            <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <button onClick={() => navigate('/referee-form')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+              <button onClick={() => navigate('/forms')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
                 <span className="material-symbols-outlined">assignment</span>
               </button>
-              <button style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+              <button onClick={() => navigate('/settings')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
                 <span className="material-symbols-outlined">settings</span>
               </button>
             </div>
@@ -147,7 +149,7 @@ export default function User() {
           <div style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>sports_soccer</span>
-              <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>Goals</span>
+              <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>{t('user_goals')}</span>
             </div>
             <span style={{ fontSize: '3rem', fontWeight: 900, color: colors.onSurface, lineHeight: 1 }}>42</span>
             <span style={{ fontSize: '0.625rem', fontWeight: 700, color: colors.tertiary, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '0.25rem' }}>Level 08</span>
@@ -157,7 +159,7 @@ export default function User() {
           <div style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-              <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>Awards</span>
+              <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>{t('user_awards')}</span>
             </div>
             {AWARDS.map(({ icon, label, value }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -174,8 +176,8 @@ export default function User() {
         {/* Recent Matches */}
         <section style={{ padding: '1rem 1rem 0.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface }}>Recent Matches</span>
-            <span style={{ fontSize: '0.625rem', fontWeight: 500, color: colors.onSurfaceVariant }}>SEASON 24/25</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface }}>{t('user_recent_matches')}</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 500, color: colors.onSurfaceVariant }}>{t('user_season')}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {RECENT_MATCHES.map((m, i) => {
