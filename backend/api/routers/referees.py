@@ -8,13 +8,18 @@ from api.schema import RefereeIn, RefereeOut
 
 router = Router()
 
+ORDER_FIELDS = {'name': 'first_name', 'created_at': 'created_at'}
+
 
 @router.get('/', response=List[RefereeOut])
-def list_referees(request, search: str = ''):
-    print("List api")
+def list_referees(request, search: str = '', ordering: str = 'created_at'):
     qs = Referee.objects.all()
     if search:
         qs = qs.filter(first_name__icontains=search) | qs.filter(last_name__icontains=search)
+    desc = ordering.startswith('-')
+    key = ordering.lstrip('-')
+    field = ORDER_FIELDS.get(key, 'created_at')
+    qs = qs.order_by(f'-{field}' if desc else field)
     return list(qs)
 
 

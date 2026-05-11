@@ -1,8 +1,11 @@
 const BASE = import.meta.env.VITE_API_URL
 
-export async function fetchReferees(search = '') {
-  const params = search ? `?search=${encodeURIComponent(search)}` : ''
-  const res = await fetch(`${BASE}/referees/${params}`)
+export async function fetchReferees(search = '', ordering = 'created_at') {
+  const p = new URLSearchParams()
+  if (search) p.set('search', search)
+  if (ordering) p.set('ordering', ordering)
+  const qs = p.toString() ? `?${p}` : ''
+  const res = await fetch(`${BASE}/referees/${qs}`)
   if (!res.ok) throw new Error('Failed to fetch referees')
   return res.json()
 }

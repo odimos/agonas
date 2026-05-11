@@ -1,8 +1,11 @@
 const BASE = import.meta.env.VITE_API_URL
 
-export async function fetchTeams(search = '') {
-  const params = search ? `?search=${encodeURIComponent(search)}` : ''
-  const res = await fetch(`${BASE}/teams/${params}`)
+export async function fetchTeams(search = '', ordering = 'created_at') {
+  const p = new URLSearchParams()
+  if (search) p.set('search', search)
+  if (ordering) p.set('ordering', ordering)
+  const qs = p.toString() ? `?${p}` : ''
+  const res = await fetch(`${BASE}/teams/${qs}`)
   if (!res.ok) throw new Error('Failed to fetch teams')
   return res.json()
 }

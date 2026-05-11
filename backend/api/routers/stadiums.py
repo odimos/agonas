@@ -8,12 +8,18 @@ from api.schema import StadiumIn, StadiumOut
 
 router = Router()
 
+ORDER_FIELDS = {'name': 'name', 'created_at': 'created_at'}
+
 
 @router.get('/', response=List[StadiumOut])
-def list_stadiums(request, search: str = ''):
+def list_stadiums(request, search: str = '', ordering: str = 'created_at'):
     qs = Stadium.objects.all()
     if search:
         qs = qs.filter(name__icontains=search)
+    desc = ordering.startswith('-')
+    key = ordering.lstrip('-')
+    field = ORDER_FIELDS.get(key, 'created_at')
+    qs = qs.order_by(f'-{field}' if desc else field)
     return list(qs)
 
 

@@ -4,6 +4,7 @@ from django.db import models
 class Team(models.Model):
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     comments = models.TextField(blank=True, null=True)
     captain = models.ForeignKey(
         'Player', null=True, blank=True, on_delete=models.SET_NULL,
@@ -32,6 +33,7 @@ class Stadium(models.Model):
     comments = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=200)
     map_url = models.URLField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         self.name = self.name.strip()
@@ -53,6 +55,7 @@ class Referee(models.Model):
     phone = models.CharField(max_length=20)
     email = models.EmailField(blank=True, default='')
     comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         self.first_name = self.first_name.strip()
@@ -75,6 +78,7 @@ class Player(models.Model):
     email = models.EmailField(blank=True, default='')
     comments = models.TextField(blank=True, null=True)
     team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         self.first_name = self.first_name.strip()

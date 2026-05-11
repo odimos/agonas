@@ -1,8 +1,55 @@
+import { useState, useEffect, useRef } from 'react'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
 
-export default function DataTable({ columns, rows, renderRow, search, onSearch, total }) {
+const PAGE_SIZE = 10
+
+const SORT_OPTIONS = [
+  { value: 'created_at',  label: 'Ημ. Δημιουργίας ↑' },
+  { value: '-created_at', label: 'Ημ. Δημιουργίας ↓' },
+  { value: 'name',        label: 'Αλφαβητικά Α→Ω' },
+  { value: '-name',       label: 'Αλφαβητικά Ω→Α' },
+]
+
+export default function DataTable({ columns, rows, renderRow, search, onSearch, total, ordering, onOrdering }) {
   const { t } = useLang()
+  const [page, setPage] = useState(1)
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef(null)
+
+  useEffect(() => {
+    if (!sortOpen) return
+    function close(e) { if (!sortRef.current?.contains(e.target)) setSortOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [sortOpen])
+
+  // Reset to page 1 whenever the dataset changes (search, new data)
+  useEffect(() => { setPage(1) }, [rows.length, search])
+
+  const totalRows  = total ?? rows.length
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE))
+  const start      = (page - 1) * PAGE_SIZE
+  const pageRows   = rows.slice(start, start + PAGE_SIZE)
+
+  // Build a compact page window: always show first, last, current ±1, with ellipsis
+  function pageNumbers() {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+    const set = new Set([1, totalPages, page, page - 1, page + 1].filter(n => n >= 1 && n <= totalPages))
+    const nums = [...set].sort((a, b) => a - b)
+    // insert null as ellipsis marker where gaps > 1
+    const result = []
+    for (let i = 0; i < nums.length; i++) {
+      if (i > 0 && nums[i] - nums[i - 1] > 1) result.push(null)
+      result.push(nums[i])
+    }
+    return result
+  }
+
+  function goTo(n) {
+    if (n >= 1 && n <= totalPages) setPage(n)
+  }
+
   return (
     <div style={st.tableCard}>
 
@@ -22,9 +69,32 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
           <button style={st.iconBtn}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>filter_list</span>
           </button>
-          <button style={st.iconBtn}>
-            <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant }}>sort</span>
-          </button>
+          {onOrdering && (
+            <div style={{ position: 'relative' }} ref={sortRef}>
+              <button
+                style={{ ...st.iconBtn, ...(ordering && ordering !== 'created_at' ? { backgroundColor: `${colors.primary}18` } : {}) }}
+                onClick={() => setSortOpen(v => !v)}
+                data-testid="sort-btn"
+                title="Ταξινόμηση"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: ordering && ordering !== 'created_at' ? colors.primary : colors.onSurfaceVariant }}>sort</span>
+              </button>
+              {sortOpen && (
+                <div style={st.sortDropdown} data-testid="sort-dropdown">
+                  {SORT_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      style={{ ...st.sortOption, ...(ordering === opt.value ? st.sortOptionActive : {}) }}
+                      onClick={() => { onOrdering(opt.value); setSortOpen(false) }}
+                      data-testid={`sort-option-${opt.value}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -37,22 +107,43 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
         ))}
       </div>
 
-      {/* Rows */}
+      {/* Rows — current page only */}
       <div>
-        {rows.map((row, i) => renderRow(row, i === 0))}
+        {pageRows.map((row, i) => renderRow(row, i === 0))}
       </div>
 
       {/* Pagination */}
       <div style={st.pagination}>
-        <span style={st.paginationInfo}>{t('dt_showing')} {rows.length} {t('dt_of')} {total ?? rows.length}</span>
+        <span style={st.paginationInfo}>
+          {t('dt_showing')} {Math.min(start + PAGE_SIZE, totalRows) - start > 0 ? start + 1 : 0}–{Math.min(start + PAGE_SIZE, totalRows)} {t('dt_of')} {totalRows}
+        </span>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button style={{ ...st.pageBtn, ...st.pageBtnIcon, opacity: 0.4 }} disabled>
+          <button
+            style={{ ...st.pageBtn, ...st.pageBtnIcon, opacity: page === 1 ? 0.4 : 1 }}
+            disabled={page === 1}
+            onClick={() => goTo(page - 1)}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_left</span>
           </button>
-          {[1, 2, 3].map(n => (
-            <button key={n} style={{ ...st.pageBtn, ...(n === 1 ? st.pageBtnActive : {}) }}>{n}</button>
-          ))}
-          <button style={{ ...st.pageBtn, ...st.pageBtnIcon }}>
+
+          {pageNumbers().map((n, i) =>
+            n === null
+              ? <span key={`ellipsis-${i}`} style={st.ellipsis}>…</span>
+              : <button
+                  key={n}
+                  style={{ ...st.pageBtn, ...(n === page ? st.pageBtnActive : {}) }}
+                  onClick={() => goTo(n)}
+                  data-testid={n === page ? 'page-btn-active' : 'page-btn'}
+                >
+                  {n}
+                </button>
+          )}
+
+          <button
+            style={{ ...st.pageBtn, ...st.pageBtnIcon, opacity: page === totalPages ? 0.4 : 1 }}
+            disabled={page === totalPages}
+            onClick={() => goTo(page + 1)}
+          >
             <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_right</span>
           </button>
         </div>
@@ -161,5 +252,41 @@ const st = {
     backgroundColor: colors.primary,
     color: colors.onPrimary,
     border: `1px solid ${colors.primary}`,
+  },
+  ellipsis: {
+    fontSize: '0.875rem',
+    color: colors.onSurfaceVariant,
+    padding: '0 0.25rem',
+    userSelect: 'none',
+  },
+  sortDropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 0.375rem)',
+    right: 0,
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+    zIndex: 50,
+    minWidth: '11rem',
+    overflow: 'hidden',
+  },
+  sortOption: {
+    display: 'block',
+    width: '100%',
+    textAlign: 'left',
+    padding: '0.5rem 0.875rem',
+    background: 'none',
+    border: 'none',
+    fontSize: '0.8125rem',
+    fontWeight: 500,
+    color: colors.onSurface,
+    cursor: 'pointer',
+    fontFamily: fonts.body,
+  },
+  sortOptionActive: {
+    backgroundColor: `${colors.primary}14`,
+    color: colors.primary,
+    fontWeight: 700,
   },
 }

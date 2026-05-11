@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
-import PlayerModalContent,  { initPlayerForm  } from './PlayerModalContent'
-import RefereeModalContent from './RefereeModalContent'
-import StadiumModalContent from './StadiumModalContent'
-import TeamModalContent    from './TeamModalContent'
+import PlayerModalContent, { initPlayerForm } from './PlayerModalContent'
+import RefereeModalContent, { initRefereeForm } from './RefereeModalContent'
+import StadiumModalContent, { initStadiumForm } from './StadiumModalContent'
+import TeamModalContent, { initTeamForm } from './TeamModalContent'
 import { createPlayer  } from './api/players'
+import { createTeam    } from './api/teams'
+import { createReferee } from './api/referees'
+import { createStadium } from './api/stadiums'
 
 const META = {
   player:  { title: 'Νέος Παίκτης' },
@@ -17,7 +20,10 @@ const META = {
 export default function CreateModal({ type, teams = [], onClose, onCreated }) {
   const { t } = useLang()
   const [form, setForm] = useState(() => {
-    if (type === 'player') return initPlayerForm()
+    if (type === 'player')  return initPlayerForm()
+    if (type === 'team')    return initTeamForm()
+    if (type === 'referee') return initRefereeForm()
+    if (type === 'stadium') return initStadiumForm()
     return {}
   })
   const [saving, setSaving] = useState(false)
@@ -36,6 +42,32 @@ export default function CreateModal({ type, teams = [], onClose, onCreated }) {
           email:      form.email     || '',
           team_id:    form.team_id   ?? null,
           comments:   form.comments  || null,
+        })
+      } else if (type === 'team') {
+        await createTeam({
+          name:            form.name.trim(),
+          is_active:       form.is_active,
+          captain_id:      form.captain_id      ?? null,
+          vice_captain_id: form.vice_captain_id ?? null,
+          comments:        form.comments        || null,
+        })
+      } else if (type === 'referee') {
+        await createReferee({
+          first_name: form.firstName.trim(),
+          last_name:  form.lastName.trim(),
+          phone:      form.phone.trim(),
+          email:      form.email  || '',
+          comments:   form.comments || null,
+        })
+      } else if (type === 'stadium') {
+        await createStadium({
+          name:     form.name.trim(),
+          phone:    form.phone.trim(),
+          address:  form.address.trim(),
+          email:    form.email    || '',
+          cost:     form.cost     || null,
+          map_url:  form.map_url  || '',
+          comments: form.comments || null,
         })
       }
       onCreated?.()
@@ -62,9 +94,9 @@ export default function CreateModal({ type, teams = [], onClose, onCreated }) {
         {/* Content */}
         <div style={st.content}>
           {type === 'player'  && <PlayerModalContent  form={form} setForm={setForm} editing teams={teams} />}
-          {type === 'referee' && <RefereeModalContent referee={{}} editing />}
-          {type === 'stadium' && <StadiumModalContent stadium={{}} editing />}
-          {type === 'team'    && <TeamModalContent    team={{}}    editing />}
+          {type === 'team'    && <TeamModalContent    form={form} setForm={setForm} editing players={[]} />}
+          {type === 'referee' && <RefereeModalContent form={form} setForm={setForm} editing />}
+          {type === 'stadium' && <StadiumModalContent form={form} setForm={setForm} editing />}
           {error && <p style={{ color: colors.error, marginTop: '0.75rem', fontSize: '0.875rem' }}>{error}</p>}
         </div>
 

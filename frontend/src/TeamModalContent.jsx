@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { colors, radius, fonts } from './styles'
 import ModalField from './ModalField'
 import { useLang } from './LangContext'
 
-function initForm(team) {
+// form shape: { name, is_active, captain_id, vice_captain_id, comments }
+export function initTeamForm(team = {}) {
   return {
-    teamName:  team.name      ?? '',
-    teamLogo:  team.logo      ?? '',
-    captainId: team.captainId ?? '',
-    viceId:    team.viceId    ?? '',
-    comments:  team.comments  ?? '',
+    name:            team.name            ?? '',
+    is_active:       team.is_active       ?? true,
+    captain_id:      team.captain_id      ?? null,
+    vice_captain_id: team.vice_captain_id ?? null,
+    comments:        team.comments        ?? '',
   }
 }
 
-function OfficerCard({ circleColor, icon, label, playerId, players, editing, onChange, t }) {
+function OfficerCard({ circleColor, icon, label, playerId, players, editing, onChange, testId, t }) {
   const selected = players.find(p => p.id === playerId)
-
   return (
     <div style={{ ...st.card, borderLeftColor: circleColor }}>
       <div style={st.cardHeader}>
@@ -29,12 +29,13 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
           <div style={{ position: 'relative' }}>
             <select
               style={{ ...st.playerSelect, borderBottomColor: circleColor }}
-              value={playerId}
-              onChange={e => onChange(e.target.value)}
+              value={playerId ?? ''}
+              onChange={e => onChange(e.target.value ? Number(e.target.value) : null)}
+              data-testid={testId}
             >
               <option value="">{t('modal_select_player')}</option>
               {players.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
               ))}
             </select>
             <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
@@ -42,7 +43,9 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
         )
       ) : (
         <div style={st.cardText}>
-          <p style={st.cardName}>{selected?.name || '—'}</p>
+          <p style={st.cardName}>
+            {selected ? `${selected.first_name} ${selected.last_name}` : '—'}
+          </p>
           {selected?.email && <p style={st.cardMeta}>{selected.email}</p>}
           {selected?.phone && <p style={st.cardMeta}>{selected.phone}</p>}
         </div>
@@ -51,23 +54,23 @@ function OfficerCard({ circleColor, icon, label, playerId, players, editing, onC
   )
 }
 
-export default function TeamModalContent({ team, editing }) {
+export default function TeamModalContent({ form, setForm, editing, players = [], availablePlayers = [], onAddPlayer, onRemovePlayer }) {
   const { t } = useLang()
-  const [form, setForm] = useState(() => initForm(team))
-
-  useEffect(() => {
-    if (!editing) setForm(initForm(team))
-  }, [editing])
-
   const set = field => value => setForm(f => ({ ...f, [field]: value }))
+  const [addPickerOpen, setAddPickerOpen] = useState(false)
+  const [addingId, setAddingId] = useState('')
+  const [addBusy, setAddBusy] = useState(false)
 
-  const players = team.players ?? []
-
-  function handleLogoChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setForm(f => ({ ...f, teamLogo: url }))
+  async function handleAdd() {
+    if (!addingId || !onAddPlayer) return
+    setAddBusy(true)
+    try {
+      await onAddPlayer(Number(addingId))
+      setAddingId('')
+      setAddPickerOpen(false)
+    } finally {
+      setAddBusy(false)
+    }
   }
 
   return (
@@ -76,26 +79,37 @@ export default function TeamModalContent({ team, editing }) {
       {/* Team identity row */}
       <div style={st.identityRow}>
         <div style={st.logoWrap}>
-          {form.teamLogo
-            ? <img src={form.teamLogo} alt="logo" style={st.logoImg} />
-            : <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.onSurfaceVariant }}>shield</span>
-          }
+          <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.onSurfaceVariant }}>shield</span>
           {editing && (
             <label style={st.logoOverlay}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>photo_camera</span>
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoChange} />
+              <input type="file" accept="image/*" style={{ display: 'none' }} />
             </label>
           )}
         </div>
         {editing ? (
           <input
             style={st.nameInput}
-            value={form.teamName}
-            onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+            value={form.name}
+            onChange={e => set('name')(e.target.value)}
+            data-testid="input-name"
           />
         ) : (
-          <h3 style={st.teamName}>{form.teamName}</h3>
+          <h3 style={st.teamName} data-testid="team-detail-name">{form.name}</h3>
         )}
+      </div>
+
+      {/* Active toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <span style={st.sectionLabel}>{t('modal_active_label')}</span>
+        <input
+          type="checkbox"
+          checked={form.is_active}
+          disabled={!editing}
+          onChange={e => set('is_active')(e.target.checked)}
+          data-testid="input-is-active"
+          style={{ cursor: editing ? 'pointer' : 'default' }}
+        />
       </div>
 
       {/* Captain + Vice-captain */}
@@ -104,20 +118,22 @@ export default function TeamModalContent({ team, editing }) {
           circleColor={colors.tertiary}
           icon="stars"
           label={t('modal_captain')}
-          playerId={form.captainId}
+          playerId={form.captain_id}
           players={players}
           editing={editing}
-          onChange={set('captainId')}
+          onChange={set('captain_id')}
+          testId="input-captain"
           t={t}
         />
         <OfficerCard
           circleColor={colors.primaryContainer}
           icon="star_half"
           label={t('modal_vice')}
-          playerId={form.viceId}
+          playerId={form.vice_captain_id}
           players={players}
           editing={editing}
-          onChange={set('viceId')}
+          onChange={set('vice_captain_id')}
+          testId="input-vice-captain"
           t={t}
         />
       </div>
@@ -127,7 +143,8 @@ export default function TeamModalContent({ team, editing }) {
         <label style={st.sectionLabel}>{t('modal_comments_label')}</label>
         {editing ? (
           <ModalField value={form.comments} editing onChange={set('comments')} multiline rows={3}
-            placeholder="Enter administrative notes, sportsmanship records, or scheduling details..." />
+            placeholder="Enter administrative notes, sportsmanship records, or scheduling details..."
+            testId="input-comments" />
         ) : (
           <div style={st.commentView}>
             {form.comments ? `"${form.comments}"` : <span style={{ fontStyle: 'normal', color: colors.outline }}>—</span>}
@@ -135,45 +152,74 @@ export default function TeamModalContent({ team, editing }) {
         )}
       </div>
 
-      {/* Players */}
+      {/* Players roster */}
       <div>
-        {players.length > 0 ? (
-          <div style={st.playerList}>
-            <div style={st.playerListHeader}>
-              <span style={st.sectionLabel}>{t('modal_players_label')} ({players.length})</span>
-              <button style={st.addBtn}>
-                <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
-                {t('modal_add_player')}
-              </button>
-            </div>
-            {players.map(p => (
-              <div key={p.id} style={st.playerRow}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                  <p style={st.playerName}>{p.name}</p>
-                  <span style={st.playerId}>ID: {p.id}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '0.125rem' }}>
-                  <button style={st.iconBtn}><span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>visibility</span></button>
-                  <button style={{ ...st.iconBtn, color: colors.error }}><span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete</span></button>
-                </div>
-              </div>
-            ))}
+        <div style={st.playerList}>
+          <div style={st.playerListHeader}>
+            <span style={st.sectionLabel}>{t('modal_players_label')} ({players.length})</span>
+            <button style={st.addBtn} onClick={() => setAddPickerOpen(v => !v)} data-testid="btn-add-player-open">
+              <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
+              {t('modal_add_player')}
+            </button>
           </div>
-        ) : (
-          <div style={st.playerList}>
-            <div style={st.playerListHeader}>
-              <span style={st.sectionLabel}>{t('modal_players_label')} (0)</span>
-              <button style={st.addBtn}>
-                <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
-                {t('modal_add_player')}
+
+          {/* Inline add-player picker */}
+          {addPickerOpen && (
+            <div style={st.addPickerRow} data-testid="add-player-picker">
+              <div style={{ position: 'relative', flex: 1 }}>
+                <select
+                  style={st.addSelect}
+                  value={addingId}
+                  onChange={e => setAddingId(e.target.value)}
+                  data-testid="add-player-select"
+                >
+                  <option value="">{t('modal_select_player')}</option>
+                  {availablePlayers.map(p => (
+                    <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
+              </div>
+              <button
+                style={{ ...st.addBtn, opacity: (!addingId || addBusy) ? 0.5 : 1 }}
+                onClick={handleAdd}
+                disabled={!addingId || addBusy}
+                data-testid="btn-add-player-confirm"
+              >
+                {addBusy ? '…' : t('btn_add')}
+              </button>
+              <button style={{ ...st.iconBtn, fontSize: '1rem' }} onClick={() => { setAddPickerOpen(false); setAddingId('') }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>close</span>
               </button>
             </div>
+          )}
+
+          {players.length === 0 ? (
             <div style={st.emptyPlayers}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.5rem', color: colors.onSurfaceVariant }}>group</span>
               <p style={st.emptyText}>{t('modal_no_reg_players')}</p>
             </div>
-          </div>
-        )}
+          ) : (
+            players.map(p => (
+              <div key={p.id} style={st.playerRow} data-testid="team-detail-player">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                  <p style={st.playerName}>{p.first_name} {p.last_name}</p>
+                  <span style={st.playerId}>ID: {p.id}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '0.125rem' }}>
+                  <button style={st.iconBtn}><span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>visibility</span></button>
+                  <button
+                    style={{ ...st.iconBtn, color: colors.error }}
+                    onClick={() => onRemovePlayer?.(p)}
+                    data-testid="btn-remove-player"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
     </div>
@@ -181,7 +227,7 @@ export default function TeamModalContent({ team, editing }) {
 }
 
 const st = {
-  body:       { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
+  body: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
 
   identityRow: {
     display: 'flex',
@@ -203,11 +249,6 @@ const st = {
     justifyContent: 'center',
     overflow: 'hidden',
     flexShrink: 0,
-  },
-  logoImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
   },
   logoOverlay: {
     position: 'absolute',
@@ -289,6 +330,32 @@ const st = {
     pointerEvents: 'none',
   },
 
+  addPickerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: colors.surfaceContainerLow,
+    borderBottom: `1px solid ${colors.outlineVariant}22`,
+  },
+  addSelect: {
+    width: '100%',
+    backgroundColor: colors.surfaceContainer,
+    border: 'none',
+    borderBottom: `2px solid ${colors.tertiary}`,
+    outline: 'none',
+    padding: '0.375rem 1.75rem 0.375rem 0.5rem',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: colors.onSurface,
+    fontFamily: fonts.body,
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    boxSizing: 'border-box',
+    display: 'block',
+    cursor: 'pointer',
+  },
+
   sectionLabel: {
     display: 'block',
     fontSize: '0.625rem',
@@ -308,7 +375,6 @@ const st = {
     fontStyle: 'italic',
     lineHeight: 1.6,
   },
-
   addBtn: {
     display: 'flex',
     alignItems: 'center',

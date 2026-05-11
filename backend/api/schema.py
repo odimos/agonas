@@ -46,6 +46,7 @@ class RefereeOut(Schema):
     phone: str
     email: str
     comments: Optional[str]
+    created_at: datetime
 
 
 class StadiumIn(Schema):
@@ -103,6 +104,7 @@ class StadiumOut(Schema):
     cost: Optional[Decimal]
     comments: Optional[str]
     map_url: str
+    created_at: datetime
 
 
 class PlayerIn(Schema):
@@ -144,6 +146,7 @@ class PlayerOut(Schema):
     email: str
     comments: Optional[str]
     team_id: Optional[int]
+    created_at: datetime
 
 
 class TeamIn(Schema):
@@ -176,6 +179,7 @@ class TeamOut(Schema):
     comments: Optional[str]
     captain_id: Optional[int]
     vice_captain_id: Optional[int]
+    created_at: datetime
 
 
 VALID_STATUSES = ['draft', 'canceled', 'finished', 'expected']

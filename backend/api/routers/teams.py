@@ -9,11 +9,17 @@ from api.schema import TeamIn, TeamOut
 router = Router()
 
 
+TEAM_ORDER_FIELDS = {'name': 'name', 'created_at': 'created_at'}
+
 @router.get('/', response=List[TeamOut])
-def list_teams(request, search: str = ''):
+def list_teams(request, search: str = '', ordering: str = 'created_at'):
     qs = Team.objects.all()
     if search:
         qs = qs.filter(name__icontains=search)
+    desc = ordering.startswith('-')
+    key = ordering.lstrip('-')
+    field = TEAM_ORDER_FIELDS.get(key, 'created_at')
+    qs = qs.order_by(f'-{field}' if desc else field)
     return list(qs)
 
 

@@ -22,7 +22,8 @@ async function apiCleanup(request, firstName) {
   }
 }
 
-function clickRow(page, name) {
+async function clickRow(page, name) {
+  await page.getByTestId('search-input').fill(name.split(' ')[0])
   return page.getByTestId('player-row').filter({ hasText: name }).first().click()
 }
 
@@ -54,6 +55,7 @@ test('add player creates a new row and appears in list', async ({ page, request 
 
   // modal closes and new row appears
   await expect(page.locator('h2').filter({ hasText: 'Νέος Παίκτης' })).not.toBeVisible()
+  await page.getByTestId('search-input').fill('Playwright')
   await expect(
     page.getByTestId('player-row').filter({ hasText: 'Playwright Tester' }).first()
   ).toBeVisible()
@@ -116,6 +118,7 @@ test('assigning a team shows team name in the list row', async ({ page, request 
   await page.getByTestId('input-team').selectOption({ label: 'SpecTeam' })
   await page.getByTestId('btn-save').click()
 
+  await page.getByTestId('search-input').fill('Teamd')
   await expect(
     page.getByTestId('player-row').filter({ hasText: 'SpecTeam' }).first()
   ).toBeVisible()

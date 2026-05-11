@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { colors, radius, s } from './styles'
 import { PageHeader, StatCard } from './Buttons'
 import { useLang } from './LangContext'
+import TableRow from './TableRow'
 import DataTable from './DataTable'
 import ItemModal from './ItemModal'
 import PlayerModalContent, { initPlayerForm } from './PlayerModalContent'
@@ -21,24 +22,9 @@ const cols = {
 // ─── Player Row ───────────────────────────────────────────────────────────────
 
 function PlayerRow({ player, isFirst, onClick, teamName }) {
-  const [hovered, setHovered] = useState(false)
   const fullName = `${player.first_name} ${player.last_name}`
   return (
-    <div
-      data-testid="player-row"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        borderTop: isFirst ? 'none' : `1px solid ${colors.outlineVariant}1a`,
-        backgroundColor: hovered ? colors.surfaceContainerLow : 'transparent',
-        transition: 'background-color 0.15s ease',
-        cursor: 'pointer',
-        padding: '0 1.5rem',
-      }}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <TableRow testId="player-row" isFirst={isFirst} onClick={onClick}>
       <div style={cols.name}>
         <div>
           <p style={st.cellName}>{fullName}</p>
@@ -54,7 +40,7 @@ function PlayerRow({ player, isFirst, onClick, teamName }) {
       <div style={cols.team}>
         <span style={st.cellMid}>{teamName || '—'}</span>
       </div>
-    </div>
+    </TableRow>
   )
 }
 
@@ -65,6 +51,7 @@ export default function Players() {
   const [players, setPlayers] = useState([])
   const [teams, setTeams] = useState([])
   const [search, setSearch] = useState('')
+  const [ordering, setOrdering] = useState('created_at')
   const [selected, setSelected] = useState(null)
   const [selectedForm, setSelectedForm] = useState(null)
   const [creating, setCreating] = useState(false)
@@ -75,7 +62,7 @@ export default function Players() {
     setLoading(true)
     setError(null)
     try {
-      const [ps, ts] = await Promise.all([fetchPlayers(search), fetchTeams()])
+      const [ps, ts] = await Promise.all([fetchPlayers(search, null, ordering), fetchTeams()])
       setPlayers(ps)
       setTeams(ts)
     } catch {
@@ -83,7 +70,7 @@ export default function Players() {
     } finally {
       setLoading(false)
     }
-  }, [search])
+  }, [search, ordering])
 
   useEffect(() => { load() }, [load])
 
@@ -150,6 +137,8 @@ export default function Players() {
         )}
         search={search}
         onSearch={setSearch}
+        ordering={ordering}
+        onOrdering={setOrdering}
         total={players.length}
         loading={loading}
       />
