@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Referee Details - LeagueManager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f9f9f8",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#10b981",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-bright": "#f9f9f8",
+                        "secondary-fixed-dim": "#95d4ac",
+                        "inverse-surface": "#2e3131",
+                        "on-primary-container": "#273e31",
+                        "surface": "#f9f9f8",
+                        "error": "#ba1a1a",
+                        "primary": "#4c6455",
+                        "on-secondary-fixed-variant": "#0f5132",
+                        "tertiary": "#006c49",
+                        "on-surface": "#191c1c",
+                        "surface-container-low": "#f3f4f3",
+                        "surface-container-high": "#e7e8e7",
+                        "on-secondary-fixed": "#002111",
+                        "secondary": "#2c6a48",
+                        "primary-fixed-dim": "#b2cdbb",
+                        "inverse-on-surface": "#f0f1f0",
+                        "outline": "#727973",
+                        "on-surface-variant": "#424844",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#edeeed",
+                        "secondary-container": "#adeec4",
+                        "on-primary-fixed": "#082014",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-tertiary-container": "#00422b",
+                        "secondary-fixed": "#b0f1c7",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1c",
+                        "surface-container-highest": "#e1e3e2",
+                        "outline-variant": "#c2c8c2",
+                        "on-primary-fixed-variant": "#344c3e",
+                        "inverse-primary": "#b2cdbb",
+                        "surface-variant": "#e1e3e2",
+                        "on-secondary-container": "#316e4c",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#cee9d6",
+                        "surface-dim": "#d9dad9",
+                        "surface-tint": "#4c6455",
+                        "on-tertiary-fixed": "#002113",
+                        "primary-container": "#8fa998"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen overflow-hidden">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200/50 dark:border-stone-800/50 flex justify-between items-center px-8 h-16 w-full">
+<div class="flex items-center gap-8">
+<span class="text-lg font-bold tracking-tighter text-stone-900 dark:text-stone-50">LeagueManager</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="font-sans text-sm font-medium tracking-tight text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Dashboard</a>
+<a class="font-sans text-sm font-medium tracking-tight text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Tournaments</a>
+<a class="font-sans text-sm font-medium tracking-tight text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-700 dark:border-emerald-400 pb-1" href="#">Info</a>
+<a class="font-sans text-sm font-medium tracking-tight text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" href="#">Stats</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors rounded-full text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors rounded-full text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="close-up of a professional league administrator with a confident expression in a clean studio lighting setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNCIrEIK5SbnCcs-bgXFoCYVNv82wnKZk72Pu_R46yDRMhl2OQzNAKyj1-G5-mdgmcdvZ5YCu4OelClQsOUuOi8V0Qu5g0RPVdDwo6f9ytsg3eS1b94XDoY86qWvV9OnVQNmAp3OcqKueQv6BFjRtCC2w_KXiyNLBqcrkvtZF3wyvbskEdY9u9zZUEaVeMiv_CzXHv13sdU8CdSO12ugEXWKauPE2u27ir3TD7sh7QUgwRVzN0P28SJ1s8xNXWFB6TEoVvQUQaXPk"/>
+</div>
+</div>
+</nav>
+<!-- Side Navigation Bar -->
+<aside class="h-full w-64 fixed left-0 top-16 bg-stone-50 dark:bg-stone-950 border-r border-stone-200/20 dark:border-stone-800/20 flex flex-col py-6 gap-2">
+<div class="px-6 mb-6">
+<h2 class="text-stone-900 dark:text-stone-50 font-bold text-sm">Info Center</h2>
+<p class="text-[0.75rem] text-on-surface-variant opacity-70">League Assets</p>
+</div>
+<a class="mx-3 px-4 py-3 flex items-center gap-3 font-sans text-[0.875rem] font-medium text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+            Teams
+        </a>
+<a class="mx-3 px-4 py-3 flex items-center gap-3 font-sans text-[0.875rem] font-medium text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+            Players
+        </a>
+<a class="mx-3 px-4 py-3 flex items-center gap-3 font-sans text-[0.875rem] font-medium bg-white dark:bg-stone-900 text-emerald-700 dark:text-emerald-400 border-l-4 border-emerald-600 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="sports_whistle">sports</span>
+            Referees
+        </a>
+<a class="mx-3 px-4 py-3 flex items-center gap-3 font-sans text-[0.875rem] font-medium text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="stadium">stadium</span>
+            Stadiums
+        </a>
+</aside>
+<!-- Main Content (Background List View) -->
+<main class="ml-64 pt-16 p-8 min-h-screen">
+<header class="mb-8">
+<h1 class="text-3xl font-bold tracking-tight text-on-surface mb-2">Referee Management</h1>
+<p class="text-on-surface-variant">Registry of certified league officials and performance logs.</p>
+</header>
+<!-- Spreadsheet-style Table -->
+<div class="bg-surface-container-lowest border border-outline-variant/20 overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/30">
+<th class="px-6 py-4 text-[0.7rem] uppercase tracking-widest font-semibold text-on-surface-variant">Name</th>
+<th class="px-6 py-4 text-[0.7rem] uppercase tracking-widest font-semibold text-on-surface-variant">ID</th>
+<th class="px-6 py-4 text-[0.7rem] uppercase tracking-widest font-semibold text-on-surface-variant">Phone</th>
+<th class="px-6 py-4 text-[0.7rem] uppercase tracking-widest font-semibold text-on-surface-variant">Email</th>
+<th class="px-6 py-4 text-[0.7rem] uppercase tracking-widest font-semibold text-on-surface-variant">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer bg-surface-container-high/20">
+<td class="px-6 py-4 text-sm font-medium">Ev Ref</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">REF-0055</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">6900000055</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">ev.ref@leaguemanager.com</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wider bg-secondary-container text-on-secondary-container rounded-sm">Active</span>
+</td>
+</tr>
+<!-- Placeholder rows for list context -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-4 text-sm font-medium">Marcus Thorne</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">REF-0021</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">6900000122</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">m.thorne@leaguemanager.com</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wider bg-secondary-container text-on-secondary-container rounded-sm">Active</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer">
+<td class="px-6 py-4 text-sm font-medium">Sarah Jenkins</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">REF-0089</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">6900000988</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">s.jenkins@leaguemanager.com</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-wider bg-error-container text-on-error-container rounded-sm">Suspended</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-on-surface/40 backdrop-blur-sm"></div>
+<!-- Modal Content -->
+<div class="relative w-full max-w-xl bg-surface-container-lowest shadow-2xl overflow-hidden border border-outline-variant/30">
+<!-- Modal Header -->
+<div class="bg-surface-container-high px-8 py-6 flex justify-between items-center border-b border-outline-variant/50">
+<div>
+<h3 class="text-xl font-bold tracking-tight text-on-surface">Λεπτομέρειες Διαιτητή</h3>
+<p class="text-xs font-medium uppercase tracking-widest text-on-surface-variant mt-0.5">ID: PLY-7731-X</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body (Form) -->
+<div class="p-8">
+<form class="space-y-6">
+<div class="grid grid-cols-2 gap-6">
+<!-- First Name -->
+<div class="space-y-1.5">
+<label class="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant">ΟΝΟΜΑ</label>
+<input class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-tertiary outline-none px-3 py-2 text-sm font-medium transition-colors" type="text" value="Ev"/>
+</div>
+<!-- Last Name -->
+<div class="space-y-1.5">
+<label class="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant">ΕΠΙΘΕΤΟ</label>
+<input class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-tertiary outline-none px-3 py-2 text-sm font-medium transition-colors" type="text" value="Ref"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<!-- Phone -->
+<div class="space-y-1.5">
+<label class="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant">ΤΗΛΕΦΩΝΟ</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm" data-icon="call">call</span>
+<input class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-tertiary outline-none pl-10 pr-3 py-2 text-sm font-medium transition-colors" type="tel" value="6900000055"/>
+</div>
+</div>
+<!-- Email -->
+<div class="space-y-1.5">
+<label class="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant">Email</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm" data-icon="mail">mail</span>
+<input class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-tertiary outline-none pl-10 pr-3 py-2 text-sm font-medium transition-colors" type="email" value="ev.ref@leaguemanager.com"/>
+</div>
+</div>
+</div>
+<!-- Comments -->
+<div class="space-y-1.5">
+<label class="text-[0.7rem] uppercase tracking-widest font-bold text-on-surface-variant">ΣΧΟΛΙΑ</label>
+<textarea class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-tertiary outline-none px-3 py-2 text-sm font-medium transition-colors resize-none" placeholder="Enter administrative notes, disciplinary history, or availability details..." rows="4"></textarea>
+</div>
+<!-- Additional Metadata (Spreadsheet feel) -->
+<div class="pt-4 mt-2 border-t border-outline-variant/10 flex justify-between items-center text-[0.65rem] text-on-surface-variant uppercase tracking-widest font-medium">
+<div class="flex gap-4">
+</div>
+
+</div>
+</form>
+</div>
+<!-- Modal Footer -->
+<div class="px-8 py-6 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between">
+<button class="flex items-center gap-2 text-error text-xs font-bold uppercase tracking-wider hover:bg-error-container/20 px-4 py-2 transition-colors rounded-sm">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+                    Delete
+                </button>
+<div class="flex gap-3">
+<button class="px-6 py-2 border border-outline-variant text-on-surface text-xs font-bold uppercase tracking-wider hover:bg-surface-container-high transition-colors">
+                        Cancel
+                    </button>
+<button class="px-8 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-wider hover:bg-primary-container transition-colors shadow-sm">
+                        Save
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

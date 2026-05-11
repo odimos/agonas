@@ -141,3 +141,34 @@ class Match(models.Model):
         home = str(self.home_team) if self.home_team else '?'
         away = str(self.away_team) if self.away_team else '?'
         return f"{home} vs {away}"
+
+
+class MatchPlayerCard(models.Model):
+    CARD_TYPES = [('yellow', 'Yellow'), ('red', 'Red')]
+
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='cards')
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='cards')
+    team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='match_player_cards')
+    card_type = models.CharField(max_length=10, choices=CARD_TYPES)
+    minute = models.IntegerField()
+    comments = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if self.comments:
+            self.comments = self.comments.strip()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.card_type} card – {self.player} ({self.match})"
+
+
+class MatchPlayerGoal(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='goals')
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='goals')
+    team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='match_player_goals')
+    own_goal = models.BooleanField(default=False)
+    minute = models.IntegerField()
+
+    def __str__(self):
+        og = ' (OG)' if self.own_goal else ''
+        return f"Goal{og} – {self.player} ({self.match})"

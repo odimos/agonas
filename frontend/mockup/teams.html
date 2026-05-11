@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive Utility - Teams Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#727973",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f3f4f3",
+                    "tertiary-container": "#10b981",
+                    "primary-container": "#8fa998",
+                    "tertiary": "#006c49",
+                    "on-surface-variant": "#424844",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "primary-fixed": "#cee9d6",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-primary-fixed-variant": "#344c3e",
+                    "primary-fixed-dim": "#b2cdbb",
+                    "inverse-surface": "#2e3131",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#f9f9f8",
+                    "surface-container": "#edeeed",
+                    "secondary": "#2c6a48",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#191c1c",
+                    "outline-variant": "#c2c8c2",
+                    "surface-tint": "#4c6455",
+                    "surface": "#f9f9f8",
+                    "secondary-fixed": "#b0f1c7",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#b2cdbb",
+                    "surface-container-high": "#e7e8e7",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-fixed-variant": "#0f5132",
+                    "primary": "#4c6455",
+                    "secondary-fixed-dim": "#95d4ac",
+                    "surface-dim": "#d9dad9",
+                    "surface-container-highest": "#e1e3e2",
+                    "on-secondary-fixed": "#002111",
+                    "surface-variant": "#e1e3e2",
+                    "on-tertiary-container": "#00422b",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#f0f1f0",
+                    "on-secondary-container": "#316e4c",
+                    "on-primary-container": "#273e31",
+                    "on-primary-fixed": "#082014",
+                    "on-surface": "#191c1c",
+                    "background": "#f9f9f8",
+                    "secondary-container": "#adeec4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .ghost-border { border-bottom: 1px solid rgba(194, 200, 194, 0.2); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+
+<div class="flex flex-1 pt-16">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 pt-8 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900 hidden md:block sticky top-16">
+<div class="px-6 mb-8">
+<h2 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">League Info</h2>
+<p class="text-[10px] text-on-surface-variant/70 italic">Contextual Management</p>
+</div>
+<nav class="flex flex-col gap-1 px-3">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border-l-4 border-emerald-700 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="text-sm font-medium">Teams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-sm font-medium">Players</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="sports">sports</span>
+<span class="text-sm font-medium">Referees</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="stadium">stadium</span>
+<span class="text-sm font-medium">Stadiums</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 bg-surface p-8 max-w-7xl mx-auto w-full">
+<!-- Header Section -->
+<header class="mb-10 flex justify-between items-end">
+<div class="space-y-1">
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Registered Teams</h1>
+<p class="text-on-surface-variant text-sm font-medium">League Operations &amp; Directory</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-on-primary px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span>
+                    Register New Team
+                </button>
+</header>
+<!-- Stats Overview - Bento Style -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div class="bg-surface-container-lowest p-5 rounded-lg border-l-4 border-tertiary shadow-sm">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Total Teams</p>
+<div class="text-2xl font-bold text-on-surface">24</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-lg border-l-4 border-primary-container shadow-sm">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Active Squads</p>
+<div class="text-2xl font-bold text-on-surface">22</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-lg border-l-4 border-secondary shadow-sm">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Open Applications</p>
+<div class="text-2xl font-bold text-on-surface">03</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-lg border-l-4 border-outline-variant shadow-sm">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Compliance Rate</p>
+<div class="text-2xl font-bold text-on-surface">98%</div>
+</div>
+</div>
+<!-- Teams Table Container -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden border border-outline-variant/20">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/30">
+<th class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Team Name</th>
+<th class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Captain</th>
+<th class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Contact info</th>
+<th class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Status</th>
+<th class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Team Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 bg-surface-container rounded-lg flex items-center justify-center font-bold text-primary border border-outline-variant/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="minimalist sports team logo with emerald green and sage geometric shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCINzVJCj9R8ZkjVYYRd6Ca9PDYndD_OFwn-7WmRE-BmlSle8-rnBa8soT0UPmJ1OasE8wojKO0EP0k7DGZ1ZQ73hRxC2oQwqqECuu2mgrYTMbd9tckN4f4dOdkzuLW3suj_gQkhsHo-76fuq6fonb2qRjiwMMly_eVsvzHgn_kYb67XqkIJkZJJEsTnWuHdkdB83wxm1INfpeeAWRexQP8cAcHWI_T9VN3ICrtKMXg6Kl_kLILUVo8FP-tKgz9uKCZJQ6iZhZ1oqc"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">North Star Rangers</p>
+<p class="text-[11px] text-on-surface-variant">Established 2018</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-on-surface">Alexander Vance</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant font-mono">vance.a@northstars.com</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-container text-on-secondary-container">Active</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-[11px] font-bold uppercase tracking-wider text-tertiary hover:underline transition-all">View Details</button>
+</td>
+</tr>
+<!-- Team Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 bg-surface-container rounded-lg flex items-center justify-center font-bold text-primary border border-outline-variant/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="emblem of an urban sports club with dark green and white typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-6YlMQxFxBdjTu9qWwSg8E5JObKBlspxg5fmbXNL-qF7cHS7BYCE1HzpWODmSqohrvJa6GJLch-RTmfWyV1rRSAOqBH2Jp35WMUdrCG0Jo5EmVFmPlzpqzcm7Xi3oK70gt-nWIvWeuP5ZozGXNY3M047Rs77BoLt7ouGzxwBKVnZb2yDJoH9De7gSWoBmWF0yAE9qh5md4DQqFB3I0YD1XbSVEHbjpAetW3RXYaMSfbf718qgYsiSv3FmZPTbvZ5YxQE2HWchNCc"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Metropolitan United</p>
+<p class="text-[11px] text-on-surface-variant">Established 2021</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-on-surface">Sarah Sterling</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant font-mono">admin@metroutd.io</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-secondary-container text-on-secondary-container">Active</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-[11px] font-bold uppercase tracking-wider text-tertiary hover:underline transition-all">View Details</button>
+</td>
+</tr>
+<!-- Team Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 bg-surface-container rounded-lg flex items-center justify-center font-bold text-primary border border-outline-variant/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="clean shield logo for a sports organization with sage green background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAMmCV_EYnv7UsY0_h-iG951R8VYw-s_SZ1dj4ngpChHuHj054LOghlTryM9i9X0lt1gJeBzNj_Nwc7OVkikknqgLq4CD6P3d3zp4B6oXFJc5JMU4_4uVLTAaT19D0dzT1hHtF28GpQf84PLV8EmjN0BLFMNbMD3o_P4mORQqu2uYzAAzuDH4nEC0Bnlbp7_Sdpll0oMZeoz3F0GJYBoDPXdzPrc6AN_XkAhEr3lLH336I3y7GPwVvZcwFseD-zJ2-9NBWcMasc4Y"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Harbor City FC</p>
+<p class="text-[11px] text-on-surface-variant">Established 2015</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-on-surface">Marcus Thorne</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant font-mono">m.thorne@harborcity.net</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-error-container text-on-error-container">Suspended</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-[11px] font-bold uppercase tracking-wider text-tertiary hover:underline transition-all">View Details</button>
+</td>
+</tr>
+<!-- Team Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 bg-surface-container rounded-lg flex items-center justify-center font-bold text-primary border border-outline-variant/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="minimalist vector icon of a falcon in dark green on a light cream background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEbGdhAPVF5vf84llZvH_7jG93eTenACQ8Z-_EhJVkUu-YNDQoDauHkLKbCeOFkfZcniUOL7CsbhmQxZStT09OzsYpsqYC-h6daQXg2kd6BGdgooYdp0k3cggUtAv5MFmbd9ZLGI2H00ItQ2oyA0K41XDwRQavAMgnO9YMao32tEdkePTmaRwMHlfv7u2juLkyZJvnwPJpvPBDidKiTmzzQBYkCe9rJx6Ztol1pIzD3zQJQKRtVxI8v_DtXeuGsIisjXxVEQS9DN8"/>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Valley Falcons</p>
+<p class="text-[11px] text-on-surface-variant">Established 2023</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-medium text-on-surface">Elena Rodriguez</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant font-mono">elena.r@falcons.com</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-surface-variant text-on-surface-variant">Inactive</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-[11px] font-bold uppercase tracking-wider text-tertiary hover:underline transition-all">View Details</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer of Table -->
+<div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant/30 flex justify-between items-center">
+<p class="text-xs text-on-surface-variant">Showing 4 of 24 teams</p>
+<div class="flex gap-2">
+<button class="p-1.5 rounded border border-outline-variant/30 hover:bg-white transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-1.5 rounded border border-outline-variant/30 bg-white shadow-sm font-bold text-xs px-3">1</button>
+<button class="p-1.5 rounded border border-outline-variant/30 hover:bg-white transition-colors font-bold text-xs px-3">2</button>
+<button class="p-1.5 rounded border border-outline-variant/30 hover:bg-white transition-colors font-bold text-xs px-3">3</button>
+<button class="p-1.5 rounded border border-outline-variant/30 hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full py-6 mt-auto bg-white dark:bg-zinc-950 border-t border-zinc-200/50 dark:border-zinc-800/50 flex justify-between items-center px-8 max-w-full">
+<span class="text-xs font-normal text-zinc-500">© 2024 Executive Utility League Systems</span>
+<div class="flex gap-6">
+<a class="text-xs font-normal text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-emerald-500/30" href="#">Privacy Policy</a>
+<a class="text-xs font-normal text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-emerald-500/30" href="#">Terms of Service</a>
+<a class="text-xs font-normal text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-emerald-500/30" href="#">API Documentation</a>
+<a class="text-xs font-normal text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline decoration-emerald-500/30" href="#">Support</a>
+</div>
+</footer>
+<!-- Details Modal Overlay (Hidden State Mockup) -->
+<div class="fixed inset-0 bg-on-surface/20 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden">
+<div class="bg-surface rounded-lg shadow-xl max-w-2xl w-full border border-outline-variant/30">
+<div class="p-6 border-b border-outline-variant/20 flex justify-between items-start">
+<div>
+<h3 class="text-xl font-bold text-on-surface">Team Profile: North Star Rangers</h3>
+<p class="text-sm text-on-surface-variant">Registry ID: 88293-F</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-8 space-y-6">
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<label class="block text-[10px] font-bold uppercase text-on-surface-variant tracking-widest">Management</label>
+<div>
+<p class="text-[11px] text-on-surface-variant">Head Coach</p>
+<p class="text-sm font-medium">Dominic Sterling</p>
+</div>
+<div>
+<p class="text-[11px] text-on-surface-variant">Team Physician</p>
+<p class="text-sm font-medium">Dr. Helen K. Miller</p>
+</div>
+</div>
+<div class="space-y-4">
+<label class="block text-[10px] font-bold uppercase text-on-surface-variant tracking-widest">Facility</label>
+<div>
+<p class="text-[11px] text-on-surface-variant">Primary Pitch</p>
+<p class="text-sm font-medium">Highland Park Arena</p>
+</div>
+<div>
+<p class="text-[11px] text-on-surface-variant">Training Grounds</p>
+<p class="text-sm font-medium">Vance Memorial Fields</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container p-4 rounded border border-outline-variant/20">
+<p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-2">Compliance Notes</p>
+<p class="text-xs leading-relaxed text-on-surface-variant italic">All seasonal fees paid. Player insurance certificates are current until 12/2024. Team uniform colors verified for tournament play.</p>
+</div>
+</div>
+<div class="p-6 bg-surface-container-low border-t border-outline-variant/20 flex justify-end gap-3">
+<button class="px-5 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface transition-colors rounded border border-outline-variant/30">Close</button>
+<button class="px-5 py-2 text-sm font-semibold bg-tertiary text-on-tertiary rounded shadow-sm hover:opacity-90">Edit Profile</button>
+</div>
+</div>
+</div>
+</body></html>
