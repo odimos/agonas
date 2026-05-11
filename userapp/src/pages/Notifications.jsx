@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
+import { useLang } from '../LangContext'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 
@@ -88,6 +89,7 @@ const INITIAL = [
 ]
 
 export default function Notifications() {
+  const { t } = useLang()
   const [items, setItems] = useState(INITIAL)
 
   const unreadCount = items.filter(n => !n.read).length
@@ -108,7 +110,7 @@ export default function Notifications() {
       {/* Header */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>
-          Notifications
+          {t('notif_title')}
           {unreadCount > 0 && (
             <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', fontWeight: 700, background: colors.error, color: '#fff', borderRadius: '1rem', padding: '0.1rem 0.45rem', verticalAlign: 'middle' }}>
               {unreadCount}
@@ -117,7 +119,7 @@ export default function Notifications() {
         </span>
         {unreadCount > 0 && (
           <button onClick={markAllRead} style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-            Mark all read
+            {t('notif_mark_all')}
           </button>
         )}
       </header>
@@ -125,10 +127,10 @@ export default function Notifications() {
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
         {unread.length > 0 && (
           <section style={{ padding: '1rem 1rem 0.5rem' }}>
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>New</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>{t('notif_new')}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               {unread.map(n => (
-                <NotifRow key={n.id} n={n} onRead={markRead} />
+                <NotifRow key={n.id} n={n} onRead={markRead} t={t} />
               ))}
             </div>
           </section>
@@ -136,10 +138,10 @@ export default function Notifications() {
 
         {earlier.length > 0 && (
           <section style={{ padding: '1rem 1rem 0.5rem' }}>
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>Earlier</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant }}>{t('notif_earlier')}</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               {earlier.map(n => (
-                <NotifRow key={n.id} n={n} onRead={markRead} />
+                <NotifRow key={n.id} n={n} onRead={markRead} t={t} />
               ))}
             </div>
           </section>
@@ -148,7 +150,7 @@ export default function Notifications() {
         {items.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 2rem', gap: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '3rem', color: colors.outlineVariant }}>notifications_off</span>
-            <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, margin: 0 }}>No notifications</p>
+            <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, margin: 0 }}>{t('notif_none')}</p>
           </div>
         )}
       </main>
@@ -158,7 +160,7 @@ export default function Notifications() {
   )
 }
 
-function NotifRow({ n, onRead }) {
+function NotifRow({ n, onRead, t }) {
   return (
     <div
       onClick={() => onRead(n.id)}
@@ -184,7 +186,7 @@ function NotifRow({ n, onRead }) {
         <p style={{ fontSize: '0.7rem', color: colors.onSurfaceVariant, margin: 0, lineHeight: 1.4 }}>{n.body}</p>
         {!n.read && n.type === 'action' && (
           <span style={{ display: 'inline-block', marginTop: '0.4rem', fontSize: '0.6rem', fontWeight: 700, color: n.iconColor, textTransform: 'uppercase', letterSpacing: '0.08em', background: `${n.iconColor}18`, borderRadius: radius.full, padding: '0.15rem 0.5rem' }}>
-            Action required
+            {t('notif_action_req')}
           </span>
         )}
       </div>

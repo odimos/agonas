@@ -1,0 +1,520 @@
+import { useState, useRef } from 'react'
+import { useParams } from 'react-router-dom'
+import { colors, fonts, radius } from './styles'
+import { useLang } from './LangContext'
+import { StatCard } from './Buttons'
+
+const MOCK_TOURNAMENTS = {
+  '1': {
+    id: 1, name: 'Tournament 1', status: 'ΕΝΕΡΓΟ',
+    progress: 60, totalTeams: 8, remainingTeams: 3,
+    startDate: '12/10/2024', type: 'Knockout', visibility: 'Visible',
+    description: 'Tournament 1 is currently in the late Phase 2 stage. System logs indicate all knockout brackets are synchronized with real-time server updates. Ensure all visibility settings are finalized before the weekend cutoff.',
+  },
+  '2': {
+    id: 2, name: 'Tournament 2', status: 'ΑΝΕΝΕΡΓΟ',
+    progress: 25, totalTeams: 6, remainingTeams: 6,
+    startDate: '15/01/2025', type: 'Round Robin', visibility: 'Hidden',
+    description: 'Tournament 2 is in early configuration. Team registrations are open and bracket generation is pending. Confirm visibility settings before publishing.',
+  },
+}
+
+function toInputDate(dmy) {
+  const [d, m, y] = dmy.split('/')
+  return `${y}-${m}-${d}`
+}
+
+function fromInputDate(ymd) {
+  const [y, m, d] = ymd.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function DataCell({ label, last, onClick, children }) {
+  return (
+    <div
+      style={{ ...st.dataCell, borderRight: last ? 'none' : `1px solid ${colors.outlineVariant}33`, cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
+      onClick={onClick}
+    >
+      <span style={st.dataCellLabel}>{label}</span>
+      <div style={st.dataCellRow}>{children}</div>
+    </div>
+  )
+}
+
+export default function TournamentOverview() {
+  const { id } = useParams()
+  const { t } = useLang()
+  const tour = MOCK_TOURNAMENTS[id] ?? MOCK_TOURNAMENTS['1']
+
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+  const dateInputRef = useRef(null)
+
+  function handleCancel() {
+    setDraft({ status: tour.status, startDate: tour.startDate, visibility: tour.visibility })
+    setEditing(false)
+  }
+
+  return (
+    <div style={st.page}>
+
+      {/* Header */}
+      <div style={st.header}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.375rem' }}>
+            <h1 style={st.title}>{tour.name.toUpperCase()}</h1>
+            {editing ? (
+              <select
+                value={draft.status}
+                onChange={e => setDraft(d => ({ ...d, status: e.target.value }))}
+                style={{ ...st.statusSelect, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusSelectInactive : {}) }}
+              >
+                <option value="ΕΝΕΡΓΟ">{t('ΕΝΕΡΓΟ')}</option>
+                <option value="ΑΝΕΝΕΡΓΟ">{t('ΑΝΕΝΕΡΓΟ')}</option>
+              </select>
+            ) : (
+              <div style={{ ...st.statusBadge, ...(draft.status === 'ΑΝΕΝΕΡΓΟ' ? st.statusBadgeInactive : {}) }}>
+                {t(draft.status)}
+              </div>
+            )}
+          </div>
+          <p style={st.subtitle}>{t('to_subtitle')}</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {editing ? (
+            <>
+              <button style={st.cancelBtn} onClick={handleCancel}>{t('modal_cancel')}</button>
+              <button style={st.saveBtn} onClick={() => setEditing(false)}>{t('modal_save')}</button>
+            </>
+          ) : (
+            <button style={st.editBtn} onClick={() => setEditing(true)}>{t('modal_edit')}</button>
+          )}
+        </div>
+      </div>
+
+      {/* Bento grid */}
+      <div style={st.bentoGrid}>
+
+        {/* Progress card */}
+        <div style={st.progressCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <span style={st.cardLabel}>{t('to_progress')}</span>
+              <div style={st.progressNum}>{tour.progress}%</div>
+            </div>
+            <button style={st.graphBtn}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>auto_graph</span>
+              {t('to_gen_graph')}
+            </button>
+          </div>
+          <div style={st.progressBarTrack}>
+            <div style={{ ...st.progressBarFill, width: `${tour.progress}%` }} />
+          </div>
+        </div>
+
+        {/* Teams stat cards */}
+        <StatCard label={t('to_total_teams')}     count={tour.totalTeams}     />
+        <StatCard label={t('to_remaining_teams')} count={tour.remainingTeams} accentColor={colors.primary} />
+
+        {/* Data grid */}
+        <div style={st.dataGrid}>
+
+          {/* Start Date */}
+          <DataCell label={t('to_start_date')} onClick={editing ? () => dateInputRef.current?.showPicker?.() : undefined}>
+            <span style={st.dataCellValue}>{draft.startDate}</span>
+            {editing && (
+              <>
+                <span className="material-symbols-outlined" style={st.dataCellIcon}>calendar_today</span>
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={toInputDate(draft.startDate)}
+                  onChange={e => setDraft(d => ({ ...d, startDate: fromInputDate(e.target.value) }))}
+                  style={st.hiddenDateInput}
+                  onClick={e => e.stopPropagation()}
+                />
+              </>
+            )}
+          </DataCell>
+
+          {/* Type — always read-only */}
+          <DataCell label={t('to_type')}>
+            <span style={st.dataCellValue}>{tour.type}</span>
+            <span className="material-symbols-outlined" style={st.dataCellIcon}>schema</span>
+          </DataCell>
+
+          {/* Visibility */}
+          <DataCell label={t('to_visibility')} last>
+            {editing ? (
+              <select
+                value={draft.visibility}
+                onChange={e => setDraft(d => ({ ...d, visibility: e.target.value }))}
+                style={st.fieldSelect}
+              >
+                <option value="Visible">Visible</option>
+                <option value="Hidden">Hidden</option>
+              </select>
+            ) : (
+              <>
+                <span style={st.dataCellValue}>{draft.visibility}</span>
+                <span className="material-symbols-outlined" style={st.dataCellIcon}>visibility</span>
+              </>
+            )}
+          </DataCell>
+
+        </div>
+
+        {/* Decorative card */}
+        <div style={st.decoCard}>
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDUKDE6blm6pJmeS_ira6JCjiBQCoPJZNHmDPn3q6oFKVeW1UKST3y4s7yBLhaXj4d8_ttMieYE5eLJYedlEWvcCVnQL84Uu2qaprwHT1soL1L-vkvI8rFSjZqwd79BIa_oHrXghxDQ0n2KGWxZvQzHusWd_D3ZVUTE5YYuCpUJX_daDRsBJHBNoP93bCkM_XWumIuBSDTpAi-O1tA1-6NLTUr9P8c1GFvsB0jobPP00CxMin07rfENwSwmyooSuJMq2cekjNkYlY"
+            alt=""
+            style={st.decoImg}
+          />
+          <div style={st.decoContent}>
+            <h3 style={st.decoTitle}>{t('to_league_env')}</h3>
+            <p style={st.decoText}>{tour.description}</p>
+            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem' }}>
+              <div style={st.indicator}>
+                <span style={{ ...st.dot, backgroundColor: colors.tertiary }} />
+                {t('to_realtime')}
+              </div>
+              <div style={st.indicator}>
+                <span style={{ ...st.dot, backgroundColor: colors.outlineVariant }} />
+                {t('to_auto_archive')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Danger Zone */}
+      <div style={st.dangerZone}>
+        <div>
+          <p style={st.dangerTitle}>{t('to_danger_zone')}</p>
+          <p style={st.dangerText}>{t('to_danger_text')}</p>
+        </div>
+        <button style={st.dangerBtn}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete_forever</span>
+          {t('to_delete')}
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
+const st = {
+  page: {
+    padding: '2rem 2.5rem',
+    fontFamily: fonts.body,
+    backgroundColor: colors.surface,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2rem',
+  },
+
+  // Header
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingBottom: '1.5rem',
+    borderBottom: `1px solid ${colors.outlineVariant}33`,
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: colors.onSurface,
+    margin: 0,
+    fontFamily: fonts.headline,
+  },
+  subtitle: {
+    fontSize: '0.875rem',
+    color: colors.onSurfaceVariant,
+    margin: 0,
+    fontFamily: fonts.label,
+  },
+  statusBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    backgroundColor: colors.secondaryContainer,
+    color: colors.onSecondaryContainer,
+    padding: '0.1875rem 0.75rem',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    fontFamily: fonts.label,
+  },
+  statusSelect: {
+    backgroundColor: colors.secondaryContainer,
+    color: colors.onSecondaryContainer,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    padding: '0.1875rem 0.5rem',
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    fontFamily: fonts.label,
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  statusBadgeInactive: {
+    backgroundColor: colors.surfaceContainerHigh,
+    color: colors.onSurfaceVariant,
+  },
+  statusSelectInactive: {
+    backgroundColor: colors.surfaceContainerHigh,
+    color: colors.onSurfaceVariant,
+  },
+
+  // Header action buttons (modal-style)
+  editBtn: {
+    padding: '0.5rem 2rem',
+    backgroundColor: colors.primary,
+    color: colors.onPrimary,
+    border: 'none',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
+  },
+  cancelBtn: {
+    padding: '0.5rem 1.25rem',
+    backgroundColor: 'transparent',
+    color: colors.onSurfaceVariant,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
+  },
+  saveBtn: {
+    padding: '0.5rem 1.5rem',
+    backgroundColor: colors.primary,
+    color: colors.onPrimary,
+    border: 'none',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: fonts.label,
+  },
+
+  // Bento
+  bentoGrid: {
+    display: 'grid',
+    gridTemplateColumns: '3fr 1fr 1fr',
+    gridTemplateRows: 'auto auto auto',
+    gap: '1.5rem',
+  },
+
+  progressCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderLeft: `4px solid ${colors.tertiary}`,
+    padding: '1.25rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    minHeight: 0,
+  },
+  cardLabel: {
+    display: 'block',
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.18em',
+    color: colors.onSurfaceVariant,
+    marginBottom: '0.375rem',
+    fontFamily: fonts.label,
+  },
+  progressNum: {
+    fontSize: '2rem',
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: colors.onSurface,
+    lineHeight: 1,
+    fontFamily: fonts.headline,
+  },
+  graphBtn: {
+    display: 'flex', alignItems: 'center', gap: '0.5rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: `${colors.primaryContainer}33`,
+    color: colors.primary,
+    border: 'none',
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.6875rem', fontWeight: 700,
+    textTransform: 'uppercase', letterSpacing: '0.06em',
+    cursor: 'pointer', fontFamily: fonts.label,
+    flexShrink: 0,
+  },
+  progressBarTrack: {
+    width: '100%',
+    height: '4px',
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+    marginTop: '1rem',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.tertiary,
+    borderRadius: radius.full,
+    transition: 'width 0.8s ease',
+  },
+
+  dataGrid: {
+    gridColumn: '1 / -1',
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}33`,
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+  },
+  dataCell: {
+    padding: '1.5rem',
+  },
+  dataCellLabel: {
+    display: 'block',
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.18em',
+    color: colors.onSurfaceVariant,
+    marginBottom: '0.5rem',
+    fontFamily: fonts.label,
+  },
+  dataCellRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dataCellValue: {
+    fontSize: '1.125rem',
+    fontWeight: 500,
+    color: colors.onSurface,
+  },
+  dataCellIcon: {
+    fontSize: '1.25rem',
+    color: colors.onSurfaceVariant,
+  },
+  hiddenDateInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: 0,
+    height: 0,
+    pointerEvents: 'none',
+  },
+  fieldSelect: {
+    fontSize: '1.125rem',
+    fontWeight: 500,
+    color: colors.onSurface,
+    fontFamily: fonts.body,
+    background: 'none',
+    border: 'none',
+    borderBottom: `1px solid ${colors.outlineVariant}`,
+    outline: 'none',
+    padding: '0.125rem 0',
+    cursor: 'pointer',
+    width: '100%',
+  },
+
+  decoCard: {
+    gridColumn: '1 / -1',
+    position: 'relative',
+    height: '16rem',
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceContainerLowest,
+  },
+  decoImg: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    opacity: 0.1,
+    filter: 'grayscale(1)',
+  },
+  decoContent: {
+    position: 'relative',
+    zIndex: 1,
+    padding: '2.5rem',
+    maxWidth: '40rem',
+  },
+  decoTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 800,
+    letterSpacing: '-0.03em',
+    textTransform: 'uppercase',
+    color: colors.onSurface,
+    margin: '0 0 0.75rem',
+    fontFamily: fonts.headline,
+  },
+  decoText: {
+    fontSize: '0.875rem',
+    color: colors.onSurfaceVariant,
+    lineHeight: 1.6,
+    margin: 0,
+  },
+  indicator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.6875rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    color: colors.primary,
+    fontFamily: fonts.label,
+  },
+  dot: {
+    width: '0.5rem',
+    height: '0.5rem',
+    borderRadius: radius.full,
+    flexShrink: 0,
+  },
+
+  // Danger Zone
+  dangerZone: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '2rem',
+    borderTop: `1px solid ${colors.error}1a`,
+    backgroundColor: `${colors.errorContainer}0d`,
+  },
+  dangerTitle: {
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '-0.02em',
+    color: colors.error,
+    margin: '0 0 0.25rem',
+    fontFamily: fonts.headline,
+  },
+  dangerText: {
+    fontSize: '0.75rem',
+    color: colors.onSurfaceVariant,
+    margin: 0,
+    maxWidth: '36rem',
+    lineHeight: 1.5,
+  },
+  dangerBtn: {
+    display: 'flex', alignItems: 'center', gap: '0.5rem',
+    padding: '0.625rem 1.5rem',
+    backgroundColor: 'transparent',
+    border: `1px solid ${colors.error}`,
+    borderRadius: radius.DEFAULT,
+    fontSize: '0.75rem', fontWeight: 800,
+    textTransform: 'uppercase', letterSpacing: '0.08em',
+    color: colors.error,
+    cursor: 'pointer', fontFamily: fonts.label,
+    flexShrink: 0,
+  },
+}
