@@ -15,6 +15,7 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
             placeholder={t('dt_search')}
             value={search}
             onChange={e => onSearch(e.target.value)}
+            data-testid="search-input"
           />
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>

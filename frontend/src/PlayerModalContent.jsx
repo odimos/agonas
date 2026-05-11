@@ -1,29 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { colors, fonts } from './styles'
 import ModalField from './ModalField'
 import { useLang } from './LangContext'
 
-const TEAMS = ['OPA FC', 'Emerald Giants', 'Sage United', 'Coastal Rangers']
-
-function initForm(player) {
-  const parts = player.name.trim().split(' ')
+// form shape: { firstName, lastName, nickname, phone, email, team_id, comments }
+export function initPlayerForm(player = {}) {
   return {
-    firstName: parts[0] ?? '',
-    lastName:  parts.slice(1).join(' ') ?? '',
-    phone:     player.phone    ?? '',
-    email:     player.email    ?? '',
-    nickname:  player.nickname ?? '',
-    team:      player.team     ?? '',
-    comments:  player.comments ?? '',
+    firstName: player.first_name ?? '',
+    lastName:  player.last_name  ?? '',
+    nickname:  player.nickname   ?? '',
+    phone:     player.phone      ?? '',
+    email:     player.email      ?? '',
+    team_id:   player.team_id    ?? null,
+    comments:  player.comments   ?? '',
   }
 }
 
-export default function PlayerModalContent({ player, editing }) {
+export default function PlayerModalContent({ form, setForm, editing, teams = [] }) {
   const { t } = useLang()
-  const [form, setForm] = useState(() => initForm(player))
 
   useEffect(() => {
-    if (!editing) setForm(initForm(player))
+    // reset handled by parent when editing flips off
   }, [editing])
 
   const set = field => value => setForm(f => ({ ...f, [field]: value }))
@@ -33,15 +30,15 @@ export default function PlayerModalContent({ player, editing }) {
 
       {/* Name fields */}
       <div style={st.nameGrid}>
-        <ModalField label={t('modal_first_name')} value={form.firstName} editing={editing} onChange={set('firstName')} />
-        <ModalField label={t('modal_last_name')}  value={form.lastName}  editing={editing} onChange={set('lastName')}  />
-        <ModalField label={t('modal_nickname')}   value={form.nickname}  editing={editing} onChange={set('nickname')} span2 />
+        <ModalField label={t('modal_first_name')} value={form.firstName} editing={editing} onChange={set('firstName')} testId="input-first-name" />
+        <ModalField label={t('modal_last_name')}  value={form.lastName}  editing={editing} onChange={set('lastName')}  testId="input-last-name"  />
+        <ModalField label={t('modal_nickname')}   value={form.nickname}  editing={editing} onChange={set('nickname')} span2 testId="input-nickname" />
       </div>
 
       {/* Contact + Team */}
       <div style={st.contactGrid}>
-        <ModalField label={t('modal_phone')} value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   />
-        <ModalField label="Email"            value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" />
+        <ModalField label={t('modal_phone')} value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   testId="input-phone" />
+        <ModalField label="Email"            value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" testId="input-email" />
 
         {/* Team — full-width select */}
         <div style={{ gridColumn: '1 / -1' }}>
@@ -49,11 +46,12 @@ export default function PlayerModalContent({ player, editing }) {
           <div style={{ position: 'relative' }}>
             <select
               style={{ ...st.select, borderBottomColor: editing ? colors.primary : `${colors.outlineVariant}4d`, cursor: editing ? 'pointer' : 'default', pointerEvents: editing ? 'auto' : 'none' }}
-              value={form.team}
-              onChange={e => set('team')(e.target.value)}
+              value={form.team_id ?? ''}
+              onChange={e => set('team_id')(e.target.value ? Number(e.target.value) : null)}
+              data-testid="input-team"
             >
-              <option value="">— </option>
-              {TEAMS.map(t => <option key={t}>{t}</option>)}
+              <option value="">—</option>
+              {teams.map(tm => <option key={tm.id} value={tm.id}>{tm.name}</option>)}
             </select>
             <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
           </div>

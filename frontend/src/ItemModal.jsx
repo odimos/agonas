@@ -2,14 +2,29 @@ import { useState } from 'react'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
 
-export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', onClose, onDelete, children }) {
+export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', onClose, onDelete, onSave, onEditingChange, children }) {
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const { t } = useLang()
+
+  function setEditingWithCb(val) {
+    setEditing(val)
+    onEditingChange?.(val)
+  }
 
   function handleDelete() {
     if (window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
       onDelete?.()
-      onClose()
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await onSave?.()
+      setEditingWithCb(false)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -21,12 +36,12 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
         <div style={st.header}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <h2 style={st.title}>{title}</h2>
+              <h2 style={st.title} data-testid="modal-title">{title}</h2>
               {badge}
             </div>
             {subtitle && <p style={st.subtitle}>{subtitle}</p>}
           </div>
-          <button style={st.closeBtn} onClick={onClose}>
+          <button style={st.closeBtn} onClick={onClose} data-testid="modal-close">
             <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>close</span>
           </button>
         </div>
@@ -39,7 +54,7 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
         {/* Footer */}
         <div style={st.footer}>
           {editing ? <div /> : (
-            <button style={st.deleteBtn} onClick={handleDelete}>
+            <button style={st.deleteBtn} onClick={handleDelete} data-testid="btn-delete">
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete_forever</span>
               {t('modal_delete')}
             </button>
@@ -47,11 +62,11 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {editing ? (
               <>
-                <button style={st.cancelBtn} onClick={() => setEditing(false)}>{t('modal_cancel')}</button>
-                <button style={st.saveBtn}>{t('modal_save')}</button>
+                <button style={st.cancelBtn} onClick={() => setEditingWithCb(false)} disabled={saving}>{t('modal_cancel')}</button>
+                <button style={st.saveBtn} onClick={handleSave} disabled={saving} data-testid="btn-save-changes">{saving ? '…' : t('modal_save')}</button>
               </>
             ) : (
-              <button style={st.editBtn} onClick={() => setEditing(true)}>{t('modal_edit')}</button>
+              <button style={st.editBtn} onClick={() => setEditingWithCb(true)} data-testid="btn-edit">{t('modal_edit')}</button>
             )}
           </div>
         </div>

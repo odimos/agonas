@@ -11,9 +11,9 @@ export function ExportCSVButton({ onClick }) {
   )
 }
 
-export function AddButton({ label, onClick }) {
+export function AddButton({ label, onClick, testId }) {
   return (
-    <button style={st.addBtn} onClick={onClick}>
+    <button style={st.addBtn} onClick={onClick} data-testid={testId}>
       <span className="material-symbols-outlined" style={st.icon}>add</span>
       {label}
     </button>
@@ -29,13 +29,13 @@ export function StatCard({ label, count, accentColor, valueColor, style }) {
   )
 }
 
-export function PageHeader({ title, addLabel, onAdd, onExport }) {
+export function PageHeader({ title, addLabel, onAdd, onExport, addTestId }) {
   return (
     <div style={st.header}>
       <h1 style={st.title}>{title}</h1>
       <div style={st.actions}>
         <ExportCSVButton onClick={onExport} />
-        <AddButton label={addLabel} onClick={onAdd} />
+        <AddButton label={addLabel} onClick={onAdd} testId={addTestId} />
       </div>
     </div>
   )

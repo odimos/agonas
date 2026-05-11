@@ -1,6 +1,6 @@
 import { colors, fonts } from './styles'
 
-export default function ModalField({ label, value, onChange, editing, icon, type = 'text', multiline = false, span2 = false, placeholder = '', rows = 4 }) {
+export default function ModalField({ label, value, onChange, editing, icon, type = 'text', multiline = false, span2 = false, placeholder = '', rows = 4, testId }) {
   const inputSt = {
     ...st.input,
     borderBottomColor: editing ? colors.primary : `${colors.outlineVariant}4d`,
@@ -19,6 +19,7 @@ export default function ModalField({ label, value, onChange, editing, icon, type
           onChange={e => onChange?.(e.target.value)}
           rows={rows}
           placeholder={editing ? placeholder : ''}
+          data-testid={testId}
         />
       ) : (
         <div style={{ position: 'relative' }}>
@@ -33,6 +34,7 @@ export default function ModalField({ label, value, onChange, editing, icon, type
             value={value}
             readOnly={!editing}
             onChange={e => onChange?.(e.target.value)}
+            data-testid={testId}
           />
         </div>
       )}
