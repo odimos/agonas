@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
+import { useLang } from '../LangContext'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 
@@ -17,7 +18,6 @@ const SQUAD = [
   { name: 'K. Yamada', pos: 'DEF' },
 ]
 
-const FORM = ['L','W','W','D','W']
 const FORM_COLOR = { W: colors.tertiary, D: colors.outline, L: colors.error }
 
 const MATCH_HISTORY = [
@@ -30,18 +30,50 @@ const MATCH_HISTORY = [
 
 const RESULT_BORDER = { win: colors.tertiary, draw: colors.outline,         loss: colors.error }
 const RESULT_COLOR  = { win: colors.tertiary, draw: colors.onSurfaceVariant, loss: colors.error }
-const RESULT_LABEL  = { win: 'Win',           draw: 'Draw',                  loss: 'Loss'      }
+
+const FORM = ['L','W','W','D','W']
 
 export default function Team() {
+  const { t } = useLang()
   const [squadOpen, setSquadOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [teamName, setTeamName] = useState('TEAM NORTH')
+  const [logo, setLogo] = useState(null)
+  const [draft, setDraft] = useState({})
+  const logoRef = useRef(null)
+
+  function enterEdit() {
+    setDraft({ teamName, logo })
+    setEditing(true)
+  }
+  function cancelEdit() {
+    setTeamName(draft.teamName)
+    setLogo(draft.logo)
+    setEditing(false)
+  }
+  function saveEdit() { setEditing(false) }
+
+  function onLogoChange(e) {
+    const file = e.target.files[0]
+    if (file) setLogo(URL.createObjectURL(file))
+  }
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* TopAppBar */}
       <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', boxSizing: 'border-box', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
-        <div style={{ width: '2rem' }} />
-        <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>My Team</h1>
-        <button style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+        {editing ? (
+          <>
+            <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
+            <button onClick={saveEdit} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
+          </>
+        ) : (
+          <>
+            <div style={{ width: '2rem' }} />
+            <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>{t('team_title')}</h1>
+            <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>
+          </>
+        )}
       </header>
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
@@ -49,18 +81,40 @@ export default function Team() {
         <div style={{ position: 'relative' }}>
           <div style={{ height: '7rem', background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary}, ${colors.tertiary})` }} />
           <div style={{ position: 'absolute', left: '50%', transform: 'translate(-50%, 50%)', bottom: 0 }}>
-            <div style={{ width: '6rem', height: '6rem', borderRadius: '1rem', border: `4px solid ${colors.surface}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', background: '#1a3329', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.125rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.secondaryContainer, fontVariationSettings: "'FILL' 1" }}>shield</span>
-              <span style={{ fontSize: '0.55rem', fontWeight: 900, color: colors.secondaryContainer, letterSpacing: '0.15em', textTransform: 'uppercase' }}>North</span>
+            <div
+              onClick={editing ? () => logoRef.current.click() : undefined}
+              style={{ position: 'relative', width: '6rem', height: '6rem', borderRadius: '1rem', border: `4px solid ${colors.surface}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', background: '#1a3329', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.125rem', cursor: editing ? 'pointer' : 'default', overflow: 'hidden' }}
+            >
+              {logo
+                ? <img src={logo} alt="Team logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <>
+                    <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.secondaryContainer, fontVariationSettings: "'FILL' 1" }}>shield</span>
+                    <span style={{ fontSize: '0.55rem', fontWeight: 900, color: colors.secondaryContainer, letterSpacing: '0.15em', textTransform: 'uppercase' }}>North</span>
+                  </>
+              }
+              {editing && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '1.75rem' }}>photo_camera</span>
+                </div>
+              )}
             </div>
+            <input ref={logoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onLogoChange} />
           </div>
         </div>
 
         {/* Team identity */}
         <section style={{ marginTop: '4rem', padding: '0 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.25rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.025em', color: colors.onSurface, margin: 0 }}>TEAM NORTH</h2>
+          {editing ? (
+            <input
+              value={teamName}
+              onChange={e => setTeamName(e.target.value)}
+              style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.025em', color: colors.onSurface, margin: 0, textAlign: 'center', background: 'transparent', border: 'none', borderBottom: `2px solid ${colors.primary}`, outline: 'none', fontFamily: 'inherit', width: '100%', textTransform: 'uppercase' }}
+            />
+          ) : (
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.025em', color: colors.onSurface, margin: 0 }}>{teamName}</h2>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.5rem' }}>
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant, marginRight: '0.25rem' }}>Form</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurfaceVariant, marginRight: '0.25rem' }}>{t('team_form')}</span>
             {FORM.map((f, i) => (
               <div key={i} style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: FORM_COLOR[f], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{f}</div>
             ))}
@@ -71,9 +125,9 @@ export default function Team() {
         <section style={{ padding: '1.25rem 1rem 0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
             {[
-              { value: '12', label: 'Won',   color: colors.tertiary        },
-              { value: '4',  label: 'Drawn', color: colors.onSurfaceVariant },
-              { value: '2',  label: 'Lost',  color: colors.error            },
+              { value: '12', label: t('team_won'),   color: colors.tertiary        },
+              { value: '4',  label: t('team_drawn'), color: colors.onSurfaceVariant },
+              { value: '2',  label: t('team_lost'),  color: colors.error            },
             ].map(({ value, label, color }) => (
               <div key={label} style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, padding: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.125rem' }}>
                 <span style={{ fontSize: '1.875rem', fontWeight: 900, color }}>{value}</span>
@@ -91,8 +145,7 @@ export default function Team() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>person</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface }}>Squad</span>
-              <span style={{ fontSize: '0.625rem', fontWeight: 500, color: colors.onSurfaceVariant }}>{SQUAD.length} Players</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface }}>Players ({SQUAD.length})</span>
             </div>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant, transition: 'transform 0.2s', transform: squadOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>expand_more</span>
           </button>
@@ -111,7 +164,7 @@ export default function Team() {
         <section style={{ padding: '1.25rem 1rem 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>Tournaments</h2>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>{t('team_tournaments')}</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
@@ -200,7 +253,7 @@ export default function Team() {
         <section style={{ padding: '1.25rem 1rem 1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant, fontVariationSettings: "'FILL' 1" }}>history</span>
-            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>Match History</h2>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, margin: 0 }}>{t('team_history')}</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {MATCH_HISTORY.map((m, i) => (
@@ -215,7 +268,7 @@ export default function Team() {
                     <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant }}>{m.meta}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant }}>{m.date}</span>
-                      <span style={{ fontSize: '0.625rem', fontWeight: 700, color: RESULT_COLOR[m.result], textTransform: 'uppercase' }}>{RESULT_LABEL[m.result]}</span>
+                      <span style={{ fontSize: '0.625rem', fontWeight: 700, color: RESULT_COLOR[m.result], textTransform: 'uppercase' }}>{t(`team_${m.result}`)}</span>
                       <span style={{ fontSize: '0.55rem', color: colors.onSurfaceVariant, background: colors.surfaceContainer, padding: '0.125rem 0.375rem', borderRadius: radius.lg }}>{m.comp}</span>
                     </div>
                   </div>

@@ -30,11 +30,21 @@ agonas/
 │       └── urls.py
 ├── frontend/              # Management React app (Vite, port 5173)
 │   ├── src/
-│   │   ├── App.jsx        # Root — currently renders Theme mockup
-│   │   ├── pages/         # One page per entity
-│   │   ├── components/    # Modal components per entity
-│   │   └── api/           # Fetch wrappers per entity
-│   └── mockup/            # Static HTML/JSX design prototypes
+│   │   ├── App.jsx        # Root — renders Theme (router entry point)
+│   │   ├── Theme.jsx      # Top-level layout + React Router routes
+│   │   ├── Header.jsx     # Sticky nav bar with language switcher
+│   │   ├── SideMenu.jsx   # Entities sidebar (fixed, 16rem)
+│   │   ├── Dashboard.jsx  # Match schedule page
+│   │   ├── Entities.jsx   # Entities layout (Outlet + SideMenu)
+│   │   ├── Teams.jsx / Players.jsx / Referees.jsx / Stadiums.jsx / Requests.jsx
+│   │   ├── Tournament.jsx / TournamentOverview.jsx / TournamentSideMenu.jsx / Phase.jsx
+│   │   ├── Buttons.jsx / DataTable.jsx / ItemModal.jsx / CreateModal.jsx / ModalField.jsx
+│   │   ├── *ModalContent.jsx  # Per-entity modal field sets
+│   │   ├── LangContext.jsx    # React context for GR/EN language
+│   │   ├── i18n.js            # Translation strings (gr + en)
+│   │   ├── styles.js          # Shared design tokens (colors, fonts, radius)
+│   │   └── api/               # Fetch wrappers per entity
+│   └── mockup/            # Static HTML design prototypes (reference only)
 ├── userapp/               # User-facing React app (Vite, port 5174)
 │   └── src/
 │       ├── App.jsx
@@ -130,43 +140,47 @@ Server-side `icontains` filtering. Search fields per entity:
 
 React 19 · React Router 7 · Vite 8 · No UI library (inline styles / custom CSS)
 
-### State & Data Flow
+### Routing
 
-Each page manages its own state. Pattern per page:
+`App.jsx` renders `<Theme />`, which owns all React Router `<Routes>`:
 
 ```
-Page
- ├── fetch on mount → data[]
- ├── search input → re-fetch with ?search=
- ├── modalType string drives which modal is open
- └── afterSave() → re-fetch to refresh table
+/                   → redirect to /dashboard
+/dashboard          → Dashboard
+/tournaments        → Tournament (layout)
+  /:id             → TournamentOverview
+  /:id/phases/:pid → Phase
+/entities           → Entities (layout with SideMenu)
+  /teams           → Teams
+  /players         → Players
+  /referees        → Referees
+  /stadiums        → Stadiums
+  /requests        → Requests
+/page               → Stats
 ```
-
-### Page → API mapping
-
-| Page | API module | Entity |
-|---|---|---|
-| PlayersPage | `api/players.js` | `/api/players/` |
-| RefereesPage | `api/referees.js` | `/api/referees/` |
-| StadiumsPage | `api/stadiums.js` | `/api/stadiums/` |
-| TeamsPage | `api/teams.js` | `/api/teams/` |
-| MatchesPage | `api/matches.js` | `/api/matches/` |
-
-Cards and goals are sub-resources inside MatchesPage, using `api/match_player_cards.js` and `api/match_player_goals.js`.
 
 ### Component Structure
 
-```
-components/
-  {entity}/
-    Add{Entity}Modal.jsx      create form
-    Details{Entity}Modal.jsx  read-only view + Edit / Delete buttons
-    Edit{Entity}Modal.jsx     update form
-    Delete{Entity}Modal.jsx   confirm dialog
-  Modal.jsx                   base modal wrapper
-```
+All components live flat in `frontend/src/` (no subdirectories):
 
-22 modal components total (4 per entity × 5 entities + base + referees extra).
+| File | Role |
+|---|---|
+| `Theme.jsx` | Router layout shell (wrapper + Header + Routes) |
+| `Header.jsx` | Fixed top nav with language toggle |
+| `SideMenu.jsx` | Fixed left sidebar for Entities section |
+| `Dashboard.jsx` | Match schedule with filters, conflict detection |
+| `Entities.jsx` | Layout wrapper with `<Outlet>` for entity sub-pages |
+| `Teams/Players/Referees/Stadiums/Requests.jsx` | Entity list pages |
+| `Tournament/TournamentOverview/TournamentSideMenu/Phase.jsx` | Tournament management |
+| `DataTable.jsx` | Reusable sortable/searchable table |
+| `ItemModal.jsx` | View/edit/delete modal shell |
+| `CreateModal.jsx` | Create modal shell |
+| `ModalField.jsx` | Form field primitive used in modals |
+| `Buttons.jsx` | `StatCard`, `AddButton`, `ExportCSVButton`, `PageHeader` |
+| `*ModalContent.jsx` | Per-entity field sets (`TeamModalContent`, etc.) |
+| `LangContext.jsx` | `LangProvider` + `useLang()` hook |
+| `i18n.js` | Translation strings for `gr` and `en` |
+| `styles.js` | Design tokens: `colors`, `fonts`, `radius`, `s` |
 
 ### API Client Layer (`frontend/src/api/`)
 
@@ -179,11 +193,7 @@ update(id, data)    → PUT
 remove(id)          → DELETE
 ```
 
-Errors throw the parsed JSON error body.
-
-### Routing
-
-React Router is wired up but currently `App.jsx` renders only the `Theme` mockup component. Pages are imported but not yet routed. Migration from mockup to full routing is in progress.
+Errors throw the parsed JSON error body. Api modules exist for: referees, stadiums, players, teams, matches, match_player_cards, match_player_goals — not yet wired to the live UI pages (mock data used in current UI).
 
 ### Vite Config
 
@@ -195,7 +205,7 @@ No proxy — relies on `VITE_API_URL` in `.env`. `usePolling: true` set for Dock
 
 ### Status
 
-Barebone scaffold — Hello World screen only. Intended for the player-facing mobile experience (see `frontend/mockup/` for design prototypes of user.html, calendar.html, TeamAppView.html).
+Active development — mobile-style player-facing app with React Router, bottom nav, and multiple pages. Static HTML design prototypes exist in `frontend/mockup/` (user.html, calendar.html, TeamAppView.html).
 
 ### Stack
 
@@ -230,7 +240,7 @@ userapp:   ./userapp         port 5174   volume: ./userapp:/app
 ## Key Patterns & Conventions
 
 - **No authentication yet** on either API namespace — planned separately for `userapp`
-- **Mockup-first design**: `frontend/mockup/` contains standalone HTML prototypes used to design screens before implementing them in React
+- **Mockup-first design**: `frontend/mockup/` contains standalone HTML prototypes used to design screens. JSX components have been migrated to `frontend/src/` and are the live UI.
 - **Django Ninja over DRF**: lighter, Pydantic-native, no serializer class boilerplate
 - **One router file per entity**: keeps routers small and independently testable
 - **Test structure**: `backend/api/tests/{unit,integration,functional,smoke}` — Playwright for frontend E2E
