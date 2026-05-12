@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
+import { useUser } from '../UserContext'
+
+const API = '/app/api'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 
@@ -32,16 +35,33 @@ const sectionTitle = {
 export default function Settings() {
   const navigate = useNavigate()
   const { lang, setLang, t } = useLang()
+  const { user, logout } = useUser()
   const [editing, setEditing] = useState(false)
   const [visibility, setVisibility] = useState('public')
   const [form, setForm] = useState({
-    username: 'jordan_vance',
-    name: 'Jordan',
-    surname: 'Vance',
-    phone: '+30 697 000 0000',
-    email: 'jordan.vance@email.com',
+    username: '',
+    name: '',
+    surname: '',
+    phone: '',
+    email: '',
   })
   const [draft, setDraft] = useState({})
+
+  useEffect(() => {
+    if (!user) return
+    setForm(f => ({ ...f, username: user.username }))
+    if (user.is_player) {
+      fetch(`${API}/player/me`).then(r => r.ok ? r.json() : null).then(p => {
+        if (!p) return
+        setForm(f => ({ ...f, name: p.first_name, surname: p.last_name, phone: p.phone, email: p.email }))
+      })
+    } else if (user.is_referee) {
+      fetch(`${API}/referee/me`).then(r => r.ok ? r.json() : null).then(p => {
+        if (!p) return
+        setForm(f => ({ ...f, name: p.first_name, surname: p.last_name, phone: p.phone, email: p.email }))
+      })
+    }
+  }, [user])
 
   function enterEdit() {
     setDraft({ form, visibility, lang })
@@ -169,6 +189,16 @@ export default function Settings() {
                 ))}
               </div>
             </div>
+          </section>
+
+          {/* Sign out */}
+          <section>
+            <button
+              onClick={logout}
+              style={{ width: '100%', padding: '0.875rem', background: 'transparent', color: colors.error, border: `1.5px solid ${colors.error}`, borderRadius: radius.xl, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+            >
+              Sign Out
+            </button>
           </section>
 
         </div>

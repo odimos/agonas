@@ -16,6 +16,7 @@ class ScheduleRequest(Schema):
     start_date: date
     end_date: date
     mode: str = 'league'  # 'league' or 'knockout'
+    from_scratch: bool = False
 
 
 class ScheduleSuggestion(Schema):
@@ -46,6 +47,9 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
     phase = get_object_or_404(Phase, id=phase_id)
     phase_team_ids = list(phase.teams.values_list('id', flat=True))
 
+    if payload.from_scratch:
+        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected']).delete()
+
     avs = list(StadiumAvailability.objects.select_related('stadium').all())
     slots = _expand_slots(avs, payload.start_date, payload.end_date)
 
@@ -54,7 +58,7 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
         team_prefs.setdefault(tp.team_id, {})[tp.availability_id] = tp.score
 
     if payload.mode == 'knockout':
-        return _generate_knockout(phase, phase_team_ids, slots, team_prefs)
+        return _generate_knockout(phase, phase_team_ids, slots, team_prefs, payload.from_scratch)
     else:
         return _generate_league(phase, phase_team_ids, slots, team_prefs)
 
@@ -124,12 +128,18 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs):
 
 # ─── Knockout mode ────────────────────────────────────────────────────────────
 
-def _generate_knockout(phase, phase_team_ids, slots, team_prefs):
-    """
-    Pair teams randomly. If odd count, one team gets a bye.
-    Returns new match specs (not existing matches) to be created on apply.
-    """
-    teams = list(phase_team_ids)
+def _generate_knockout(phase, phase_team_ids, slots, team_prefs, from_scratch=True):
+    # Find teams already paired in existing draft/expected matches
+    existing_matches = list(
+        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected'])
+    ) if not from_scratch else []
+
+    already_paired = set()
+    for m in existing_matches:
+        if m.home_team_id: already_paired.add(m.home_team_id)
+        if m.away_team_id: already_paired.add(m.away_team_id)
+
+    teams = [tid for tid in phase_team_ids if tid not in already_paired]
     random.shuffle(teams)
 
     pairs = []  # (home_id, away_id) or (home_id, None) for bye

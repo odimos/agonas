@@ -6,7 +6,8 @@
       "Bash(curl *)",
       "Bash(cp \"C:/Users/dimz/Desktop/Σχολη/Ανάπτυξη Εφαρμογών πληροφοριακών συστημάτων/project/agonas/frontend/mockup/\"*.jsx \"C:/Users/dimz/Desktop/Σχολη/Ανάπτυξη Εφαρμογών πληροφοριακών συστημάτων/project/agonas/userapp/src/\")",
       "Bash(cp \"C:/Users/dimz/Desktop/Σχολη/Ανάπτυξη Εφαρμογών πληροφοριακών συστημάτων/project/agonas/frontend/mockup/\"*.js \"C:/Users/dimz/Desktop/Σχολη/Ανάπτυξη Εφαρμογών πληροφοριακών συστημάτων/project/agonas/userapp/src/\")",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Bash(docker compose *)"
     ]
   }
 }

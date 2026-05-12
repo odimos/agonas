@@ -2,23 +2,13 @@ import { useState, useEffect } from 'react'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
+import { useUser } from '../UserContext'
 
-const MY_TEAM = 'Team North'
-const TODAY = new Date(2026, 3, 22)
+const API = '/app/api'
+const TODAY = new Date()
+TODAY.setHours(0, 0, 0, 0)
 
-const MATCHES = [
-  { date: new Date(2026,2,28), opponent:'Western Rovers', home:false, score:[0,1], result:'loss', venue:'Rovers Park',   time:'16:00' },
-  { date: new Date(2026,3,5),  opponent:'Metro United',   home:true,  score:[2,2], result:'draw', venue:'Stadium Nord',  time:'15:00' },
-  { date: new Date(2026,3,8),  opponent:'Coastal Elite',  home:false, score:[1,0], result:'win',  venue:'Coast Arena',   time:'19:00' },
-  { date: new Date(2026,3,12), opponent:'Northern Hawks', home:true,  score:[3,1], result:'win',  venue:'Stadium Nord',  time:'15:00' },
-  { date: new Date(2026,3,19), opponent:'Southern Stars', home:false, score:[2,0], result:'win',  venue:'Stars Ground',  time:'17:00' },
-  { date: new Date(2026,3,22), opponent:'FC Riviera',     home:true,  time:'20:45', venue:'Stadium Nord' },
-  { date: new Date(2026,3,26), opponent:'Bay United',     home:true,  time:'15:00', venue:'Stadium Nord' },
-  { date: new Date(2026,4,3),  opponent:'City FC',        home:false, time:'17:00', venue:'City Stadium' },
-  { date: new Date(2026,4,10), opponent:'Eastern Lions',  home:true,  time:'15:00', venue:'Stadium Nord' },
-  { date: new Date(2026,4,17), opponent:'Metro United',   home:false, time:'19:00', venue:'Metro Park'   },
-  { date: new Date(2026,4,24), opponent:'Northern Hawks', home:true,  time:'16:00', venue:'Stadium Nord' },
-]
+const GHOST = '1px solid rgba(194,200,194,0.2)'
 
 function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
@@ -26,28 +16,24 @@ function sameDay(a, b) {
 const isPast  = d => d < TODAY && !sameDay(d, TODAY)
 const isToday = d => sameDay(d, TODAY)
 
-const GHOST = '1px solid rgba(194,200,194,0.2)'
-
 function DayCell({ day, match, date }) {
   const today    = isToday(date)
-  const past     = !!match && isPast(match.date)
-  const upcoming = !!match && !isPast(match.date)
+  const past     = !!match && match.status === 'finished'
+  const upcoming = !!match && match.status === 'expected'
 
   if (today && match) {
     return (
       <div style={{ position: 'relative', width: '2.1rem', height: '2.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: colors.error }} />
-        <span style={{ position: 'relative', zIndex: 1, width: '1.35rem', height: '1.35rem', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#fff' }}>
-          {day}
-        </span>
+        <span style={{ position: 'relative', zIndex: 1, width: '1.35rem', height: '1.35rem', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#fff' }}>{day}</span>
       </div>
     )
   }
 
   let bg = 'transparent', color = colors.onSurface
-  if (today)    { bg = colors.primary;               color = '#fff' }
-  if (upcoming) { bg = colors.error;                 color = '#fff' }
-  if (past)     { bg = 'rgba(186,26,26,0.22)';       color = colors.error }
+  if (today)    { bg = colors.primary;         color = '#fff' }
+  if (upcoming) { bg = colors.error;           color = '#fff' }
+  if (past)     { bg = 'rgba(186,26,26,0.22)'; color = colors.error }
 
   return (
     <span style={{ width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600, borderRadius: '50%', lineHeight: 1, background: bg, color }}>
@@ -61,25 +47,16 @@ function MatchModal({ match, open, onClose, t }) {
   const [visible,  setVisible]  = useState(false)
 
   useEffect(() => {
-    if (open) {
-      setRendered(true)
-      requestAnimationFrame(() => setVisible(true))
-    } else {
-      setVisible(false)
-      const timer = setTimeout(() => setRendered(false), 320)
-      return () => clearTimeout(timer)
-    }
+    if (open) { setRendered(true); requestAnimationFrame(() => setVisible(true)) }
+    else { setVisible(false); const timer = setTimeout(() => setRendered(false), 320); return () => clearTimeout(timer) }
   }, [open])
 
   if (!rendered || !match) return null
 
-  const WEEKDAYS    = t('cal_weekdays').split(',')
+  const WEEKDAYS     = t('cal_weekdays').split(',')
   const SHORT_MONTHS = t('cal_months_short').split(',')
-
-  const past       = isPast(match.date)
+  const past       = match.status === 'finished'
   const todayMatch = isToday(match.date)
-  const homeTeam   = match.home ? MY_TEAM : match.opponent
-  const awayTeam   = match.home ? match.opponent : MY_TEAM
   const dateStr    = `${WEEKDAYS[match.date.getDay()]}, ${SHORT_MONTHS[match.date.getMonth()]} ${match.date.getDate()}, ${match.date.getFullYear()}`
 
   function daysUntil(d) {
@@ -91,27 +68,23 @@ function MatchModal({ match, open, onClose, t }) {
   }
 
   let badgeLabel, badgeColor, badgeBg, middle
-
   if (past) {
     const cfg = {
-      win:  { bg: colors.secondaryContainer,  color: colors.tertiary,        label: t('result_win')  },
-      loss: { bg: colors.errorContainer,      color: colors.error,           label: t('result_loss') },
-      draw: { bg: colors.surfaceContainer,    color: colors.onSurfaceVariant, label: t('result_draw') },
-    }[match.result]
+      win:  { bg: colors.secondaryContainer, color: colors.tertiary,         label: t('result_win')  },
+      loss: { bg: colors.errorContainer,     color: colors.error,            label: t('result_loss') },
+      draw: { bg: colors.surfaceContainer,   color: colors.onSurfaceVariant, label: t('result_draw') },
+    }[match.result] || { bg: colors.surfaceContainer, color: colors.onSurfaceVariant, label: '' }
     badgeLabel = cfg.label; badgeColor = cfg.color; badgeBg = cfg.bg
-    const hs = match.home ? match.score[0] : match.score[1]
-    const as = match.home ? match.score[1] : match.score[0]
     middle = (
       <>
-        <span style={{ fontSize: '2.25rem', fontWeight: 900, color: colors.onSurface }}>{hs}</span>
+        <span style={{ fontSize: '2.25rem', fontWeight: 900, color: colors.onSurface }}>{match.team_score}</span>
         <span style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.onSurfaceVariant, margin: '0 0.25rem' }}>–</span>
-        <span style={{ fontSize: '2.25rem', fontWeight: 900, color: colors.onSurface }}>{as}</span>
+        <span style={{ fontSize: '2.25rem', fontWeight: 900, color: colors.onSurface }}>{match.opp_score}</span>
       </>
     )
   } else {
     badgeLabel = todayMatch ? t('cal_today') : daysUntil(match.date)
-    badgeColor = colors.tertiary
-    badgeBg    = colors.secondaryContainer
+    badgeColor = colors.tertiary; badgeBg = colors.secondaryContainer
     middle = <span style={{ fontSize: '1.25rem', fontWeight: 700, color: colors.onSurfaceVariant }}>vs</span>
   }
 
@@ -125,21 +98,23 @@ function MatchModal({ match, open, onClose, t }) {
         <div style={{ padding: '0.75rem 1.25rem 6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.25rem 0.75rem', borderRadius: radius.full, background: badgeBg, color: badgeColor }}>{badgeLabel}</span>
-            <span style={{ fontSize: '0.7rem', color: colors.onSurfaceVariant }}>{match.time}</span>
+            {match.time && <span style={{ fontSize: '0.7rem', color: colors.onSurfaceVariant }}>{match.time}</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', width: '100%', padding: '0 0.5rem' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, textAlign: 'right', lineHeight: 1.3 }}>{homeTeam}</span>
+            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, textAlign: 'right', lineHeight: 1.3 }}>{match.home_team_name}</span>
             <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{middle}</div>
-            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, textAlign: 'left', lineHeight: 1.3 }}>{awayTeam}</span>
+            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, textAlign: 'left', lineHeight: 1.3 }}>{match.away_team_name}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.7rem', color: colors.onSurfaceVariant, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {match.venue && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>location_on</span>
+                {match.venue}
+              </span>
+            )}
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>location_on</span>
-              {match.venue}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>{match.home ? 'home' : 'flight_takeoff'}</span>
-              {match.home ? t('cal_home') : t('cal_away')}
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>{match.is_home ? 'home' : 'flight_takeoff'}</span>
+              {match.is_home ? t('cal_home') : t('cal_away')}
             </span>
           </div>
           <p style={{ fontSize: '0.65rem', color: colors.onSurfaceVariant, margin: 0 }}>{dateStr}</p>
@@ -151,10 +126,19 @@ function MatchModal({ match, open, onClose, t }) {
 
 export default function Calendar() {
   const { t } = useLang()
+  const { user } = useUser()
+  const [matches, setMatches] = useState([])
   const [viewYear,  setViewYear]  = useState(TODAY.getFullYear())
   const [viewMonth, setViewMonth] = useState(TODAY.getMonth())
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [modalOpen,     setModalOpen]     = useState(false)
+
+  useEffect(() => {
+    if (!user?.team_id) return
+    fetch(`${API}/team/${user.team_id}/matches`).then(r => r.ok ? r.json() : []).then(data => {
+      setMatches(data.map(m => ({ ...m, date: new Date(m.scheduled_at) })))
+    })
+  }, [user])
 
   const MONTHS       = t('cal_months').split(',')
   const SHORT_MONTHS = t('cal_months_short').split(',')
@@ -187,17 +171,16 @@ export default function Calendar() {
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
 
   const dayMap = {}
-  MATCHES.forEach(m => {
+  matches.forEach(m => {
     if (m.date.getFullYear() === viewYear && m.date.getMonth() === viewMonth)
       dayMap[m.date.getDate()] = m
   })
 
-  const upcoming = MATCHES.filter(m => !isPast(m.date)).sort((a, b) => a.date - b.date)
-  const past     = MATCHES.filter(m =>  isPast(m.date)).sort((a, b) => b.date - a.date)
+  const upcoming = matches.filter(m => m.status === 'expected').sort((a, b) => a.date - b.date)
+  const past     = matches.filter(m => m.status === 'finished').sort((a, b) => b.date - a.date)
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      {/* TopAppBar */}
       <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <button onClick={prevMonth} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
           <span className="material-symbols-outlined">chevron_left</span>
@@ -211,7 +194,6 @@ export default function Calendar() {
       </header>
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
-        {/* Calendar grid */}
         <section style={{ padding: '0.75rem 0.75rem 0.5rem', background: colors.surfaceContainerLowest, borderBottom: GHOST }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '0.25rem' }}>
             {DAY_LABELS.map(d => (
@@ -225,11 +207,8 @@ export default function Calendar() {
               const match = dayMap[day]
               const date  = new Date(viewYear, viewMonth, day)
               return (
-                <div
-                  key={day}
-                  onClick={match ? () => { setSelectedMatch(match); setModalOpen(true) } : undefined}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '2.5rem', cursor: match ? 'pointer' : 'default', userSelect: 'none' }}
-                >
+                <div key={day} onClick={match ? () => { setSelectedMatch(match); setModalOpen(true) } : undefined}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '2.5rem', cursor: match ? 'pointer' : 'default', userSelect: 'none' }}>
                   <DayCell day={day} match={match} date={date} />
                 </div>
               )
@@ -237,7 +216,6 @@ export default function Calendar() {
           </div>
         </section>
 
-        {/* Legend */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem 1rem', borderBottom: GHOST }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: colors.tertiary }} />
@@ -249,13 +227,12 @@ export default function Calendar() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <div style={{ width: '1rem', height: '1rem', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>22</span>
+              <span style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', lineHeight: 1 }}>{TODAY.getDate()}</span>
             </div>
             <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant, fontWeight: 500 }}>{t('cal_legend_today')}</span>
           </div>
         </div>
 
-        {/* Upcoming matches */}
         <section style={{ padding: '1.25rem 1rem 0.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary, fontVariationSettings: "'FILL' 1" }}>upcoming</span>
@@ -264,20 +241,20 @@ export default function Calendar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {upcoming.length === 0
               ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>{t('cal_no_upcoming')}</p>
-              : upcoming.map((m, i) => {
-                  const home = m.home ? MY_TEAM : m.opponent
-                  const away = m.home ? m.opponent : MY_TEAM
-                  const ds   = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`
+              : upcoming.map(m => {
+                  const ds = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`
+                  const time = m.date.toTimeString().slice(0, 5)
                   return (
-                    <div key={i} onClick={() => { setSelectedMatch(m); setModalOpen(true) }} style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, overflow: 'hidden', cursor: 'pointer' }}>
+                    <div key={m.id} onClick={() => { setSelectedMatch(m); setModalOpen(true) }}
+                      style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, overflow: 'hidden', cursor: 'pointer' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem 0.25rem' }}>
                         <span style={{ fontSize: '0.625rem', fontWeight: 700, color: colors.tertiary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{daysUntil(m.date)}</span>
-                        <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant }}>{ds} · {m.time}</span>
+                        <span style={{ fontSize: '0.625rem', color: colors.onSurfaceVariant }}>{ds} · {time}</span>
                       </div>
                       <div style={{ padding: '0 1rem 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home}</span>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.home_team_name}</span>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.onSurfaceVariant }}>vs</span>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{away}</span>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{m.away_team_name}</span>
                       </div>
                     </div>
                   )
@@ -288,7 +265,6 @@ export default function Calendar() {
 
         <div style={{ margin: '0.5rem 1rem', borderTop: '1px solid rgba(194,200,194,0.3)' }} />
 
-        {/* Past results */}
         <section style={{ padding: '0.75rem 1rem 1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.onSurfaceVariant, fontVariationSettings: "'FILL' 1" }}>history</span>
@@ -297,23 +273,20 @@ export default function Calendar() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {past.length === 0
               ? <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', padding: '1rem 0', margin: 0 }}>{t('cal_no_past')}</p>
-              : past.map((m, i) => {
-                  const cfg  = RESULT_CFG[m.result]
-                  const home = m.home ? MY_TEAM : m.opponent
-                  const away = m.home ? m.opponent : MY_TEAM
-                  const hs   = m.home ? m.score[0] : m.score[1]
-                  const as   = m.home ? m.score[1] : m.score[0]
-                  const ds   = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`
+              : past.map(m => {
+                  const cfg = RESULT_CFG[m.result] || { border: colors.outline, label: '', color: colors.onSurfaceVariant }
+                  const ds = `${SHORT_MONTHS[m.date.getMonth()]} ${m.date.getDate()}`
                   return (
-                    <div key={i} onClick={() => { setSelectedMatch(m); setModalOpen(true) }} style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, overflow: 'hidden', display: 'flex', borderLeft: `4px solid ${cfg.border}`, cursor: 'pointer' }}>
+                    <div key={m.id} onClick={() => { setSelectedMatch(m); setModalOpen(true) }}
+                      style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: radius.xl, overflow: 'hidden', display: 'flex', borderLeft: `4px solid ${cfg.border}`, cursor: 'pointer' }}>
                       <div style={{ flex: 1, padding: '0.6rem 0.75rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.1rem' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{home}</span>
-                          <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', fontWeight: 900, color: colors.onSurface, flexShrink: 0 }}>{hs} – {as}</span>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{away}</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.home_team_name}</span>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.9rem', fontWeight: 900, color: colors.onSurface, flexShrink: 0 }}>{m.home_team_name === m.away_team_name ? '' : `${m.team_score} – ${m.opp_score}`}</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.onSurface, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{m.away_team_name}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.3rem' }}>
-                          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.home ? t('cal_home') : t('cal_away')}</span>
+                          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant }}>{m.venue} · {m.is_home ? t('cal_home') : t('cal_away')}</span>
                           <span style={{ fontSize: '0.6rem', fontWeight: 700, color: cfg.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cfg.label} · {ds}</span>
                         </div>
                       </div>

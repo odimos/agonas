@@ -1,34 +1,21 @@
-import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
-const MY_TEAM = 'Team North'
-
-const MATCH = {
-  date: new Date(2026, 3, 19),
-  opponent: 'Southern Stars',
-  home: false,
-  venue: 'Stars Ground',
-  time: '17:00',
-  tournament: 'Spring League 2026',
-}
+const API = '/app/api'
 
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
-const HOME_TEAM = MATCH.home ? MY_TEAM : MATCH.opponent
-const AWAY_TEAM = MATCH.home ? MATCH.opponent : MY_TEAM
-const DATE_STR  = `${WEEKDAYS[MATCH.date.getDay()]}, ${SHORT_MONTHS[MATCH.date.getMonth()]} ${MATCH.date.getDate()}`
-
-const PLAYERS = [
-  'Jordan Vance', 'Marcus Silva', 'Leo Hartmann', 'Kai Russo',
-  'Finn Olsen', 'Dante Cruz', 'Oscar Webb', 'Remy Blanc',
-  'Noah Steele', 'Eli Thorn', 'Sam Adler',
-]
-
 const RATINGS = ['–', '0', '1', '2', '3', '4', '5']
+
+function formatDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return `${WEEKDAYS[d.getDay()]}, ${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`
+}
 
 function SectionHeader({ icon, label }) {
   return (
@@ -51,17 +38,17 @@ function GoalRow({ entry, players, onChange, onRemove }) {
         style={{ width: '2.8rem', fontSize: '0.75rem', fontWeight: 600, fontStyle: 'italic', color: colors.onSurface, background: 'transparent', border: 'none', borderBottom: `1px solid ${colors.outlineVariant}`, outline: 'none', textAlign: 'center', fontFamily: 'inherit', padding: '0.1rem 0', flexShrink: 0 }}
       />
       <select
-        value={entry.player}
-        onChange={e => onChange({ ...entry, player: e.target.value })}
+        value={entry.player_id}
+        onChange={e => onChange({ ...entry, player_id: Number(e.target.value), team_id: players.find(p => p.id === Number(e.target.value))?.team_id || '' })}
         style={{ ...selectStyle, flex: 1, minWidth: 0, fontSize: '0.75rem' }}
       >
         <option value="">Player…</option>
-        {players.map(p => <option key={p}>{p}</option>)}
+        {players.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
       </select>
       <select
-        value={entry.type}
-        onChange={e => onChange({ ...entry, type: e.target.value })}
-        style={{ ...selectStyle, fontSize: '0.7rem', color: entry.type === 'own_goal' ? colors.error : colors.tertiary, fontWeight: 700, flexShrink: 0 }}
+        value={entry.own_goal ? 'own_goal' : 'goal'}
+        onChange={e => onChange({ ...entry, own_goal: e.target.value === 'own_goal' })}
+        style={{ ...selectStyle, fontSize: '0.7rem', color: entry.own_goal ? colors.error : colors.tertiary, fontWeight: 700, flexShrink: 0 }}
       >
         <option value="goal">Goal</option>
         <option value="own_goal">OG</option>
@@ -81,12 +68,12 @@ function CardRow({ entry, players, onChange, onRemove }) {
         style={{ width: '1.1rem', height: '1.5rem', borderRadius: '0.15rem', background: entry.type === 'yellow' ? '#f59e0b' : colors.error, border: 'none', cursor: 'pointer', flexShrink: 0 }}
       />
       <select
-        value={entry.player}
-        onChange={e => onChange({ ...entry, player: e.target.value })}
+        value={entry.player_id}
+        onChange={e => onChange({ ...entry, player_id: Number(e.target.value), team_id: players.find(p => p.id === Number(e.target.value))?.team_id || '' })}
         style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600, color: colors.onSurface, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}
       >
         <option value="">Select player…</option>
-        {players.map(p => <option key={p}>{p}</option>)}
+        {players.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
       </select>
       <button onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', padding: '0.1rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>close</span>
@@ -97,6 +84,12 @@ function CardRow({ entry, players, onChange, onRemove }) {
 
 export default function RefereeForm() {
   const navigate = useNavigate()
+  const { id } = useParams()
+
+  const [match, setMatch] = useState(null)
+  const [players, setPlayers] = useState([])
+  const [loadError, setLoadError] = useState(null)
+
   const [homeScore, setHomeScore] = useState(0)
   const [awayScore, setAwayScore] = useState(0)
   const [goals, setGoals] = useState([])
@@ -107,8 +100,25 @@ export default function RefereeForm() {
   const [comment, setComment] = useState('')
   const [commentOpen, setCommentOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
   const photoRefs = [useRef(), useRef(), useRef()]
 
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API}/matches/${id}`).then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e))),
+      fetch(`${API}/matches/${id}/players`).then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e))),
+    ]).then(([m, p]) => {
+      setMatch(m)
+      setPlayers(p)
+    }).catch(e => {
+      setLoadError(e?.detail || e?.message || 'Failed to load match')
+    })
+  }, [id])
+
+  const HOME_TEAM = match?.home_team_name || 'Home'
+  const AWAY_TEAM = match?.away_team_name || 'Away'
+  const DATE_STR = formatDate(match?.scheduled_at)
   const TEAM_OPTIONS = ['', HOME_TEAM, AWAY_TEAM, 'Both']
 
   function onPhotoChange(i, e) {
@@ -125,12 +135,72 @@ export default function RefereeForm() {
     setPhotos(p => p.map((x, j) => j === i ? { src: null, team: '' } : x))
   }
 
-  function addGoal() { setGoals(g => [...g, { player: '', minute: '', type: 'goal', id: Date.now() }]) }
-  function addCard() { setCards(c => [...c, { player: '', minute: '', type: 'yellow', id: Date.now() }]) }
+  function addGoal() { setGoals(g => [...g, { player_id: '', team_id: '', minute: '', own_goal: false, id: Date.now() }]) }
+  function addCard() { setCards(c => [...c, { player_id: '', team_id: '', type: 'yellow', id: Date.now() }]) }
   function updateGoal(id, val) { setGoals(g => g.map(x => x.id === id ? { ...x, ...val } : x)) }
   function removeGoal(id)      { setGoals(g => g.filter(x => x.id !== id)) }
   function updateCard(id, val) { setCards(c => c.map(x => x.id === id ? { ...x, ...val } : x)) }
   function removeCard(id)      { setCards(c => c.filter(x => x.id !== id)) }
+
+  async function handleSubmit() {
+    setSubmitError(null)
+    if (fairPlayHome === '' || fairPlayAway === '') {
+      setSubmitError('Please set fair play scores for both teams')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const body = {
+        home_score: homeScore,
+        away_score: awayScore,
+        home_fair_play: parseInt(fairPlayHome),
+        away_fair_play: parseInt(fairPlayAway),
+        comments: comment || null,
+        goals: goals.filter(g => g.player_id && g.team_id && g.minute).map(g => ({
+          player_id: g.player_id,
+          team_id: g.team_id,
+          minute: parseInt(g.minute),
+          own_goal: g.own_goal,
+        })),
+        cards: cards.filter(c => c.player_id && c.team_id).map(c => ({
+          player_id: c.player_id,
+          team_id: c.team_id,
+          card_type: c.type,
+          minute: 0,
+        })),
+      }
+      const res = await fetch(`${API}/matches/${id}/finish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.detail || JSON.stringify(data))
+      setSubmitted(true)
+    } catch (e) {
+      setSubmitError(e.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '2rem' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', color: colors.error }}>error</span>
+        <p style={{ color: colors.error, textAlign: 'center', margin: 0 }}>{loadError}</p>
+        <button onClick={() => navigate('/forms')} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: `1.5px solid ${colors.tertiary}`, borderRadius: radius.full, padding: '0.5rem 1.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
+      </div>
+    )
+  }
+
+  if (!match) {
+    return (
+      <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ color: colors.onSurfaceVariant, fontSize: '0.9rem' }}>Loading…</span>
+      </div>
+    )
+  }
 
   if (submitted) {
     return (
@@ -148,8 +218,8 @@ export default function RefereeForm() {
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: colors.onSurface, margin: 0 }}>Form Submitted</h2>
           <p style={{ fontSize: '0.875rem', color: colors.onSurfaceVariant, textAlign: 'center', margin: 0, lineHeight: 1.5 }}>Your referee evaluation for {HOME_TEAM} vs {AWAY_TEAM} has been sent.</p>
-          <button onClick={() => setSubmitted(false)} style={{ marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: `1.5px solid ${colors.tertiary}`, borderRadius: radius.full, padding: '0.5rem 1.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
-            Back to form
+          <button onClick={() => navigate('/forms')} style={{ marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: `1.5px solid ${colors.tertiary}`, borderRadius: radius.full, padding: '0.5rem 1.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Back to Forms
           </button>
         </main>
         <BottomNav />
@@ -165,7 +235,7 @@ export default function RefereeForm() {
         </button>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>Referee Form</span>
-          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant, marginTop: '0.1rem' }}>{DATE_STR} · {MATCH.tournament}</span>
+          <span style={{ fontSize: '0.6rem', color: colors.onSurfaceVariant, marginTop: '0.1rem' }}>{DATE_STR} · {match.tournament_name || ''}</span>
         </div>
         <div style={{ width: '1.9rem' }} />
       </header>
@@ -251,7 +321,7 @@ export default function RefereeForm() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {goals.map(g => (
-              <GoalRow key={g.id} entry={g} players={PLAYERS} onChange={val => updateGoal(g.id, val)} onRemove={() => removeGoal(g.id)} />
+              <GoalRow key={g.id} entry={g} players={players} onChange={val => updateGoal(g.id, val)} onRemove={() => removeGoal(g.id)} />
             ))}
           </div>
         </section>
@@ -267,7 +337,7 @@ export default function RefereeForm() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {cards.map(c => (
-              <CardRow key={c.id} entry={c} players={PLAYERS} onChange={val => updateCard(c.id, val)} onRemove={() => removeCard(c.id)} />
+              <CardRow key={c.id} entry={c} players={players} onChange={val => updateCard(c.id, val)} onRemove={() => removeCard(c.id)} />
             ))}
           </div>
         </section>
@@ -317,13 +387,21 @@ export default function RefereeForm() {
           )}
         </section>
 
+        {/* Error */}
+        {submitError && (
+          <div style={{ padding: '0 0.5rem 0.75rem' }}>
+            <p style={{ color: colors.error, fontSize: '0.8rem', margin: 0, textAlign: 'center' }}>{submitError}</p>
+          </div>
+        )}
+
         {/* Submit */}
         <div style={{ padding: '0 0.5rem 1rem' }}>
           <button
-            onClick={() => setSubmitted(true)}
-            style={{ width: '100%', padding: '0.875rem', background: colors.tertiary, color: '#fff', border: 'none', borderRadius: radius.xl, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+            onClick={handleSubmit}
+            disabled={submitting}
+            style={{ width: '100%', padding: '0.875rem', background: submitting ? colors.surfaceContainer : colors.tertiary, color: submitting ? colors.onSurfaceVariant : '#fff', border: 'none', borderRadius: radius.xl, fontSize: '0.875rem', fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
           >
-            Submit Form
+            {submitting ? 'Submitting…' : 'Submit Form'}
           </button>
         </div>
       </main>

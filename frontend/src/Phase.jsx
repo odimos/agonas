@@ -10,13 +10,14 @@ const BASE = import.meta.env.VITE_API_URL
 
 const DAY_NAMES = ['Δευτ', 'Τρίτ', 'Τετ', 'Πέμπ', 'Παρ', 'Σαββ', 'Κυρ']
 
-function ScheduleModal({ phaseId, teams, onClose, onApplied }) {
+function ScheduleModal({ phaseId, teams, tournamentType, onClose, onApplied }) {
   const today = new Date().toISOString().slice(0, 10)
   const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)
 
-  const [startDate, setStartDate] = useState(today)
-  const [endDate,   setEndDate]   = useState(twoWeeks)
-  const [mode,      setMode]      = useState('league')
+  const [startDate,   setStartDate]   = useState(today)
+  const [endDate,     setEndDate]     = useState(twoWeeks)
+  const [fromScratch, setFromScratch] = useState(true)
+  const mode = tournamentType === 'knockout' ? 'knockout' : 'league'
   const [loading,   setLoading]   = useState(false)
   const [applying,  setApplying]  = useState(false)
   const [preview,   setPreview]   = useState(null)
@@ -27,7 +28,7 @@ function ScheduleModal({ phaseId, teams, onClose, onApplied }) {
     try {
       const res = await fetch(`${BASE}/schedule/generate?phase_id=${phaseId}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ start_date: startDate, end_date: endDate, mode }),
+        body: JSON.stringify({ start_date: startDate, end_date: endDate, mode, from_scratch: fromScratch }),
       })
       if (!res.ok) { setError('Σφάλμα κατά τη δημιουργία προγράμματος.'); return }
       setPreview(await res.json())
@@ -79,15 +80,27 @@ function ScheduleModal({ phaseId, teams, onClose, onApplied }) {
         </div>
 
         <div style={sm.body}>
-          {/* Mode + date range */}
+          {/* From scratch / keep matches toggle */}
+          <div style={{ display:'flex', gap:'0.5rem' }}>
+            {[
+              { value: true,  label: 'Από την αρχή' },
+              { value: false, label: 'Διατήρηση αγώνων' },
+            ].map(opt => (
+              <button
+                key={String(opt.value)}
+                style={{
+                  ...sm.toggleBtn,
+                  ...(fromScratch === opt.value ? sm.toggleBtnActive : {}),
+                }}
+                onClick={() => { setFromScratch(opt.value); setPreview(null) }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Date range */}
           <div style={{ display:'flex', gap:'0.75rem', alignItems:'flex-end', flexWrap:'wrap' }}>
-            <div style={sm.field}>
-              <label style={sm.label}>Τύπος</label>
-              <select style={sm.input} value={mode} onChange={e => { setMode(e.target.value); setPreview(null) }}>
-                <option value="league">League (round-robin)</option>
-                <option value="knockout">Knockout</option>
-              </select>
-            </div>
             <div style={sm.field}>
               <label style={sm.label}>Από</label>
               <input type="date" style={sm.input} value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -101,11 +114,10 @@ function ScheduleModal({ phaseId, teams, onClose, onApplied }) {
             </button>
           </div>
 
-          {mode === 'knockout' && (
-            <p style={{ margin:0, fontSize:'0.8125rem', color:colors.onSurfaceVariant, backgroundColor:colors.surfaceContainerLow, padding:'0.5rem 0.75rem', borderRadius:radius.DEFAULT }}>
-              Knockout: κάθε ομάδα παίζει έναν αγώνα. Αν ο αριθμός ομάδων είναι μονός, μία ομάδα προχωράει αυτόματα (BYE).
-            </p>
-          )}
+          <p style={{ margin:0, fontSize:'0.75rem', color:colors.onSurfaceVariant }}>
+            Λειτουργία: <strong>{mode === 'knockout' ? 'Knockout — κάθε ομάδα παίζει έναν αγώνα' : 'League — round-robin'}</strong>
+            {mode === 'knockout' && ', BYE για μονό αριθμό ομάδων'}
+          </p>
 
           {error && <p style={{ color: colors.error, fontSize:'0.875rem', margin:0 }}>{error}</p>}
 
@@ -217,10 +229,11 @@ export default function Phase() {
   const { t } = useLang()
   const navigate = useNavigate()
 
-  const [phase,        setPhase]        = useState(null)
-  const [teams,        setTeams]        = useState([])
-  const [matches,      setMatches]      = useState([])
-  const [teamSearch,   setTeamSearch]   = useState('')
+  const [phase,          setPhase]          = useState(null)
+  const [tournament,     setTournament]     = useState(null)
+  const [teams,          setTeams]          = useState([])
+  const [matches,        setMatches]        = useState([])
+  const [teamSearch,     setTeamSearch]     = useState('')
   const [selectedTeamId, setSelectedTeamId] = useState(null)
   const [completing,     setCompleting]     = useState(false)
   const [notPlayedModal, setNotPlayedModal] = useState(null)
@@ -229,7 +242,11 @@ export default function Phase() {
   const [showSchedule,   setShowSchedule]   = useState(false)
 
   useEffect(() => {
-    fetchPhase(phaseId).then(setPhase).catch(() => {})
+    fetchPhase(phaseId).then(p => {
+      setPhase(p)
+      // fetch tournament for its type
+      fetch(`${BASE}/tournaments/${p.tournament_id}`).then(r=>r.json()).then(setTournament).catch(() => {})
+    }).catch(() => {})
     fetchMatches({ phaseId }).then(ms => setMatches(ms.filter(m => m.status === 'expected' || m.status === 'finished'))).catch(() => {})
     fetchTeams().then(setTeams).catch(() => {})
   }, [phaseId])
@@ -444,6 +461,7 @@ export default function Phase() {
         <ScheduleModal
           phaseId={phaseId}
           teams={teams}
+          tournamentType={tournament?.type ?? 'league'}
           onClose={() => setShowSchedule(false)}
           onApplied={() => {
             fetchMatches({ phaseId }).then(ms => setMatches(ms.filter(m => m.status === 'expected' || m.status === 'finished'))).catch(() => {})
@@ -957,5 +975,16 @@ const sm = {
     padding: '0.5rem 1.5rem', backgroundColor: colors.tertiary, border: 'none',
     borderRadius: radius.DEFAULT, fontSize: '0.875rem', fontWeight: 700,
     color: colors.onTertiary, cursor: 'pointer', fontFamily: fonts.label,
+  },
+  toggleBtn: {
+    flex: 1, padding: '0.5rem 0.75rem',
+    backgroundColor: colors.surfaceContainerLow,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT, fontSize: '0.8125rem', fontWeight: 600,
+    color: colors.onSurfaceVariant, cursor: 'pointer', fontFamily: fonts.label,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.primary, border: `1px solid ${colors.primary}`,
+    color: colors.onPrimary,
   },
 }

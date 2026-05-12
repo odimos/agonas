@@ -195,7 +195,7 @@ class Match(models.Model):
     scheduled_at = models.DateTimeField(null=True, blank=True)
     comments = models.TextField(blank=True, null=True)
     tournament = models.ForeignKey(
-        Tournament, null=True, blank=True, on_delete=models.SET_NULL,
+        Tournament, null=True, blank=True, on_delete=models.CASCADE,
     )
     phase = models.ForeignKey(
         'Phase', null=True, blank=True, on_delete=models.SET_NULL,

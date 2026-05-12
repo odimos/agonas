@@ -1,17 +1,19 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { colors } from '../styles'
-
-const ITEMS = [
-  { icon: 'home',           path: '/'             },
-  { icon: 'person',         path: '/user'         },
-  { icon: 'calendar_today', path: '/calendar'     },
-  { icon: 'groups',         path: '/team'         },
-  { icon: 'notifications',  path: '/notifications'},
-]
+import { useUser } from '../UserContext'
 
 export default function BottomNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { user } = useUser()
+
+  const items = [
+    { icon: 'home',           path: '/'             },
+    { icon: 'person',         path: '/user'         },
+    { icon: 'calendar_today', path: '/calendar'     },
+    ...(user?.is_player ? [{ icon: 'groups', path: '/team' }] : []),
+    { icon: 'notifications',  path: '/notifications'},
+  ]
 
   return (
     <nav style={{
@@ -20,7 +22,7 @@ export default function BottomNav() {
       height: '4rem', backgroundColor: colors.surface,
       borderTop: '1px solid rgba(194,200,194,0.2)',
     }}>
-      {ITEMS.map(item => {
+      {items.map(item => {
         const active = item.path === '/'
           ? pathname === '/'
           : pathname.startsWith(item.path)
