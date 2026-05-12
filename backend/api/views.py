@@ -1,6 +1,10 @@
 from ninja import NinjaAPI, Schema
+from ninja.errors import HttpError
 
 from .schema import HelloResponse
+
+ADMIN_USERNAME = 'admin'
+ADMIN_PASSWORD = 'agonas2026'
 from .routers.players import router as players_router
 from .routers.tournaments import router as tournaments_router
 from .routers.phases import router as phases_router
@@ -30,6 +34,32 @@ api.add_router('/stadium-availabilities', stadium_availabilities_router)
 api.add_router('/team-preferences', team_preferences_router)
 api.add_router('/referee-preferences', referee_preferences_router)
 api.add_router('/schedule', schedule_router)
+
+
+class AdminLoginIn(Schema):
+    username: str
+    password: str
+
+
+@api.post('/auth/login')
+def admin_login(request, payload: AdminLoginIn):
+    if payload.username != ADMIN_USERNAME or payload.password != ADMIN_PASSWORD:
+        raise HttpError(401, 'Invalid credentials')
+    request.session['admin'] = True
+    return {'success': True}
+
+
+@api.post('/auth/logout')
+def admin_logout(request):
+    request.session.flush()
+    return {'success': True}
+
+
+@api.get('/auth/me')
+def admin_me(request):
+    if not request.session.get('admin'):
+        raise HttpError(401, 'Not authenticated')
+    return {'username': ADMIN_USERNAME}
 
 
 @api.get('/', response=HelloResponse)

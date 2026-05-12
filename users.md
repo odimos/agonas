@@ -25,3 +25,6 @@ Dont forget to make the link to referee-form/id with the match id.
   │ captain1 │ pass123  │ Player (Zara Alpha, Zeta FC) — same player as player1                           │
   ├──────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────┤
   │ noncap   │ pass123  │ Player (Aaron Beta, Zeta FC) — not captain                                      │
+
+    Credentials for the management console (localhost:5173):  - Username: admin
+  - Password: agonas2026
