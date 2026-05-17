@@ -251,6 +251,7 @@ class TeamOut(Schema):
     comments: Optional[str]
     captain_id: Optional[int]
     vice_captain_id: Optional[int]
+    photo_url: Optional[str] = None
     created_at: datetime
 
 

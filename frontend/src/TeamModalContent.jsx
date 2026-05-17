@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { colors, radius, fonts } from './styles'
 import ModalField from './ModalField'
 import { useLang } from './LangContext'
 import { fetchAllAvailabilities } from './api/stadium_availabilities'
 import { fetchPreferences, upsertPreference } from './api/team_preferences'
+import { uploadTeamPhoto } from './api/teams'
 
 // form shape: { name, is_active, captain_id, vice_captain_id, comments }
 export function initTeamForm(team = {}) {
@@ -127,7 +128,7 @@ function StadiumAccordion({ stadium, slots, prefs, editing, teamId, onPrefChange
   )
 }
 
-export default function TeamModalContent({ form, setForm, editing, players = [], availablePlayers = [], onAddPlayer, onRemovePlayer, teamId }) {
+export default function TeamModalContent({ form, setForm, editing, players = [], availablePlayers = [], onAddPlayer, onRemovePlayer, teamId, team, onTeamUpdated }) {
   const { t } = useLang()
   const set = field => value => setForm(f => ({ ...f, [field]: value }))
   const [addPickerOpen, setAddPickerOpen] = useState(false)
@@ -136,6 +137,9 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
   const [availabilities, setAvailabilities] = useState([])
   const [prefs, setPrefs] = useState([])
   const [stadiums, setStadiums] = useState([])
+  const [photoUrl, setPhotoUrl] = useState(team?.photo_url ?? null)
+  const [uploadBusy, setUploadBusy] = useState(false)
+  const photoInputRef = useRef(null)
 
   useEffect(() => {
     fetchAllAvailabilities().then(avs => {
@@ -153,6 +157,20 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
       if (existing) return prev.map(p => p.availability_id === avId ? { ...p, score } : p)
       return [...prev, { availability_id: avId, score, team_id: teamId }]
     })
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files[0]
+    if (!file || !teamId) return
+    setUploadBusy(true)
+    try {
+      const updated = await uploadTeamPhoto(teamId, file)
+      setPhotoUrl(updated.photo_url)
+      onTeamUpdated?.(updated)
+    } finally {
+      setUploadBusy(false)
+      e.target.value = ''
+    }
   }
 
   async function handleAdd() {
@@ -173,11 +191,14 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
       {/* Team identity row */}
       <div style={st.identityRow}>
         <div style={st.logoWrap}>
-          <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.onSurfaceVariant }}>shield</span>
+          {photoUrl
+            ? <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: colors.onSurfaceVariant }}>shield</span>
+          }
           {editing && (
-            <label style={st.logoOverlay}>
+            <label style={{ ...st.logoOverlay, opacity: uploadBusy ? 0.5 : 1 }}>
               <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>photo_camera</span>
-              <input type="file" accept="image/*" style={{ display: 'none' }} />
+              <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} disabled={uploadBusy} />
             </label>
           )}
         </div>

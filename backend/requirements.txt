@@ -19,6 +19,8 @@ django-cors-headers==4.9.0
     # via -r requirements.in
 django-ninja==1.6.2
     # via -r requirements.in
+Pillow==11.2.1
+    # via -r requirements.in
 psycopg2-binary==2.9.11
     # via -r requirements.in
 pydantic==2.12.5

@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import Router, Schema
 
 from api.models import (
-    Match, Phase, RefereePreference, StadiumAvailability, TeamPreference,
+    Match, Phase, Referee, RefereePreference, StadiumAvailability, TeamPreference,
 )
 
 router = Router()
@@ -23,6 +23,7 @@ class ScheduleSuggestion(Schema):
     match_id: Optional[int] = None   # None = new match to create (knockout bye/pair)
     home_team_id: Optional[int]
     away_team_id: Optional[int]
+    referee_id: Optional[int] = None
     stadium_id: int
     stadium_name: str
     scheduled_at: datetime
@@ -57,26 +58,26 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
     for tp in TeamPreference.objects.filter(team_id__in=phase_team_ids):
         team_prefs.setdefault(tp.team_id, {})[tp.availability_id] = tp.score
 
+    all_referee_ids = list(Referee.objects.values_list('id', flat=True))
+    ref_prefs = {}
+    for rp in RefereePreference.objects.filter(referee_id__in=all_referee_ids):
+        ref_prefs.setdefault(rp.referee_id, {})[rp.availability_id] = rp.score
+
     if payload.mode == 'knockout':
-        return _generate_knockout(phase, phase_team_ids, slots, team_prefs, payload.from_scratch)
+        return _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, payload.from_scratch)
     else:
-        return _generate_league(phase, phase_team_ids, slots, team_prefs)
+        return _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids)
 
 
 # ─── League mode ──────────────────────────────────────────────────────────────
 
-def _generate_league(phase, phase_team_ids, slots, team_prefs):
+def _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids):
     matches = list(
         Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected'])
         .select_related('home_team', 'away_team', 'referee')
     )
     if not matches:
         return {'suggestions': [], 'unscheduled': [], 'new_matches': []}
-
-    ref_ids = [m.referee_id for m in matches if m.referee_id]
-    ref_prefs = {}
-    for rp in RefereePreference.objects.filter(referee_id__in=ref_ids):
-        ref_prefs.setdefault(rp.referee_id, {})[rp.availability_id] = rp.score
 
     matches_sorted = sorted(matches, key=lambda m: sum(
         1 for sl in slots if _slot_score(m, sl, team_prefs, ref_prefs) >= 0
@@ -86,20 +87,25 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs):
     suggestions, unscheduled = [], []
 
     for match in matches_sorted:
-        best_score, best_idx = -1, None
+        best_score, best_idx, best_ref_id = -1, None, None
         for i, sl in enumerate(slots):
             d = sl['dt'].date()
             if match.home_team_id and match.home_team_id in day_teams.get(d, set()):
                 continue
             if match.away_team_id and match.away_team_id in day_teams.get(d, set()):
                 continue
-            if match.referee_id and match.referee_id in day_refs.get(d, set()):
-                continue
             if slot_used[i] >= sl['capacity']:
                 continue
-            score = _slot_score(match, sl, team_prefs, ref_prefs)
+            # Use match's existing referee if available and free, otherwise pick best free referee
+            if match.referee_id and match.referee_id not in day_refs.get(d, set()):
+                chosen_ref = match.referee_id
+            else:
+                chosen_ref = _pick_referee(all_referee_ids, ref_prefs, sl['av_id'], day_refs.get(d, set()))
+            if chosen_ref is None:
+                continue
+            score = _slot_score_with_ref(match, sl, team_prefs, ref_prefs, chosen_ref)
             if score > best_score:
-                best_score, best_idx = score, i
+                best_score, best_idx, best_ref_id = score, i, chosen_ref
 
         if best_idx is not None:
             sl = slots[best_idx]
@@ -108,12 +114,13 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs):
             day_refs.setdefault(d, set())
             if match.home_team_id: day_teams[d].add(match.home_team_id)
             if match.away_team_id: day_teams[d].add(match.away_team_id)
-            if match.referee_id:   day_refs[d].add(match.referee_id)
+            day_refs[d].add(best_ref_id)
             slot_used[best_idx] += 1
             suggestions.append(ScheduleSuggestion(
                 match_id=match.id,
                 home_team_id=match.home_team_id,
                 away_team_id=match.away_team_id,
+                referee_id=best_ref_id,
                 stadium_id=sl['stadium_id'],
                 stadium_name=sl['stadium_name'],
                 scheduled_at=sl['dt'],
@@ -128,7 +135,7 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs):
 
 # ─── Knockout mode ────────────────────────────────────────────────────────────
 
-def _generate_knockout(phase, phase_team_ids, slots, team_prefs, from_scratch=True):
+def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, from_scratch=True):
     # Find teams already paired in existing draft/expected matches
     existing_matches = list(
         Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected'])
@@ -148,12 +155,12 @@ def _generate_knockout(phase, phase_team_ids, slots, team_prefs, from_scratch=Tr
     if teams:
         pairs.append((teams.pop(), None))  # bye
 
-    day_teams, slot_used = {}, {i: 0 for i in range(len(slots))}
+    day_teams, day_refs, slot_used = {}, {}, {i: 0 for i in range(len(slots))}
     suggestions, unscheduled_specs = [], []
 
     for home_id, away_id in pairs:
         is_bye = away_id is None
-        best_score, best_idx = -1, None
+        best_score, best_idx, best_ref_id = -1, None, None
 
         for i, sl in enumerate(slots):
             d = sl['dt'].date()
@@ -163,22 +170,29 @@ def _generate_knockout(phase, phase_team_ids, slots, team_prefs, from_scratch=Tr
                 continue
             if slot_used[i] >= sl['capacity']:
                 continue
+            chosen_ref = _pick_referee(all_referee_ids, ref_prefs, sl['av_id'], day_refs.get(d, set()))
+            if chosen_ref is None:
+                continue
             score = (team_prefs.get(home_id, {}).get(sl['av_id'], 0)
-                   + (team_prefs.get(away_id, {}).get(sl['av_id'], 0) if away_id else 0))
+                   + (team_prefs.get(away_id, {}).get(sl['av_id'], 0) if away_id else 0)
+                   + ref_prefs.get(chosen_ref, {}).get(sl['av_id'], 0))
             if score > best_score:
-                best_score, best_idx = score, i
+                best_score, best_idx, best_ref_id = score, i, chosen_ref
 
         if best_idx is not None:
             sl = slots[best_idx]
             d = sl['dt'].date()
             day_teams.setdefault(d, set())
+            day_refs.setdefault(d, set())
             if home_id: day_teams[d].add(home_id)
             if away_id: day_teams[d].add(away_id)
+            day_refs[d].add(best_ref_id)
             slot_used[best_idx] += 1
             suggestions.append(ScheduleSuggestion(
                 match_id=None,
                 home_team_id=home_id,
                 away_team_id=away_id,
+                referee_id=best_ref_id,
                 stadium_id=sl['stadium_id'],
                 stadium_name=sl['stadium_name'],
                 scheduled_at=sl['dt'],
@@ -209,6 +223,8 @@ def apply_schedule(request, phase_id: int, payload: ApplyRequest):
             match.stadium_id   = s.stadium_id
             match.scheduled_at = s.scheduled_at
             match.status       = 'expected'
+            if s.referee_id:
+                match.referee_id = s.referee_id
             match.save()
             applied += 1
         else:
@@ -217,6 +233,7 @@ def apply_schedule(request, phase_id: int, payload: ApplyRequest):
                 status='expected',
                 home_team_id=s.home_team_id,
                 away_team_id=s.away_team_id,
+                referee_id=s.referee_id,
                 stadium_id=s.stadium_id,
                 scheduled_at=s.scheduled_at,
                 tournament_id=phase.tournament_id,
@@ -259,3 +276,26 @@ def _slot_score(match, sl, team_prefs, ref_prefs):
     if match.referee_id:
         score += ref_prefs.get(match.referee_id, {}).get(av_id, 0)
     return score
+
+
+def _slot_score_with_ref(match, sl, team_prefs, ref_prefs, referee_id):
+    av_id = sl['av_id']
+    score = 0
+    if match.home_team_id:
+        score += team_prefs.get(match.home_team_id, {}).get(av_id, 0)
+    if match.away_team_id:
+        score += team_prefs.get(match.away_team_id, {}).get(av_id, 0)
+    score += ref_prefs.get(referee_id, {}).get(av_id, 0)
+    return score
+
+
+def _pick_referee(all_referee_ids, ref_prefs, av_id, busy_referee_ids):
+    """Pick the free referee with the highest preference score for this slot."""
+    best_score, best_id = -1, None
+    for ref_id in all_referee_ids:
+        if ref_id in busy_referee_ids:
+            continue
+        score = ref_prefs.get(ref_id, {}).get(av_id, 0)
+        if score > best_score:
+            best_score, best_id = score, ref_id
+    return best_id

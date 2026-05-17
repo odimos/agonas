@@ -17,7 +17,7 @@ export default function BottomNav() {
 
   return (
     <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, boxSizing: 'border-box',
+      flexShrink: 0, zIndex: 50, boxSizing: 'border-box',
       display: 'flex', justifyContent: 'space-around', alignItems: 'center',
       height: '4rem', backgroundColor: colors.surface,
       borderTop: '1px solid rgba(194,200,194,0.2)',

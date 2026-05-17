@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 
@@ -108,7 +107,7 @@ export default function Notifications() {
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* Header */}
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <span style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary }}>
           {t('notif_title')}
           {unreadCount > 0 && (
@@ -155,7 +154,7 @@ export default function Notifications() {
         )}
       </main>
 
-      <BottomNav />
+      
     </div>
   )
 }

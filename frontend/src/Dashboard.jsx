@@ -292,16 +292,17 @@ for (let h = 0; h < 24; h++)
   for (let m = 0; m < 60; m += 15)
     QUARTER_TIMES.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`)
 
-function InlineTimePicker({ value, onChange, disabled, stadiumId, availabilities }) {
+function InlineTimePicker({ value, dateStr: dateProp, onChange, disabled, stadiumId, availabilities }) {
   const [open, setOpen] = useState(false)
   const timeStr = value ? value.slice(11, 16) : ''
 
-  // Extract day-of-week from the date part of the ISO string (avoids timezone shift)
-  const dayOfWeek = value ? (() => {
-    const datePart = value.slice(0, 10)
+  // Extract day-of-week from value, or from dateProp when scheduled_at was cleared
+  const dayOfWeek = (() => {
+    const datePart = value ? value.slice(0, 10) : dateProp
+    if (!datePart) return null
     const jsDay = new Date(`${datePart}T00:00:00`).getDay()
     return (jsDay + 6) % 7
-  })() : null
+  })()
 
   const timeOpts = useMemo(() => {
     if (stadiumId) {
@@ -374,7 +375,9 @@ function ActionBtn({ icon, title, color, onClick }) {
 
 function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tournaments, phases, availabilities, onSave, onDelete, onView }) {
   const [hovered, setHovered] = useState(false)
+  const [pendingDate, setPendingDate] = useState(null)
   const { t } = useLang()
+
   const baseBg = isConflict ? `${colors.errorContainer}55` : 'transparent'
   const locked = match.status === 'finished'
 
@@ -457,10 +460,10 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
         />
       </td>
       <td style={st.td}>
-        <InlineDatePicker value={match.scheduled_at} onChange={v => patch('scheduled_at', patchDate(match.scheduled_at, v))} disabled={locked} />
+        <InlineDatePicker value={match.scheduled_at || (pendingDate ? `${pendingDate}T00:00:00` : null)} onChange={v => setPendingDate(v)} disabled={locked} />
       </td>
       <td style={st.td}>
-        <InlineTimePicker value={match.scheduled_at} onChange={v => patch('scheduled_at', patchTime(match.scheduled_at, v))} disabled={locked} stadiumId={match.stadium_id} availabilities={availabilities} />
+        <InlineTimePicker value={pendingDate ? null : match.scheduled_at} dateStr={pendingDate} onChange={v => { const d = pendingDate || (match.scheduled_at ? match.scheduled_at.slice(0, 10) : new Date().toISOString().slice(0, 10)); setPendingDate(null); patch('scheduled_at', `${d}T${v}:00`) }} disabled={locked} stadiumId={match.stadium_id} availabilities={availabilities} />
       </td>
       <td style={st.td}>
         <InlineSelect value={match.stadium_id ? String(match.stadium_id) : ''} options={stadiumOpts} onChange={v => patch('stadium_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => stadium?.name || '—'} disabled={locked} />

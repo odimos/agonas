@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
@@ -88,7 +87,7 @@ export default function Settings() {
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
       {/* TopAppBar */}
-      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', boxSizing: 'border-box', zIndex: 50, display: 'flex', alignItems: 'center', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
         <button
           onClick={() => navigate(-1)}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.primary, display: 'flex', alignItems: 'center', padding: '0.25rem', marginLeft: '-0.25rem' }}
@@ -204,7 +203,7 @@ export default function Settings() {
         </div>
       </main>
 
-      <BottomNav />
+      
     </div>
   )
 }

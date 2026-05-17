@@ -34,3 +34,11 @@ export async function deleteTeam(id) {
   const res = await fetch(`${BASE}/teams/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error('Failed to delete team')
 }
+
+export async function uploadTeamPhoto(id, file) {
+  const form = new FormData()
+  form.append('photo', file)
+  const res = await fetch(`${BASE}/teams/${id}/photo`, { method: 'POST', body: form })
+  if (!res.ok) throw new Error('Failed to upload photo')
+  return res.json()
+}

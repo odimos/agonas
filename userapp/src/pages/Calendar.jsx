@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
@@ -181,7 +180,7 @@ export default function Calendar() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <button onClick={prevMonth} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
@@ -299,7 +298,7 @@ export default function Calendar() {
       </main>
 
       <MatchModal match={selectedMatch} open={modalOpen} onClose={() => setModalOpen(false)} t={t} />
-      <BottomNav />
+      
     </div>
   )
 }

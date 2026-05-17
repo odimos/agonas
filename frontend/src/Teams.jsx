@@ -43,7 +43,10 @@ function TeamRow({ team, captainName, playerCount, isFirst, onClick }) {
     <TableRow testId="team-row" isFirst={isFirst} onClick={onClick} borderOpacity="33">
       <div style={cols.name}>
         <div style={st.thumb}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>groups</span>
+          {team.photo_url
+            ? <img src={team.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            : <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>groups</span>
+          }
         </div>
         <span style={st.cellName}>{team.name}</span>
       </div>
@@ -233,6 +236,8 @@ export default function Teams() {
               onAddPlayer={handleAddPlayer}
               onRemovePlayer={handleRemovePlayer}
               teamId={selected.id}
+              team={selected}
+              onTeamUpdated={updated => setTeams(prev => prev.map(t => t.id === updated.id ? updated : t))}
             />
           )}
         </ItemModal>

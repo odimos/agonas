@@ -13,14 +13,17 @@ import TeamProfile from './pages/TeamProfile'
 import PlayerProfile from './pages/PlayerProfile'
 import Home from './pages/Home'
 import { colors } from './styles'
+import Layout from './components/Layout'
 
 function AppRoutes() {
   const { user } = useUser()
 
   if (user === undefined) {
     return (
-      <div style={{ minHeight: '100dvh', background: colors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: colors.onSurfaceVariant, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem' }}>Loading…</span>
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#c8cec9' }}>
+        <div style={{ maxWidth: '430px', width: '100%', minHeight: '100dvh', backgroundColor: colors.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ color: colors.onSurfaceVariant, fontFamily: "'Inter', sans-serif", fontSize: '0.9rem' }}>Loading…</span>
+        </div>
       </div>
     )
   }
@@ -31,17 +34,19 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/calendar" element={<Calendar />} />
-      <Route path="/user" element={<User />} />
-      {user.is_player && <Route path="/team" element={<Team />} />}
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/referee-form/:id" element={<RefereeForm />} />
-      <Route path="/forms" element={<Forms />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/team/:id" element={<TeamProfile />} />
-      <Route path="/player/:id" element={<PlayerProfile />} />
-      <Route path="*" element={<Navigate to="/calendar" replace />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/user" element={<User />} />
+        {user.is_player && <Route path="/team" element={<Team />} />}
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/referee-form/:id" element={<RefereeForm />} />
+        <Route path="/forms" element={<Forms />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/team/:id" element={<TeamProfile />} />
+        <Route path="/player/:id" element={<PlayerProfile />} />
+        <Route path="*" element={<Navigate to="/calendar" replace />} />
+      </Route>
     </Routes>
   )
 }

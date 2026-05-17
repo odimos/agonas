@@ -6,6 +6,7 @@ class Team(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     comments = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to='teams/', null=True, blank=True)
     captain = models.ForeignKey(
         'Player', null=True, blank=True, on_delete=models.SET_NULL,
         related_name='captain_of',

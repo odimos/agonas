@@ -5,12 +5,13 @@ import { useLang } from './LangContext'
 import { fetchPhase, fetchPhases, createPhase, updatePhase } from './api/phases'
 import { fetchMatches, updateMatch } from './api/matches'
 import { fetchTeams } from './api/teams'
+import { fetchReferees } from './api/referees'
 
 const BASE = import.meta.env.VITE_API_URL
 
 const DAY_NAMES = ['Δευτ', 'Τρίτ', 'Τετ', 'Πέμπ', 'Παρ', 'Σαββ', 'Κυρ']
 
-function ScheduleModal({ phaseId, teams, tournamentType, onClose, onApplied }) {
+function ScheduleModal({ phaseId, teams, referees, tournamentType, onClose, onApplied }) {
   const today = new Date().toISOString().slice(0, 10)
   const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)
 
@@ -51,6 +52,11 @@ function ScheduleModal({ phaseId, teams, tournamentType, onClose, onApplied }) {
   }
 
   function teamName(id) { return id ? (teams.find(t => t.id === id)?.name ?? `#${id}`) : 'BYE' }
+  function refName(id) {
+    if (!id) return null
+    const r = referees.find(r => r.id === id)
+    return r ? `${r.first_name} ${r.last_name}` : `#${id}`
+  }
 
   function formatDt(iso) {
     const d = new Date(iso)
@@ -137,7 +143,10 @@ function ScheduleModal({ phaseId, teams, tournamentType, onClose, onApplied }) {
                         {teamName(s.home_team_id)} vs {teamName(s.away_team_id)}
                         {s.is_bye && <span style={{ fontSize:'0.625rem', color:'#9e9e9e', marginLeft:'0.375rem' }}>(BYE)</span>}
                       </span>
-                      <span style={sm.slotLabel}>{formatDt(s.scheduled_at)} · {s.stadium_name}</span>
+                      <span style={sm.slotLabel}>
+                        {formatDt(s.scheduled_at)} · {s.stadium_name}
+                        {refName(s.referee_id) && ` · ${refName(s.referee_id)}`}
+                      </span>
                     </div>
                     {scoreBadge(s.score, s.is_bye)}
                   </div>
@@ -173,7 +182,10 @@ function TeamCard({ team, isSelected, isOpen, onSelect, onDelete, t }) {
     <div style={{ ...st.teamCard, ...(isSelected ? st.teamCardSelected : {}) }} onClick={() => isOpen && onSelect(team.id)}>
       <div style={st.teamCardTop}>
         <div style={{ ...st.teamIcon, ...(isSelected ? st.teamIconSelected : {}) }}>
-          <span className="material-symbols-outlined" style={{ color: isSelected ? colors.tertiary : colors.outline }}>shield</span>
+          {team.photo_url
+            ? <img src={team.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span className="material-symbols-outlined" style={{ color: isSelected ? colors.tertiary : colors.outline }}>shield</span>
+          }
         </div>
         {isOpen && isSelected ? (
           <button style={st.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(team.id) }}>
@@ -232,6 +244,7 @@ export default function Phase() {
   const [phase,          setPhase]          = useState(null)
   const [tournament,     setTournament]     = useState(null)
   const [teams,          setTeams]          = useState([])
+  const [referees,       setReferees]       = useState([])
   const [matches,        setMatches]        = useState([])
   const [teamSearch,     setTeamSearch]     = useState('')
   const [selectedTeamId, setSelectedTeamId] = useState(null)
@@ -249,6 +262,7 @@ export default function Phase() {
     }).catch(() => {})
     fetchMatches({ phaseId }).then(ms => setMatches(ms.filter(m => m.status === 'expected' || m.status === 'finished'))).catch(() => {})
     fetchTeams().then(setTeams).catch(() => {})
+    fetchReferees().then(setReferees).catch(() => {})
   }, [phaseId])
 
   function handleSelectTeam(teamId) {
@@ -461,6 +475,7 @@ export default function Phase() {
         <ScheduleModal
           phaseId={phaseId}
           teams={teams}
+          referees={referees}
           tournamentType={tournament?.type ?? 'league'}
           onClose={() => setShowSchedule(false)}
           onApplied={() => {
@@ -693,6 +708,7 @@ const st = {
     width: '2.5rem',
     height: '2.5rem',
     backgroundColor: colors.surfaceContainerLow,
+    overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

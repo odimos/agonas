@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
@@ -29,22 +28,45 @@ export default function Team() {
   const [squadOpen, setSquadOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [logo, setLogo] = useState(null)
-  const [draft, setDraft] = useState({})
+  const [uploadBusy, setUploadBusy] = useState(false)
   const logoRef = useRef(null)
 
   useEffect(() => {
     if (!user?.team_id) return
-    fetch(`${API}/team/${user.team_id}/info`).then(r => r.ok ? r.json() : null).then(setTeamData)
+    fetch(`${API}/team/${user.team_id}/info`).then(r => r.ok ? r.json() : null).then(data => {
+      setTeamData(data)
+    })
     fetch(`${API}/team/${user.team_id}/matches`).then(r => r.ok ? r.json() : []).then(data => {
       const finished = data.filter(m => m.status === 'finished').sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at))
       setMatches(finished)
     })
+    // Load current photo from management API
+    fetch(`http://localhost:8000/api/teams/${user.team_id}`).then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.photo_url) setLogo(data.photo_url)
+    }).catch(() => {})
   }, [user])
 
-  function enterEdit() { setDraft({ logo }); setEditing(true) }
-  function cancelEdit() { setLogo(draft.logo); setEditing(false) }
+  function enterEdit() { setEditing(true) }
+  function cancelEdit() { setEditing(false) }
   function saveEdit() { setEditing(false) }
-  function onLogoChange(e) { const file = e.target.files[0]; if (file) setLogo(URL.createObjectURL(file)) }
+
+  async function onLogoChange(e) {
+    const file = e.target.files[0]
+    if (!file || !user?.team_id) return
+    setUploadBusy(true)
+    try {
+      const form = new FormData()
+      form.append('photo', file)
+      const res = await fetch(`http://localhost:8000/api/teams/${user.team_id}/photo`, { method: 'POST', body: form })
+      if (res.ok) {
+        const data = await res.json()
+        setLogo(data.photo_url)
+      }
+    } finally {
+      setUploadBusy(false)
+      e.target.value = ''
+    }
+  }
 
   const teamName = teamData?.name || '…'
   const wins = teamData?.wins ?? 0
@@ -55,7 +77,7 @@ export default function Team() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      <header style={{ position: 'fixed', top: 0, left: 0, width: '100%', boxSizing: 'border-box', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
         {editing ? (
           <>
             <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
@@ -87,10 +109,10 @@ export default function Team() {
                   </>
               }
               {editing && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '1.75rem' }}>photo_camera</span>
+                <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '1.75rem' }}>{uploadBusy ? 'hourglass_empty' : 'photo_camera'}</span>
               </div>}
             </div>
-            <input ref={logoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onLogoChange} />
+            <input ref={logoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onLogoChange} disabled={uploadBusy} />
           </div>
         </div>
 
@@ -237,7 +259,7 @@ export default function Team() {
         )}
       </main>
 
-      <BottomNav />
+      
     </div>
   )
 }

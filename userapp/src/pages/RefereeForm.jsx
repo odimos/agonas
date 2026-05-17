@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import BottomNav from '../components/BottomNav'
 import { colors, radius } from '../styles'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
@@ -205,7 +204,7 @@ export default function RefereeForm() {
   if (submitted) {
     return (
       <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, display: 'flex', flexDirection: 'column' }}>
-        <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
           <button onClick={() => navigate('/forms')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', alignItems: 'center', padding: '0.25rem' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>arrow_back</span>
           </button>
@@ -222,14 +221,14 @@ export default function RefereeForm() {
             Back to Forms
           </button>
         </main>
-        <BottomNav />
+        
       </div>
     )
   }
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface, overflowX: 'hidden' }}>
-      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
         <button onClick={() => navigate('/forms')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', alignItems: 'center', padding: '0.25rem' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '1.4rem' }}>arrow_back</span>
         </button>
@@ -406,7 +405,7 @@ export default function RefereeForm() {
         </div>
       </main>
 
-      <BottomNav />
+      
     </div>
   )
 }
