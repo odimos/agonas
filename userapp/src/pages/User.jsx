@@ -25,6 +25,7 @@ export default function User() {
   const [recentMatches, setRecentMatches] = useState([])
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
+  const [draft, setDraft] = useState({ bio: '' })
   const [photoUrl, setPhotoUrl] = useState(null)
   const [uploadBusy, setUploadBusy] = useState(false)
   const fileRef = useRef(null)

@@ -54,6 +54,7 @@ class FinishMatchIn(Schema):
     home_fair_play: int
     away_fair_play: int
     comments: Optional[str] = None
+    penalty_winner_id: Optional[int] = None
     goals: List[GoalIn] = []
     cards: List[CardIn] = []
 
@@ -66,6 +67,7 @@ class MatchInfoOut(Schema):
     away_team_name: Optional[str]
     scheduled_at: Optional[str]
     tournament_name: Optional[str]
+    tournament_type: Optional[str]
     status: str
 
 
@@ -449,6 +451,7 @@ def get_match(request, match_id: int):
         'away_team_name': m.away_team.name if m.away_team else None,
         'scheduled_at': m.scheduled_at.isoformat() if m.scheduled_at else None,
         'tournament_name': m.tournament.name if m.tournament else None,
+        'tournament_type': m.tournament.type if m.tournament else None,
         'status': m.status,
     }
 
@@ -467,7 +470,7 @@ def get_match_players(request, match_id: int):
 @api.post('/matches/{match_id}/finish')
 def finish_match(request, match_id: int, payload: FinishMatchIn):
     try:
-        m = Match.objects.select_related('home_team', 'away_team').get(id=match_id)
+        m = Match.objects.select_related('home_team', 'away_team', 'tournament').get(id=match_id)
     except Match.DoesNotExist:
         raise HttpError(404, 'Match not found')
 
@@ -482,12 +485,24 @@ def finish_match(request, match_id: int, payload: FinishMatchIn):
         if c.card_type not in ('yellow', 'red'):
             raise HttpError(422, 'card_type must be yellow or red')
 
+    # Knockout tie requires penalty winner
+    is_knockout = m.tournament_id is not None and m.tournament and m.tournament.type == 'knockout'
+    if is_knockout and payload.home_score == payload.away_score:
+        if payload.penalty_winner_id is None:
+            raise HttpError(422, 'Σε ισοπαλία νοκ-άουτ απαιτείται νικητής στα πέναλτι.')
+        if payload.penalty_winner_id not in (m.home_team_id, m.away_team_id):
+            raise HttpError(422, 'Ο νικητής πέναλτι πρέπει να είναι μία από τις δύο ομάδες.')
+
     with transaction.atomic():
         m.status = 'finished'
         m.home_score = payload.home_score
         m.away_score = payload.away_score
         m.home_fair_play = payload.home_fair_play
         m.away_fair_play = payload.away_fair_play
+        if is_knockout and payload.home_score == payload.away_score:
+            m.penalty_winner_id = payload.penalty_winner_id
+        else:
+            m.penalty_winner_id = None
         if payload.comments is not None:
             m.comments = payload.comments.strip() or None
         m.save()

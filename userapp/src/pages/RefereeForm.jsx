@@ -98,6 +98,7 @@ export default function RefereeForm() {
   const [photos, setPhotos] = useState([{ src: null, team: '' }, { src: null, team: '' }, { src: null, team: '' }])
   const [comment, setComment] = useState('')
   const [commentOpen, setCommentOpen] = useState(false)
+  const [penaltyWinnerId, setPenaltyWinnerId] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -119,6 +120,19 @@ export default function RefereeForm() {
   const AWAY_TEAM = match?.away_team_name || 'Away'
   const DATE_STR = formatDate(match?.scheduled_at)
   const TEAM_OPTIONS = ['', HOME_TEAM, AWAY_TEAM, 'Both']
+  const isKnockout = match?.tournament_type === 'knockout'
+  const isTied = homeScore === awayScore
+
+  function updateHomeScore(next) {
+    const v = typeof next === 'function' ? next(homeScore) : next
+    setHomeScore(v)
+    if (v !== awayScore) setPenaltyWinnerId(null)
+  }
+  function updateAwayScore(next) {
+    const v = typeof next === 'function' ? next(awayScore) : next
+    setAwayScore(v)
+    if (v !== homeScore) setPenaltyWinnerId(null)
+  }
 
   function onPhotoChange(i, e) {
     const file = e.target.files[0]
@@ -147,6 +161,10 @@ export default function RefereeForm() {
       setSubmitError('Please set fair play scores for both teams')
       return
     }
+    if (isKnockout && isTied && !penaltyWinnerId) {
+      setSubmitError('Σε ισοπαλία νοκ-άουτ απαιτείται νικητής στα πέναλτι.')
+      return
+    }
     setSubmitting(true)
     try {
       const body = {
@@ -155,6 +173,7 @@ export default function RefereeForm() {
         home_fair_play: parseInt(fairPlayHome),
         away_fair_play: parseInt(fairPlayAway),
         comments: comment || null,
+        penalty_winner_id: (isKnockout && isTied) ? penaltyWinnerId : null,
         goals: goals.filter(g => g.player_id && g.team_id && g.minute).map(g => ({
           player_id: g.player_id,
           team_id: g.team_id,
@@ -245,8 +264,8 @@ export default function RefereeForm() {
         <section style={{ padding: '0.75rem 0 1rem' }}>
           <div style={{ background: colors.surfaceContainerLowest, border: GHOST, borderRadius: 0, overflow: 'hidden', borderLeft: 'none', borderRight: 'none' }}>
             {[
-              { team: HOME_TEAM, score: homeScore, setScore: setHomeScore },
-              { team: AWAY_TEAM, score: awayScore, setScore: setAwayScore },
+              { team: HOME_TEAM, score: homeScore, setScore: updateHomeScore },
+              { team: AWAY_TEAM, score: awayScore, setScore: updateAwayScore },
             ].map(({ team, score, setScore }, i, arr) => (
               <div key={team} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.5rem', borderBottom: i < arr.length - 1 ? GHOST : 'none' }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: 700, color: colors.onSurface }}>{team}</span>
@@ -264,6 +283,29 @@ export default function RefereeForm() {
               </div>
             ))}
           </div>
+          {isKnockout && isTied && match?.home_team_id && match?.away_team_id && (
+            <div style={{ margin: '0.5rem 0.5rem 0', padding: '0.6rem 0.75rem', background: `${colors.errorContainer}55`, border: `1px solid ${colors.error}33`, borderRadius: radius.xl }}>
+              <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.onSurface, margin: '0 0 0.5rem' }}>
+                Νικητής μετά από πέναλτι
+              </p>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {[
+                  { id: match.home_team_id, name: HOME_TEAM },
+                  { id: match.away_team_id, name: AWAY_TEAM },
+                ].map(team => (
+                  <label key={team.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', cursor: 'pointer', fontSize: '0.8rem', color: colors.onSurface }}>
+                    <input
+                      type="radio"
+                      name="penalty_winner"
+                      checked={penaltyWinnerId === team.id}
+                      onChange={() => setPenaltyWinnerId(team.id)}
+                    />
+                    {team.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Photos */}

@@ -152,17 +152,17 @@ function isoDate(d) {
 
 function formatMatchDate(isoStr, lang = 'gr') {
   if (!isoStr) return '—'
-  const d = new Date(isoStr)
+  // Treat stored date as wall-clock (no timezone shift)
+  const datePart = isoStr.slice(0, 10) // YYYY-MM-DD
+  const [y, m, d] = datePart.split('-').map(Number)
+  const dt = new Date(y, m - 1, d) // local midnight on that date — safe for getDay()
   const days = lang === 'en' ? DAYS_EN : DAYS_GR
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  return `${days[d.getDay()]}, ${dd}/${mm}`
+  return `${days[dt.getDay()]}, ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`
 }
 
 function formatMatchTime(isoStr) {
   if (!isoStr) return '—'
-  const d = new Date(isoStr)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return isoStr.slice(11, 16)
 }
 
 // Build a new scheduled_at ISO string by replacing the date portion
@@ -210,13 +210,14 @@ function detectConflicts(matches, availabilities = []) {
     }
   }
 
-  // Referee conflicts: same referee, same date (regardless of time)
+  // Referee conflicts: same referee with less than 60 minutes between kick-offs
   for (let i = 0; i < matches.length; i++) {
     for (let j = i + 1; j < matches.length; j++) {
       const a = matches[i], b = matches[j]
       if (!a.scheduled_at || !b.scheduled_at) continue
-      if (a.scheduled_at.slice(0, 10) !== b.scheduled_at.slice(0, 10)) continue
-      if (a.referee_id && a.referee_id === b.referee_id) {
+      if (!a.referee_id || a.referee_id !== b.referee_id) continue
+      const diffMs = Math.abs(new Date(a.scheduled_at) - new Date(b.scheduled_at))
+      if (diffMs < 60 * 60 * 1000) {
         conflictIndices.add(i)
         conflictIndices.add(j)
         conflicts.push({ indices: [i, j], reason: 'Διαιτητής υπερκρατημένος' })

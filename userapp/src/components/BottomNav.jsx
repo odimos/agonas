@@ -11,7 +11,7 @@ export default function BottomNav() {
     { icon: 'home',           path: '/'             },
     { icon: 'person',         path: '/user'         },
     { icon: 'calendar_today', path: '/calendar'     },
-    ...(user?.is_player ? [{ icon: 'groups', path: '/team' }] : []),
+    ...(user?.is_player && user?.team_id ? [{ icon: 'groups', path: '/team' }] : []),
     { icon: 'notifications',  path: '/notifications'},
   ]
 
