@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
+import TopBar from '../components/TopBar'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 const API = '/app/api'
@@ -76,21 +77,23 @@ export default function Team() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
-        {editing ? (
-          <>
-            <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
-            <button onClick={saveEdit} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
-          </>
-        ) : (
-          <>
-            <div style={{ width: '2rem' }} />
-            <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>{t('team_title')}</h1>
-            {user?.is_captain && <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>}
-            {!user?.is_captain && <div style={{ width: '2rem' }} />}
-          </>
-        )}
-      </header>
+      {editing ? (
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST }}>
+          <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
+          <button onClick={saveEdit} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
+        </header>
+      ) : (
+        <TopBar
+          left={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {user?.is_captain && (
+                <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>
+              )}
+              <h1 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.primary, margin: 0 }}>{t('team_title')}</h1>
+            </span>
+          }
+        />
+      )}
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
         {/* Hero */}

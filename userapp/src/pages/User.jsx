@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
+import TopBar from '../components/TopBar'
 
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 const API = '/app/api'
@@ -86,28 +87,16 @@ export default function User() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
-        {editing ? (
-          <>
-            <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
-            <button onClick={saveEdit} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
-          </>
-        ) : (
-          <>
-            <button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              {user?.is_referee && (
-                <button onClick={() => navigate('/forms')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                  <span className="material-symbols-outlined">assignment</span>
-                </button>
-              )}
-              <button onClick={() => navigate('/settings')} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-            </div>
-          </>
-        )}
-      </header>
+      {editing ? (
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}cc`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+          <button onClick={cancelEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.onSurfaceVariant, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_cancel')}</button>
+          <button onClick={saveEdit} style={{ fontSize: '0.8rem', fontWeight: 700, color: colors.tertiary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_save')}</button>
+        </header>
+      ) : (
+        <TopBar
+          left={<button onClick={enterEdit} style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('btn_edit')}</button>}
+        />
+      )}
 
       <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
         {/* Hero */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { colors, radius } from '../styles'
 import { useLang } from '../LangContext'
 import { useUser } from '../UserContext'
+import TopBar from '../components/TopBar'
 
 const API = '/app/api'
 const TODAY = new Date()
@@ -180,7 +181,8 @@ export default function Calendar() {
 
   return (
     <div style={{ minHeight: '100dvh', background: colors.background, fontFamily: "'Inter', sans-serif", color: colors.onSurface }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: '3.5rem', background: `${colors.surface}e6`, backdropFilter: 'blur(12px)', borderBottom: GHOST, boxSizing: 'border-box' }}>
+      <TopBar />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 1rem', borderBottom: GHOST, background: colors.surface }}>
         <button onClick={prevMonth} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
@@ -190,9 +192,9 @@ export default function Calendar() {
         <button onClick={nextMonth} style={{ color: colors.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
           <span className="material-symbols-outlined">chevron_right</span>
         </button>
-      </header>
+      </div>
 
-      <main style={{ paddingTop: '3.5rem', paddingBottom: '5rem' }}>
+      <main style={{ paddingBottom: '5rem' }}>
         <section style={{ padding: '0.75rem 0.75rem 0.5rem', background: colors.surfaceContainerLowest, borderBottom: GHOST }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '0.25rem' }}>
             {DAY_LABELS.map(d => (
