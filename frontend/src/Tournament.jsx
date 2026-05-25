@@ -1,12 +1,17 @@
 import { Outlet } from 'react-router-dom'
 import TournamentSideMenu from './TournamentSideMenu'
+import { useSidebar } from './SidebarContext'
 import { colors, fonts } from './styles'
 
 export default function Tournament() {
+  const { collapsed } = useSidebar()
   return (
     <div style={styles.wrapper}>
       <TournamentSideMenu />
-      <div style={styles.content}>
+      <div
+        className={collapsed ? 'entities-content entities-content--collapsed' : 'entities-content'}
+        style={styles.content}
+      >
         <Outlet />
       </div>
     </div>
@@ -21,9 +26,8 @@ const styles = {
     fontFamily: fonts.body,
   },
   content: {
-    marginLeft: '16rem',
     flex: 1,
-    width: 'calc(100vw - 16rem)',
     backgroundColor: colors.surface,
+    minWidth: 0,
   },
 }

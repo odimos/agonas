@@ -40,8 +40,7 @@ export default function Team() {
       const finished = data.filter(m => m.status === 'finished').sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at))
       setMatches(finished)
     })
-    // Load current photo from management API
-    fetch(`http://localhost:8000/api/teams/${user.team_id}`).then(r => r.ok ? r.json() : null).then(data => {
+    fetch(`${API}/team/${user.team_id}/photo`).then(r => r.ok ? r.json() : null).then(data => {
       if (data?.photo_url) setLogo(data.photo_url)
     }).catch(() => {})
   }, [user])
@@ -52,12 +51,12 @@ export default function Team() {
 
   async function onLogoChange(e) {
     const file = e.target.files[0]
-    if (!file || !user?.team_id) return
+    if (!file) return
     setUploadBusy(true)
     try {
       const form = new FormData()
       form.append('photo', file)
-      const res = await fetch(`http://localhost:8000/api/teams/${user.team_id}/photo`, { method: 'POST', body: form })
+      const res = await fetch(`${API}/team/photo`, { method: 'POST', body: form })
       if (res.ok) {
         const data = await res.json()
         setLogo(data.photo_url)

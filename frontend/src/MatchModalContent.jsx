@@ -4,7 +4,7 @@ import { useLang } from './LangContext'
 
 const ALL_STATUSES = ['draft', 'expected', 'finished', 'canceled']
 const GHOST = `1px solid ${colors.outlineVariant}33`
-const FAIR_PLAY_OPTS = ['–', '-5', '-4', '-3', '-2', '-1', '0', '1', '2', '3', '4', '5']
+const FAIR_PLAY_OPTS = ['–', '0', '1', '2', '3', '4', '5']
 
 export function initMatchForm(match = {}) {
   return {
@@ -21,19 +21,21 @@ export function initMatchForm(match = {}) {
     away_fair_play:  match.away_fair_play  ?? null,
     comments:        match.comments        ?? '',
     phase_id:        match.phase_id        ?? null,
+    penalty_winner_id: match.penalty_winner_id ?? null,
     _id:             match.id              ?? null,
   }
 }
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
-function SectionHeader({ icon, label, onAdd, editing }) {
+function SectionHeader({ icon, label, onAdd, editing, action }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', color: colors.tertiary }}>{icon}</span>
         <span style={{ fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.onSurface, fontFamily: fonts.label }}>{label}</span>
       </div>
+      {editing && action}
       {editing && onAdd && (
         <button onClick={onAdd} style={st.addCircle}>+</button>
       )}
@@ -210,9 +212,6 @@ function ScoreStepper({ label, value, editing, onChange }) {
         {editing && (
           <button onClick={() => onChange(value === null ? 0 : value + 1)} style={st.stepper}>+</button>
         )}
-        {editing && value !== null && (
-          <button onClick={() => onChange(null)} style={{ ...st.stepper, fontSize: '0.75rem', color: colors.outline }} title="Μηδενισμός">×</button>
-        )}
       </div>
     </div>
   )
@@ -259,6 +258,10 @@ export default function MatchModalContent({
   const matchId    = form._id
   const isFinished = form.status === 'finished'
   const scoresEditable = form.status === 'finished' || form.status === 'expected' || form.status === 'draft'
+
+  const tournament = tournaments.find(tn => tn.id === form.tournament_id)
+  const isKnockout = tournament?.type === 'knockout'
+  const isTied = form.home_score !== null && form.away_score !== null && form.home_score === form.away_score
 
   return (
     <div style={st.body}>
@@ -325,15 +328,48 @@ export default function MatchModalContent({
 
       {/* ── Score ──────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon="scoreboard" label="Αποτέλεσμα" />
+        <SectionHeader icon="scoreboard" label="Αποτέλεσμα"
+          editing={editing && scoresEditable}
+          action={(form.home_score !== null || form.away_score !== null) && (
+            <button onClick={() => { set('home_score')(null); set('away_score')(null) }} style={st.resetLink}>
+              <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>restart_alt</span>
+              Μηδενισμός
+            </button>
+          )}
+        />
         <div style={st.ghostCard}>
-          <ScoreStepper label={homeName} value={form.home_score} editing={editing && scoresEditable} onChange={v => set('home_score')(v)} />
-          <ScoreStepper label={awayName} value={form.away_score} editing={editing && scoresEditable} onChange={v => set('away_score')(v)} />
+          <ScoreStepper label={homeName} value={form.home_score} editing={editing && scoresEditable} onChange={v => setForm(f => ({ ...f, home_score: v, penalty_winner_id: v !== f.away_score ? null : f.penalty_winner_id }))} />
+          <ScoreStepper label={awayName} value={form.away_score} editing={editing && scoresEditable} onChange={v => setForm(f => ({ ...f, away_score: v, penalty_winner_id: v !== f.home_score ? null : f.penalty_winner_id }))} />
         </div>
         {editing && !scoresEditable && (
           <p style={{ fontSize: '0.7rem', color: colors.onSurfaceVariant, margin: '0.375rem 0 0', fontStyle: 'italic' }}>
             Το σκορ επεξεργάζεται μόνο σε αγώνα "Αναμενόμενο" ή "Ολοκληρωμένο".
           </p>
+        )}
+
+        {isKnockout && isTied && form.home_team_id && form.away_team_id && (
+          <div style={{ marginTop: '0.625rem', padding: '0.625rem 0.875rem', background: `${colors.errorContainer}55`, borderRadius: radius.DEFAULT, border: `1px solid ${colors.error}33` }}>
+            <p style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.onSurface, margin: '0 0 0.5rem', fontFamily: fonts.label }}>
+              Νικητής μετά από πέναλτι
+            </p>
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              {[
+                { id: form.home_team_id, name: homeName },
+                { id: form.away_team_id, name: awayName },
+              ].map(team => (
+                <label key={team.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', cursor: editing ? 'pointer' : 'default', fontSize: '0.875rem', color: colors.onSurface }}>
+                  <input
+                    type="radio"
+                    name="penalty_winner"
+                    checked={form.penalty_winner_id === team.id}
+                    onChange={() => set('penalty_winner_id')(team.id)}
+                    disabled={!editing}
+                  />
+                  {team.name}
+                </label>
+              ))}
+            </div>
+          </div>
         )}
       </section>
 
@@ -375,7 +411,7 @@ export default function MatchModalContent({
 
       {/* ── Fair Play ──────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon="handshake" label="Fair Play (−5 έως +5)" />
+        <SectionHeader icon="handshake" label="Fair Play (0 έως +5)" />
         <div style={{ ...st.ghostCard, display: 'flex', padding: 0, borderRadius: radius.DEFAULT }}>
           {[
             { label: homeName, field: 'home_fair_play' },
@@ -477,6 +513,13 @@ const st = {
     background: colors.tertiary, border: 'none', cursor: 'pointer',
     color: '#fff', fontSize: '1.25rem', lineHeight: 1,
     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  resetLink: {
+    display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.onSurfaceVariant, fontSize: '0.6875rem', fontWeight: 600,
+    fontFamily: fonts.label, textTransform: 'uppercase', letterSpacing: '0.06em',
+    padding: '0.25rem 0.5rem',
   },
   addForm: {
     display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap',

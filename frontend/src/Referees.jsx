@@ -53,13 +53,13 @@ export default function Referees() {
     setLoading(true)
     setError(null)
     try {
-      setReferees(await fetchReferees(search, ordering))
+      setReferees(await fetchReferees('', ordering))
     } catch {
       setError('Failed to load referees')
     } finally {
       setLoading(false)
     }
-  }, [search, ordering])
+  }, [ordering])
 
   useEffect(() => { load() }, [load])
 
@@ -114,9 +114,9 @@ export default function Referees() {
         )}
         search={search}
         onSearch={setSearch}
+        searchFields={['first_name', 'last_name']}
         ordering={ordering}
         onOrdering={setOrdering}
-        total={referees.length}
         loading={loading}
       />
       {selected && selectedForm && (

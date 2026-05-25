@@ -13,10 +13,10 @@ const DAY_NAMES = ['Δευτ', 'Τρίτ', 'Τετ', 'Πέμπ', 'Παρ', 'Σα
 
 function ScheduleModal({ phaseId, teams, referees, tournamentType, onClose, onApplied }) {
   const today = new Date().toISOString().slice(0, 10)
-  const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)
+  const oneWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
 
   const [startDate,   setStartDate]   = useState(today)
-  const [endDate,     setEndDate]     = useState(twoWeeks)
+  const [endDate,     setEndDate]     = useState(oneWeek)
   const [fromScratch, setFromScratch] = useState(true)
   const mode = tournamentType === 'knockout' ? 'knockout' : 'league'
   const [loading,   setLoading]   = useState(false)
@@ -227,6 +227,11 @@ function MatchCard({ match, teams, t }) {
           </span>
         </div>
       </div>
+      {isFinal && match.penalty_winner_id && (
+        <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: colors.tertiary, padding: '0.25rem 0', textAlign: 'center' }}>
+          πεν. {teams.find(tm => tm.id === match.penalty_winner_id)?.name ?? '—'}
+        </div>
+      )}
       <div style={st.matchFooter}>
         {isFinal  && <span style={st.matchStatusFinal}>{t('ph_final')}</span>}
         {isPending && <span style={st.matchStatusScheduled}>{t('ph_scheduled')}</span>}
@@ -352,6 +357,35 @@ export default function Phase() {
   const filteredTeams = phaseTeams.filter(t =>
     t.name.toLowerCase().includes(teamSearch.toLowerCase())
   )
+
+  const isFinish = phase.team_ids.length === 1
+  if (isFinish) {
+    const winner = phaseTeams[0]
+    return (
+      <div style={st.page}>
+        <div style={st.header}>
+          <div>
+            <span style={st.headerLabel}>{t('finish_label')}</span>
+            <h1 style={st.title}>{t('finish_label')}</h1>
+          </div>
+        </div>
+        <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', padding: '3rem 1rem' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '5rem', color: colors.tertiary }}>emoji_events</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: colors.onSurfaceVariant, fontFamily: fonts.label }}>
+            {t('winner_label')}
+          </span>
+          {winner ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {winner.photo_url && <img src={winner.photo_url} alt="" style={{ width: '4rem', height: '4rem', borderRadius: radius.DEFAULT, objectFit: 'cover' }} />}
+              <h2 style={{ fontSize: '2rem', fontWeight: 800, color: colors.onSurface, margin: 0, fontFamily: fonts.headline }}>{winner.name}</h2>
+            </div>
+          ) : (
+            <p style={{ color: colors.outline }}>—</p>
+          )}
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div style={st.page}>

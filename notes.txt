@@ -1,0 +1,4 @@
+win in penalties
+new architecture.md file to represent the changes
+a thorough report answering the most common qs
+understand the images

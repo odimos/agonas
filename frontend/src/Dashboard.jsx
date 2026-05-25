@@ -460,10 +460,24 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
         />
       </td>
       <td style={st.td}>
-        <InlineDatePicker value={match.scheduled_at || (pendingDate ? `${pendingDate}T00:00:00` : null)} onChange={v => setPendingDate(v)} disabled={locked} />
+        <InlineDatePicker value={match.scheduled_at || (pendingDate ? `${pendingDate}T00:00:00` : null)} onChange={v => {
+          const currentTime = match.scheduled_at ? match.scheduled_at.slice(11, 19) || '00:00:00' : null
+          if (currentTime && currentTime !== '00:00:00') {
+            // Keep the existing time; let validation catch incompatible date+stadium combos
+            patch('scheduled_at', `${v}T${currentTime}`)
+          } else {
+            // No time yet — stash the date locally and wait for a time pick
+            setPendingDate(v)
+          }
+        }} disabled={locked} />
       </td>
       <td style={st.td}>
-        <InlineTimePicker value={pendingDate ? null : match.scheduled_at} dateStr={pendingDate} onChange={v => { const d = pendingDate || (match.scheduled_at ? match.scheduled_at.slice(0, 10) : new Date().toISOString().slice(0, 10)); setPendingDate(null); patch('scheduled_at', `${d}T${v}:00`) }} disabled={locked} stadiumId={match.stadium_id} availabilities={availabilities} />
+        <InlineTimePicker value={pendingDate ? null : match.scheduled_at} dateStr={pendingDate} onChange={v => {
+          if (!v) { setPendingDate(null); patch('scheduled_at', null); return }
+          const d = pendingDate || (match.scheduled_at ? match.scheduled_at.slice(0, 10) : new Date().toISOString().slice(0, 10))
+          setPendingDate(null)
+          patch('scheduled_at', `${d}T${v}:00`)
+        }} disabled={locked} stadiumId={match.stadium_id} availabilities={availabilities} />
       </td>
       <td style={st.td}>
         <InlineSelect value={match.stadium_id ? String(match.stadium_id) : ''} options={stadiumOpts} onChange={v => patch('stadium_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => stadium?.name || '—'} disabled={locked} />
@@ -475,8 +489,18 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
       <td style={{ ...st.td, fontWeight: 700 }}>
         <InlineSelect value={match.away_team_id ? String(match.away_team_id) : (match.tournament_id && !match.away_team_id ? 'bye' : '')} options={teamOpts} onChange={v => patch('away_team_id', v && v !== 'bye' ? Number(v) : null)} style={{ fontWeight: 700 }} getLabel={() => awayTeam?.name || (match.tournament_id && !match.away_team_id ? 'BYE' : '—')} disabled={locked} />
       </td>
-      <td style={{ ...st.td, textAlign: 'center', backgroundColor: colors.surfaceContainerLow, fontWeight: 700 }}>{match.home_score ?? '—'}</td>
-      <td style={{ ...st.td, textAlign: 'center', backgroundColor: colors.surfaceContainerLow, fontWeight: 700 }}>{match.away_score ?? '—'}</td>
+      <td style={{ ...st.td, textAlign: 'center', backgroundColor: colors.surfaceContainerLow, fontWeight: 700 }}>
+        {match.home_score ?? '—'}
+        {match.penalty_winner_id === match.home_team_id && (
+          <sup title={`Νικητής στα πέναλτι: ${homeTeam?.name ?? ''}`} style={{ marginLeft: '0.125rem', color: colors.tertiary, fontSize: '0.625rem', fontWeight: 700 }}>π</sup>
+        )}
+      </td>
+      <td style={{ ...st.td, textAlign: 'center', backgroundColor: colors.surfaceContainerLow, fontWeight: 700 }}>
+        {match.away_score ?? '—'}
+        {match.penalty_winner_id === match.away_team_id && (
+          <sup title={`Νικητής στα πέναλτι: ${awayTeam?.name ?? ''}`} style={{ marginLeft: '0.125rem', color: colors.tertiary, fontSize: '0.625rem', fontWeight: 700 }}>π</sup>
+        )}
+      </td>
       <td style={st.td}>
         <InlineSelect value={match.referee_id ? String(match.referee_id) : ''} options={refereeOpts} onChange={v => patch('referee_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => referee ? `${referee.first_name[0]}. ${referee.last_name}` : '—'} disabled={locked} />
       </td>
@@ -492,18 +516,30 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
 
 // ─── Create Match Modal ───────────────────────────────────────────────────────
 
-function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, onClose, onCreated }) {
+function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, availabilities = [], onClose, onCreated }) {
   const { t } = useLang()
-  const [form, setForm] = useState({ status: 'draft', tournament_id: '', phase_id: '', home_team_id: '', away_team_id: '', referee_id: '', stadium_id: '', scheduled_at: '', comments: '' })
+  const [form, setForm] = useState({ status: 'draft', tournament_id: '', phase_id: '', home_team_id: '', away_team_id: '', referee_id: '', stadium_id: '', date: '', time: '', comments: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
   const set = f => v => setForm(prev => ({ ...prev, [f]: v }))
 
+  // Derive available times from chosen stadium + date
+  const stadiumId = form.stadium_id ? Number(form.stadium_id) : null
+  const dayOfWeek = form.date ? (new Date(form.date + 'T00:00').getDay() + 6) % 7 : null // Mon=0..Sun=6
+  const timeOpts = (() => {
+    if (!stadiumId) return [] // require stadium first
+    const stadiumSlots = availabilities.filter(a => a.stadium_id === stadiumId)
+    if (stadiumSlots.length === 0) return []
+    if (dayOfWeek === null) return []
+    return stadiumSlots.filter(a => a.day === dayOfWeek).map(s => s.start_time.slice(0, 5))
+  })()
+
   async function handleSubmit() {
     setSaving(true)
     setError(null)
     try {
+      const scheduled_at = form.date && form.time ? `${form.date}T${form.time}:00` : null
       await createMatch({
         status:        form.status,
         tournament_id: form.tournament_id ? Number(form.tournament_id) : null,
@@ -512,7 +548,7 @@ function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, onCl
         referee_id:   form.referee_id   ? Number(form.referee_id)   : null,
         stadium_id:   form.stadium_id   ? Number(form.stadium_id)   : null,
         phase_id:     form.phase_id     ? Number(form.phase_id) : null,
-        scheduled_at: form.scheduled_at || null,
+        scheduled_at,
         comments:     form.comments     || null,
       })
       onCreated()
@@ -565,16 +601,45 @@ function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, onCl
             </select>
           </div>
 
-          {/* Scheduled at */}
+          {/* Stadium */}
           <div style={st.fieldRow}>
-            <label style={st.fieldLabel}>Ημερομηνία & Ώρα</label>
+            <label style={st.fieldLabel}>Γήπεδο</label>
+            <select style={st.fieldSelect} value={form.stadium_id} onChange={e => { set('stadium_id')(e.target.value); set('time')('') }} data-testid="input-stadium">
+              <option value="">—</option>
+              {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          {/* Date */}
+          <div style={st.fieldRow}>
+            <label style={st.fieldLabel}>Ημερομηνία</label>
             <input
               style={st.fieldInput}
-              type="datetime-local"
-              value={form.scheduled_at}
-              onChange={e => set('scheduled_at')(e.target.value)}
-              data-testid="input-scheduled-at"
+              type="date"
+              value={form.date}
+              onChange={e => { set('date')(e.target.value); set('time')('') }}
+              data-testid="input-date"
             />
+          </div>
+
+          {/* Time (from stadium availability) */}
+          <div style={st.fieldRow}>
+            <label style={st.fieldLabel}>Ώρα</label>
+            <select
+              style={st.fieldSelect}
+              value={form.time}
+              onChange={e => set('time')(e.target.value)}
+              disabled={!form.stadium_id || !form.date}
+              data-testid="input-time"
+            >
+              <option value="">—</option>
+              {timeOpts.map(tt => <option key={tt} value={tt}>{tt}</option>)}
+            </select>
+            {form.stadium_id && form.date && timeOpts.length === 0 && (
+              <p style={{ fontSize: '0.7rem', color: colors.outline, margin: '0.25rem 0 0', fontStyle: 'italic' }}>
+                Καμία διαθεσιμότητα για αυτό το γήπεδο σε αυτήν την ημέρα.
+              </p>
+            )}
           </div>
 
           {/* Teams */}
@@ -599,15 +664,6 @@ function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, onCl
             <select style={st.fieldSelect} value={form.referee_id} onChange={e => set('referee_id')(e.target.value)} data-testid="input-referee">
               <option value="">—</option>
               {referees.map(r => <option key={r.id} value={r.id}>{r.first_name} {r.last_name}</option>)}
-            </select>
-          </div>
-
-          {/* Stadium */}
-          <div style={st.fieldRow}>
-            <label style={st.fieldLabel}>Γήπεδο</label>
-            <select style={st.fieldSelect} value={form.stadium_id} onChange={e => set('stadium_id')(e.target.value)} data-testid="input-stadium">
-              <option value="">—</option>
-              {stadiums.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
 
@@ -663,12 +719,15 @@ export default function Dashboard() {
 
   function validateStadiumTime(p) {
     if (!p.stadium_id || !p.scheduled_at) return null
-    const slots = allAvailabilities.filter(a => a.stadium_id === p.stadium_id)
-    if (slots.length === 0) return null // no availability defined — no restriction
     // Extract date/time directly from the ISO string to avoid timezone shifts
     const iso = p.scheduled_at // e.g. "2026-05-14T09:00" or "2026-05-14T09:00:00Z"
     const datePart = iso.slice(0, 10) // "2026-05-14"
     const timePart = iso.slice(11, 16) // "09:00"
+    if (!/^\d{2}:\d{2}$/.test(timePart) || timePart === '00:00')
+      return 'Πρέπει να επιλέξετε ώρα από τις διαθέσιμες του γηπέδου.'
+    const slots = allAvailabilities.filter(a => a.stadium_id === p.stadium_id)
+    if (slots.length === 0)
+      return 'Το γήπεδο δεν έχει ορισμένες διαθεσιμότητες.'
     const jsDay = new Date(`${datePart}T00:00:00`).getDay() // local midnight, safe for date
     const dayOfWeek = (jsDay + 6) % 7 // 0=Mon..6=Sun
     const daySlots = slots.filter(a => a.day === dayOfWeek)
@@ -721,6 +780,15 @@ export default function Dashboard() {
         return 'Το σκορ δεν μπορεί να είναι αρνητικό.'
       if (p.home_fair_play < -5 || p.home_fair_play > 5 || p.away_fair_play < -5 || p.away_fair_play > 5)
         return 'Το Fair Play πρέπει να είναι μεταξύ -5 και 5.'
+      if (p.tournament_id && p.home_score === p.away_score) {
+        const tn = tournaments.find(t => t.id === p.tournament_id)
+        if (tn?.type === 'knockout') {
+          if (!p.penalty_winner_id)
+            return 'Σε ισοπαλία νοκ-άουτ απαιτείται νικητής στα πέναλτι.'
+          if (p.penalty_winner_id !== p.home_team_id && p.penalty_winner_id !== p.away_team_id)
+            return 'Ο νικητής πέναλτι πρέπει να είναι μία από τις δύο ομάδες.'
+        }
+      }
     }
     return null
   }
@@ -789,6 +857,7 @@ export default function Dashboard() {
         away_fair_play:  match.away_fair_play  ?? null,
         tournament_id:   match.tournament_id   ?? null,
         phase_id:        match.phase_id        ?? null,
+        penalty_winner_id: match.penalty_winner_id ?? null,
         comments:        match.comments        ?? null,
       }
       const err = validatePayload(payload)
@@ -835,19 +904,15 @@ export default function Dashboard() {
       home_fair_play: selectedForm.home_fair_play !== null && selectedForm.home_fair_play !== '' ? Number(selectedForm.home_fair_play) : null,
       away_fair_play: selectedForm.away_fair_play !== null && selectedForm.away_fair_play !== '' ? Number(selectedForm.away_fair_play) : null,
       phase_id:       selectedForm.phase_id ?? null,
+      penalty_winner_id: selectedForm.penalty_winner_id ?? null,
       comments:       selectedForm.comments || null,
     }
     const err = validatePayload(payload)
-    if (err) { showToast(err); return }
-    try {
-      const updated = await updateMatch(selected.id, payload)
-      setMatches(prev => prev.map(m => m.id === selected.id ? updated : m))
-      setSelected(null)
-      setSelectedForm(null)
-    } catch (e) {
-      const msg = e?.detail?.[0]?.msg || e?.detail || 'Αποτυχία αποθήκευσης.'
-      showToast(typeof msg === 'string' ? msg : JSON.stringify(msg))
-    }
+    if (err) { throw { detail: err } }
+    const updated = await updateMatch(selected.id, payload)
+    setMatches(prev => prev.map(m => m.id === selected.id ? updated : m))
+    setSelected(null)
+    setSelectedForm(null)
   }
 
   async function handleModalDelete() {
@@ -1152,6 +1217,7 @@ export default function Dashboard() {
           stadiums={stadiums}
           phases={phases}
           tournaments={tournaments}
+          availabilities={allAvailabilities}
           onClose={() => setCreating(false)}
           onCreated={() => { setCreating(false); loadMatches() }}
         />

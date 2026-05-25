@@ -236,23 +236,17 @@ export default function StadiumModalContent({ form, setForm, editing, stadiumId 
         <ModalField label={t('modal_cost_hour')} value={form.cost}  editing={editing} onChange={set('cost')}  type="number"           testId="input-cost"  />
       </div>
 
-      <div>
-        <label style={st.mapLabel}>{t('modal_map')}</label>
-        <div style={st.mapPreview}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.tertiary }}>location_on</span>
-          {form.map_url
-            ? <span style={st.mapText}>Map Linked: {form.address || '—'}</span>
-            : <span style={{ ...st.mapText, color: colors.outline, fontStyle: 'italic' }}>{t('modal_no_map')}</span>
-          }
+      {form.address && (
+        <div>
+          <label style={st.mapLabel}>{t('modal_map')}</label>
+          <iframe
+            title="map"
+            style={st.mapFrame}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(form.address)}&output=embed`}
+            loading="lazy"
+          />
         </div>
-        <input
-          style={{ ...st.mapInput, borderBottomColor: editing ? colors.primary : `${colors.outlineVariant}4d`, cursor: editing ? 'text' : 'default' }}
-          type="text" value={form.map_url} readOnly={!editing}
-          placeholder={editing ? 'https://maps.google.com/...' : ''}
-          onChange={e => set('map_url')(e.target.value)}
-          data-testid="input-map-url"
-        />
-      </div>
+      )}
 
       <ModalField
         label={t('modal_comments_label')} value={form.comments} editing={editing}
@@ -293,17 +287,9 @@ const st = {
     display: 'block', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase',
     letterSpacing: '0.1em', color: colors.onSurfaceVariant, marginBottom: '0.375rem', fontFamily: fonts.label,
   },
-  mapPreview: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 0.75rem',
-    backgroundColor: colors.surfaceContainer, border: `1px solid ${colors.outlineVariant}33`,
-    borderRadius: radius.DEFAULT, marginBottom: '0.5rem',
-  },
-  mapText: { fontSize: '0.8125rem', fontWeight: 600, color: colors.onSurface },
-  mapInput: {
-    display: 'block', width: '100%', boxSizing: 'border-box',
-    backgroundColor: colors.surfaceContainer, border: 'none', borderBottom: '2px solid',
-    outline: 'none', padding: '0.375rem 0.75rem', fontSize: '0.75rem',
-    color: colors.onSurfaceVariant, fontFamily: fonts.body, transition: 'border-color 0.15s ease',
+  mapFrame: {
+    width: '100%', height: '16rem', border: 0,
+    borderRadius: radius.DEFAULT,
   },
   sectionLabel: {
     display: 'block', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase',

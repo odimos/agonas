@@ -14,11 +14,14 @@ router = Router()
 TEAM_ORDER_FIELDS = {'name': 'name', 'created_at': 'created_at'}
 
 
-def _team_out(team: Team, request=None) -> dict:
-    if team.photo:
-        photo_url = request.build_absolute_uri(team.photo.url) if request else team.photo.url
-    else:
-        photo_url = None
+def _media_url(file_field):
+    if not file_field:
+        return None
+    return f"{settings.PUBLIC_BASE_URL}{file_field.url}"
+
+
+def _team_out(team: Team) -> dict:
+    photo_url = _media_url(team.photo)
     return {
         'id': team.id,
         'name': team.name,
@@ -40,14 +43,14 @@ def list_teams(request, search: str = '', ordering: str = 'created_at'):
     key = ordering.lstrip('-')
     field = TEAM_ORDER_FIELDS.get(key, 'created_at')
     qs = qs.order_by(f'-{field}' if desc else field)
-    return [_team_out(t, request) for t in qs]
+    return [_team_out(t) for t in qs]
 
 
 @router.post('/', response={201: TeamOut})
 def create_team(request, payload: TeamIn):
     team = Team(**payload.model_dump())
     team.save()
-    return 201, _team_out(team, request)
+    return 201, _team_out(team)
 
 
 @router.get('/{team_id}', response=TeamOut)
@@ -61,7 +64,7 @@ def update_team(request, team_id: int, payload: TeamIn):
     for attr, value in payload.model_dump().items():
         setattr(team, attr, value)
     team.save()
-    return _team_out(team, request)
+    return _team_out(team)
 
 
 @router.delete('/{team_id}', response={204: None})
@@ -77,4 +80,4 @@ def upload_team_photo(request, team_id: int, photo: UploadedFile = File(...)):
     if team.photo:
         team.photo.delete(save=False)
     team.photo.save(f'{team_id}.{photo.name.rsplit(".", 1)[-1]}', photo, save=True)
-    return _team_out(team, request)
+    return _team_out(team)

@@ -1,7 +1,7 @@
 const translations = {
   gr: {
     // Nav
-    nav_dashboard:   'Dashboard',
+    nav_dashboard:   'Διαχείριση',
     nav_tournaments: 'Τουρνουά',
     nav_entities:    'Οντότητες',
     nav_page:        'Σελίδα',
@@ -13,6 +13,7 @@ const translations = {
     sm_players:  'Παίκτες',
     sm_referees: 'Διαιτητές',
     sm_stadiums: 'Γήπεδα',
+    sm_users:    'Χρήστες',
     sm_requests: 'Αιτήματα',
 
     // Tournament SideMenu  (tm_subtitle → uppercase)
@@ -39,6 +40,8 @@ const translations = {
 
     // Phase
     phase_label:        'Φάση',
+    finish_label:       'Τέλος',
+    winner_label:       'Νικητής',
 
     // Phase  (headerLabel, sectionTitle, matchStatusFinal, footerOutlineBtn, footerFinishBtn, inline delete → uppercase)
     ph_label:           'Τρεχουσα Διαχειριση',
@@ -221,6 +224,7 @@ const translations = {
     sm_players:  'Players',
     sm_referees: 'Referees',
     sm_stadiums: 'Stadiums',
+    sm_users:    'Users',
     sm_requests: 'Requests',
 
     // Tournament SideMenu
@@ -247,6 +251,8 @@ const translations = {
 
     // Phase
     phase_label:        'Phase',
+    finish_label:       'Finish',
+    winner_label:       'Winner',
 
     ph_label:           'Current Management',
     ph_status:          'Status',

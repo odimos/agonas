@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Header     from './Header'
 import { LangProvider } from './LangContext'
+import { SidebarProvider } from './SidebarContext'
 import { colors, fonts } from './styles'
 import Dashboard          from './Dashboard'
 import Tournament         from './Tournament'
@@ -12,6 +13,7 @@ import Teams              from './Teams'
 import Players            from './Players'
 import Referees           from './Referees'
 import Stadiums           from './Stadiums'
+import Users              from './Users'
 import Requests           from './Requests'
 import Tournaments        from './Tournaments'
 
@@ -39,6 +41,7 @@ const styles = {
 export default function Theme() {
   return (
     <LangProvider>
+    <SidebarProvider>
     <div style={styles.wrapper}>
       <Header />
       <main style={styles.content}>
@@ -56,12 +59,14 @@ export default function Theme() {
             <Route path="players"    element={<Players />} />
             <Route path="referees"   element={<Referees />} />
             <Route path="stadiums"   element={<Stadiums />} />
+            <Route path="users"      element={<Users />} />
             <Route path="requests"   element={<Requests />} />
           </Route>
           <Route path="/page"         element={<Stats />} />
         </Routes>
       </main>
     </div>
+    </SidebarProvider>
     </LangProvider>
   )
 }

@@ -142,6 +142,10 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
   const photoInputRef = useRef(null)
 
   useEffect(() => {
+    if (!editing) { setAddPickerOpen(false); setAddingId('') }
+  }, [editing])
+
+  useEffect(() => {
     fetchAllAvailabilities().then(avs => {
       setAvailabilities(avs)
       const stadiumMap = {}
@@ -272,10 +276,12 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
         <div style={st.playerList}>
           <div style={st.playerListHeader}>
             <span style={st.sectionLabel}>{t('modal_players_label')} ({players.length})</span>
-            <button style={st.addBtn} onClick={() => setAddPickerOpen(v => !v)} data-testid="btn-add-player-open">
-              <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
-              {t('modal_add_player')}
-            </button>
+            {editing && (
+              <button style={st.addBtn} onClick={() => setAddPickerOpen(v => !v)} data-testid="btn-add-player-open">
+                <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>person_add</span>
+                {t('modal_add_player')}
+              </button>
+            )}
           </div>
 
           {/* Inline add-player picker */}
@@ -323,13 +329,19 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
                 </div>
                 <div style={{ display: 'flex', gap: '0.125rem' }}>
                   <button style={st.iconBtn}><span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>visibility</span></button>
-                  <button
-                    style={{ ...st.iconBtn, color: colors.error }}
-                    onClick={() => onRemovePlayer?.(p)}
-                    data-testid="btn-remove-player"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete</span>
-                  </button>
+                  {editing && (
+                    <button
+                      style={{ ...st.iconBtn, color: colors.error }}
+                      onClick={() => {
+                        if (window.confirm(`Αφαίρεση παίκτη "${p.first_name} ${p.last_name}" από την ομάδα;`)) {
+                          onRemovePlayer?.(p)
+                        }
+                      }}
+                      data-testid="btn-remove-player"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>delete</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))

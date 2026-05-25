@@ -176,5 +176,7 @@ export const s = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.75rem',
+    maxWidth: '1200px',
+    width: '100%',
   },
 }

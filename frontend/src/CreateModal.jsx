@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
 import PlayerModalContent, { initPlayerForm } from './PlayerModalContent'
 import RefereeModalContent, { initRefereeForm } from './RefereeModalContent'
 import StadiumModalContent, { initStadiumForm } from './StadiumModalContent'
 import TeamModalContent, { initTeamForm } from './TeamModalContent'
-import { createPlayer  } from './api/players'
+import { createPlayer, fetchPlayers, updatePlayer } from './api/players'
 import { createTeam    } from './api/teams'
 import { createReferee } from './api/referees'
 import { createStadium } from './api/stadiums'
@@ -28,6 +28,18 @@ export default function CreateModal({ type, teams = [], onClose, onCreated }) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [unassignedPlayers, setUnassignedPlayers] = useState([])
+  const [pendingPlayerIds, setPendingPlayerIds] = useState([])
+
+  useEffect(() => {
+    if (type !== 'team') return
+    fetchPlayers().then(all => {
+      setUnassignedPlayers(all.filter(p => p.team_id == null))
+    }).catch(() => {})
+  }, [type])
+
+  const pendingPlayers = unassignedPlayers.filter(p => pendingPlayerIds.includes(p.id))
+  const availableForAdd = unassignedPlayers.filter(p => !pendingPlayerIds.includes(p.id))
 
   async function handleSubmit() {
     setError(null)
@@ -44,13 +56,24 @@ export default function CreateModal({ type, teams = [], onClose, onCreated }) {
           comments:   form.comments  || null,
         })
       } else if (type === 'team') {
-        await createTeam({
+        const team = await createTeam({
           name:            form.name.trim(),
           is_active:       form.is_active,
           captain_id:      form.captain_id      ?? null,
           vice_captain_id: form.vice_captain_id ?? null,
           comments:        form.comments        || null,
         })
+        for (const p of pendingPlayers) {
+          await updatePlayer(p.id, {
+            first_name: p.first_name,
+            last_name:  p.last_name,
+            nickname:   p.nickname,
+            phone:      p.phone,
+            email:      p.email,
+            comments:   p.comments ?? null,
+            team_id:    team.id,
+          })
+        }
       } else if (type === 'referee') {
         await createReferee({
           first_name: form.firstName.trim(),
@@ -94,7 +117,13 @@ export default function CreateModal({ type, teams = [], onClose, onCreated }) {
         {/* Content */}
         <div style={st.content}>
           {type === 'player'  && <PlayerModalContent  form={form} setForm={setForm} editing teams={teams} />}
-          {type === 'team'    && <TeamModalContent    form={form} setForm={setForm} editing players={[]} />}
+          {type === 'team'    && <TeamModalContent
+            form={form} setForm={setForm} editing
+            players={pendingPlayers}
+            availablePlayers={availableForAdd}
+            onAddPlayer={id => setPendingPlayerIds(prev => [...prev, id])}
+            onRemovePlayer={p => setPendingPlayerIds(prev => prev.filter(x => x !== p.id))}
+          />}
           {type === 'referee' && <RefereeModalContent form={form} setForm={setForm} editing />}
           {type === 'stadium' && <StadiumModalContent form={form} setForm={setForm} editing />}
           {error && <p style={{ color: colors.error, marginTop: '0.75rem', fontSize: '0.875rem' }}>{error}</p>}

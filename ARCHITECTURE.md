@@ -26,7 +26,8 @@ agonas/
 │   │   ├── routers/       # One file per entity (CRUD handlers)
 │   │   └── migrations/
 │   └── userapp/           # User-facing API app
-│       ├── views.py
+│       ├── models.py      # AppUser model
+│       ├── views.py       # NinjaAPI instance + all /app/ endpoints
 │       └── urls.py
 ├── frontend/              # Management React app (Vite, port 5173)
 │   ├── src/
@@ -74,7 +75,7 @@ All models strip whitespace in `.save()`. Foreign keys use `on_delete=SET_NULL`.
 
 | Model | Key Fields | Relations |
 |---|---|---|
-| **Team** | name, is_active, comments | captain → Player, vice_captain → Player |
+| **Team** | name, is_active, comments, photo (ImageField) | captain → Player, vice_captain → Player |
 | **Stadium** | name, phone, email, cost, address, map_url | — |
 | **Referee** | first_name, last_name, phone, email | — |
 | **Player** | first_name, last_name, nickname, phone, email | team → Team |
@@ -82,6 +83,14 @@ All models strip whitespace in `.save()`. Foreign keys use `on_delete=SET_NULL`.
 | **Match** | status, home_score, away_score, home_fair_play, away_fair_play, scheduled_at, comments | home_team/away_team → Team, referee → Referee, stadium → Stadium, tournament → Tournament |
 | **MatchPlayerCard** | card_type (yellow/red), minute, comments | player → Player, match → Match, team → Team |
 | **MatchPlayerGoal** | own_goal, minute | player → Player, match → Match, team → Team |
+
+**`backend/userapp/models.py`**
+
+| Model | Key Fields | Relations |
+|---|---|---|
+| **AppUser** | username, password (plain), bio, photo (ImageField) | player → Player (opt), referee → Referee (opt) |
+
+Captain role is derived: user is captain if their linked player is `captain` of any Team. Helper methods: `is_player()`, `is_referee()`, `is_captain()`.
 
 ### Match Status Lifecycle
 
@@ -118,6 +127,33 @@ Cards and Goals are exceptions — no update endpoint, filtered by `?match_id=`.
 | match_player_cards.py | `/api/match-player-cards/` |
 | match_player_goals.py | `/api/match-player-goals/` |
 
+Teams router also has `POST /api/teams/{id}/photo` for uploading a team photo (management side).
+
+### User App API (`/app/`)
+
+All endpoints are in `backend/userapp/views.py` as a single `NinjaAPI(urls_namespace='userapp')`.
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/app/auth/login` | Login — sets session cookie |
+| GET | `/app/auth/me` | Current user info |
+| PATCH | `/app/auth/bio` | Update bio |
+| POST | `/app/auth/photo` | Upload user profile photo |
+| POST | `/app/auth/logout` | Clear session |
+| GET | `/app/team/{id}/photo` | Get team photo URL |
+| POST | `/app/team/photo` | Upload team photo (captain only) |
+| GET | `/app/referee/matches/open` | Referee's upcoming matches |
+| GET | `/app/referee/matches/submitted` | Referee's finished matches |
+| GET | `/app/referee/me` | Referee profile |
+| GET | `/app/player/me` | Player profile |
+| GET | `/app/player/goals` | Player's goal count |
+| GET | `/app/team/{id}/matches` | All matches for a team |
+| GET | `/app/team/{id}/info` | Team details + players + standings |
+| GET | `/app/players/{id}/profile` | Public player profile |
+| GET | `/app/matches/{id}` | Match info |
+| GET | `/app/matches/{id}/players` | Players for both teams in a match |
+| POST | `/app/matches/{id}/finish` | Submit match result (referee) |
+
 ### Search
 
 Server-side `icontains` filtering. Search fields per entity:
@@ -130,7 +166,8 @@ Server-side `icontains` filtering. Search fields per entity:
 
 - `DEBUG = True`, `ALLOWED_HOSTS = ["*"]`, `CORS_ALLOW_ALL_ORIGINS = True` — dev only
 - DB credentials come from `.env` via `os.getenv()`
-- No authentication configured yet on either app
+- `PUBLIC_BASE_URL` setting (default `http://localhost:8000`) — used to build absolute media URLs returned by the API
+- Session-based auth is active on the userapp API
 
 ---
 
@@ -205,7 +242,7 @@ No proxy — relies on `VITE_API_URL` in `.env`. `usePolling: true` set for Dock
 
 ### Status
 
-Active development — mobile-style player-facing app with React Router, bottom nav, and multiple pages. Static HTML design prototypes exist in `frontend/mockup/` (user.html, calendar.html, TeamAppView.html).
+Active development — mobile-style player-facing app. Authentication (session-based login) is implemented. Roles (player, referee, captain) determine visible routes.
 
 ### Stack
 
@@ -217,7 +254,52 @@ React 18 · Vite 5 · Port 5174
 '/app/api' → http://backend:8000
 ```
 
-All user-facing API calls will go under `/app/api/` on the Django side.
+All user-facing API calls go under `/app/` on the Django side.
+
+### Structure
+
+```
+userapp/src/
+├── App.jsx           # BrowserRouter root — wraps UserProvider + LangProvider
+├── UserContext.jsx   # Global auth state (user object from /app/auth/me)
+├── LangContext.jsx   # GR/EN language context
+├── i18n.js           # Translation strings
+├── styles.js         # Design tokens
+├── main.jsx
+├── components/
+│   ├── Layout.jsx    # Outlet wrapper with BottomNav
+│   └── BottomNav.jsx # Bottom navigation bar
+└── pages/
+    ├── Login.jsx         # Login form (POST /app/auth/login)
+    ├── Home.jsx          # Landing/home screen
+    ├── Calendar.jsx      # Match calendar
+    ├── User.jsx          # Profile page (bio + photo upload)
+    ├── Team.jsx          # Current player's team page
+    ├── TeamProfile.jsx   # Any team info (/team/:id)
+    ├── PlayerProfile.jsx # Any player profile (/player/:id)
+    ├── Notifications.jsx
+    ├── Forms.jsx         # Referee: list of open/submitted matches
+    ├── RefereeForm.jsx   # Referee: submit match result (/referee-form/:id)
+    └── Settings.jsx
+```
+
+### Routes
+
+```
+/              → Home
+/calendar      → Calendar
+/user          → User profile
+/team          → Team (player-only)
+/notifications → Notifications
+/referee-form/:id → RefereeForm (referee-only)
+/forms         → Forms
+/settings      → Settings
+/team/:id      → TeamProfile
+/player/:id    → PlayerProfile
+*              → redirect to /calendar
+```
+
+Unauthenticated users see only `<Login />` (no router).
 
 ---
 
@@ -239,7 +321,7 @@ userapp:   ./userapp         port 5174   volume: ./userapp:/app
 
 ## Key Patterns & Conventions
 
-- **No authentication yet** on either API namespace — planned separately for `userapp`
+- **Authentication**: userapp uses session-based login (`AppUser` model in `backend/userapp/models.py`). Management API (`/api/`) has no authentication.
 - **Mockup-first design**: `frontend/mockup/` contains standalone HTML prototypes used to design screens. JSX components have been migrated to `frontend/src/` and are the live UI.
 - **Django Ninja over DRF**: lighter, Pydantic-native, no serializer class boilerplate
 - **One router file per entity**: keeps routers small and independently testable

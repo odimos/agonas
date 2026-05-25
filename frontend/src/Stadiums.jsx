@@ -52,13 +52,13 @@ export default function Stadiums() {
     setLoading(true)
     setError(null)
     try {
-      setStadiums(await fetchStadiums(search, ordering))
+      setStadiums(await fetchStadiums('', ordering))
     } catch {
       setError('Failed to load stadiums')
     } finally {
       setLoading(false)
     }
-  }, [search, ordering])
+  }, [ordering])
 
   useEffect(() => { load() }, [load])
 
@@ -115,9 +115,9 @@ export default function Stadiums() {
         )}
         search={search}
         onSearch={setSearch}
+        searchFields={['name']}
         ordering={ordering}
         onOrdering={setOrdering}
-        total={stadiums.length}
         loading={loading}
       />
       {selected && selectedForm && (

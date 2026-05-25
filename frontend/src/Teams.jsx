@@ -82,7 +82,7 @@ export default function Teams() {
     setLoading(true)
     setError(null)
     try {
-      const [ts, ps] = await Promise.all([fetchTeams(search, ordering), fetchPlayers()])
+      const [ts, ps] = await Promise.all([fetchTeams('', ordering), fetchPlayers()])
       setTeams(ts)
       setAllPlayers(ps)
     } catch {
@@ -90,7 +90,7 @@ export default function Teams() {
     } finally {
       setLoading(false)
     }
-  }, [search, ordering])
+  }, [ordering])
 
   useEffect(() => { load() }, [load])
 
@@ -212,9 +212,9 @@ export default function Teams() {
         }}
         search={search}
         onSearch={setSearch}
+        searchFields={['name']}
         ordering={ordering}
         onOrdering={setOrdering}
-        total={teams.length}
         loading={loading}
       />
       {selected && selectedForm && (

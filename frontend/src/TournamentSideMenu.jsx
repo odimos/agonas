@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { colors, fonts, radius } from './styles'
 import { useLang } from './LangContext'
+import { useSidebar } from './SidebarContext'
 import { fetchTournaments, createTournament } from './api/tournaments'
 import { fetchPhases, createPhase } from './api/phases'
 import { fetchTeams } from './api/teams'
@@ -140,8 +141,12 @@ function CreateTournamentModal({ teams, onClose, onCreated }) {
   )
 }
 
+const W_FULL = '16rem'
+const W_MINI = '4rem'
+
 export default function TournamentSideMenu() {
   const { t } = useLang()
+  const { collapsed, toggle } = useSidebar()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -185,50 +190,102 @@ export default function TournamentSideMenu() {
 
   return (
     <>
-      <aside style={st.aside}>
+      <aside style={{ ...st.aside, width: collapsed ? W_MINI : W_FULL }}>
 
-        <div style={st.heading}>
-          <p style={st.title}>{t('tm_title')}</p>
-          <p style={st.subtitle}>{t('tm_subtitle')}</p>
-        </div>
-
-        <button style={st.newBtn} onClick={() => setShowModal(true)}>
-          <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add</span>
-          {t('tm_new')}
+        {/* Toggle button */}
+        <button style={{ ...st.toggleBtn, justifyContent: collapsed ? 'center' : 'flex-end' }} onClick={toggle} title={collapsed ? 'Expand' : 'Collapse'}>
+          <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', color: colors.onSurfaceVariant }}>
+            {collapsed ? 'menu' : 'menu_open'}
+          </span>
         </button>
 
-        <nav style={st.nav}>
+        {!collapsed && (
+          <>
+            <div style={st.heading}>
+              <p style={st.title}>{t('tm_title')}</p>
+              <p style={st.subtitle}>{t('tm_subtitle')}</p>
+            </div>
+
+            <button style={st.newBtn} onClick={() => setShowModal(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add</span>
+              {t('tm_new')}
+            </button>
+          </>
+        )}
+
+        {collapsed && (
+          <button style={{ ...st.newBtn, margin: '0 0.5rem 0.75rem', padding: '0.5rem', justifyContent: 'center' }} onClick={() => setShowModal(true)} title={t('tm_new')}>
+            <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add</span>
+          </button>
+        )}
+
+        <nav style={{ ...st.nav, padding: collapsed ? '0 0.5rem' : '0 0.75rem' }}>
           {tournaments.map(tour => {
             const isActive   = activeId === tour.id
-            const isExpanded = expanded.has(tour.id)
+            const isExpanded = expanded.has(tour.id) && !collapsed
             const tourPhases = phases.filter(p => p.tournament_id === tour.id)
             return (
-              <div key={tour.id} style={{ marginBottom: isExpanded ? '0.25rem' : 0 }}>
+              <div key={tour.id} style={{ marginBottom: isExpanded ? '0.25rem' : 0, position: 'relative' }}>
                 <button
-                  style={{ ...st.tournamentRow, ...(isActive ? st.tournamentRowActive : {}) }}
+                  style={{
+                    ...st.tournamentRow,
+                    ...(isActive ? st.tournamentRowActive : {}),
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    padding: collapsed ? '0.625rem' : '0.625rem 0.875rem',
+                  }}
                   onClick={() => handleClick(tour.id)}
+                  title={collapsed ? tour.name : undefined}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>trophy</span>
-                  <span style={{ flex: 1, textAlign: 'left' }}>{tour.name}</span>
-                  {tourPhases.length > 0 && (
-                    <span className="material-symbols-outlined" style={{ fontSize: '1rem', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
-                      expand_more
-                    </span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.1rem', flexShrink: 0 }}>trophy</span>
+                  {!collapsed && (
+                    <>
+                      <span style={{ flex: 1, textAlign: 'left' }}>{tour.name}</span>
+                      {tourPhases.length > 0 && (
+                        <span className="material-symbols-outlined" style={{ fontSize: '1rem', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                          expand_more
+                        </span>
+                      )}
+                    </>
                   )}
                 </button>
 
                 {isExpanded && tourPhases.length > 0 && (
                   <div style={st.phaseList}>
-                    {tourPhases.map((phase, i) => (
-                      <button
-                        key={phase.id}
-                        style={{ ...st.phaseLink, ...(activePhase === phase.id ? st.phaseLinkActive : {}) }}
-                        onClick={() => navigate(`/tournaments/${tour.id}/phases/${phase.id}`)}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>{PHASE_ICONS[i] ?? 'circle'}</span>
-                        {t('phase_label')} {phase.order}
-                      </button>
-                    ))}
+                    {tourPhases.map((phase, i) => {
+                      const isFinish = phase.team_ids.length === 1
+                      return (
+                        <button
+                          key={phase.id}
+                          style={{ ...st.phaseLink, ...(activePhase === phase.id ? st.phaseLinkActive : {}) }}
+                          onClick={() => navigate(`/tournaments/${tour.id}/phases/${phase.id}`)}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>
+                            {isFinish ? 'emoji_events' : (PHASE_ICONS[i] ?? 'circle')}
+                          </span>
+                          {isFinish ? t('finish_label') : `${t('phase_label')} ${phase.order}`}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {collapsed && expanded.has(tour.id) && tourPhases.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem', padding: '0 0.5rem' }}>
+                    {tourPhases.map((phase, i) => {
+                      const isFinish = phase.team_ids.length === 1
+                      return (
+                        <button
+                          key={phase.id}
+                          style={{ ...st.phaseLink, ...(activePhase === phase.id ? st.phaseLinkActive : {}), justifyContent: 'center', padding: '0.375rem' }}
+                          title={isFinish ? t('finish_label') : `${t('phase_label')} ${phase.order}`}
+                          onClick={() => navigate(`/tournaments/${tour.id}/phases/${phase.id}`)}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>
+                            {isFinish ? 'emoji_events' : (PHASE_ICONS[i] ?? 'circle')}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -251,8 +308,7 @@ export default function TournamentSideMenu() {
 
 const st = {
   aside: {
-    width: '16rem',
-    paddingTop: '1.5rem',
+    paddingTop: '0.75rem',
     borderRight: `1px solid rgba(194, 200, 194, 0.3)`,
     backgroundColor: colors.surfaceContainerLow,
     position: 'fixed',
@@ -260,10 +316,22 @@ const st = {
     left: 0,
     height: 'calc(100vh - 4rem)',
     overflowY: 'auto',
+    overflowX: 'hidden',
     zIndex: 40,
     fontFamily: fonts.body,
     display: 'flex',
     flexDirection: 'column',
+    transition: 'width 0.2s ease',
+  },
+  toggleBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0.375rem 0.75rem',
+    marginBottom: '0.5rem',
   },
   heading: {
     padding: '0 1.5rem',
@@ -329,6 +397,29 @@ const st = {
     color: colors.tertiary,
     borderLeft: `3px solid ${colors.tertiary}`,
     fontWeight: 600,
+  },
+  popout: {
+    position: 'absolute',
+    left: 'calc(100% + 0.375rem)',
+    top: 0,
+    backgroundColor: colors.surfaceContainerLowest,
+    border: `1px solid ${colors.outlineVariant}`,
+    borderRadius: radius.DEFAULT,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+    zIndex: 100,
+    minWidth: '10rem',
+    padding: '0.375rem 0.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  popoutTitle: {
+    fontSize: '0.6875rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: colors.onSurfaceVariant,
+    margin: '0 0 0.25rem',
+    padding: '0 0.625rem',
   },
   phaseList: {
     display: 'flex',

@@ -9,7 +9,6 @@ export default function Header() {
     { key: 'nav_dashboard',   to: '/dashboard' },
     { key: 'nav_tournaments', to: '/tournaments' },
     { key: 'nav_entities',    to: '/entities' },
-    { key: 'nav_page',        to: '/page' },
   ]
 
   return (

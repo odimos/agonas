@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 from django.db import models, transaction
-from ninja import NinjaAPI, Schema
+from ninja import NinjaAPI, Schema, File
+from ninja.files import UploadedFile
 from ninja.errors import HttpError
 
 from api.models import Match, MatchPlayerCard, MatchPlayerGoal, Player, Team, Phase, Tournament
@@ -28,6 +29,7 @@ class MeOut(Schema):
     referee_id: Optional[int]
     team_id: Optional[int]
     team_name: Optional[str]
+    photo_url: Optional[str] = None
 
 
 # ── Match schemas ────────────────────────────────────────────────────────────
@@ -85,12 +87,20 @@ class RefereeMatchOut(Schema):
 
 # ── Auth endpoints ───────────────────────────────────────────────────────────
 
+def _media_url(file_field):
+    from django.conf import settings
+    if not file_field:
+        return None
+    return f"{settings.PUBLIC_BASE_URL}{file_field.url}"
+
+
 def _me_dict(user: AppUser) -> dict:
     team_id = None
     team_name = None
     if user.player_id and user.player and user.player.team_id:
         team_id = user.player.team_id
         team_name = user.player.team.name if user.player.team else None
+    photo_url = _media_url(user.photo)
     return {
         'id': user.id,
         'username': user.username,
@@ -102,6 +112,7 @@ def _me_dict(user: AppUser) -> dict:
         'referee_id': user.referee_id,
         'team_id': team_id,
         'team_name': team_name,
+        'photo_url': photo_url,
     }
 
 
@@ -132,6 +143,18 @@ def update_bio(request, payload: BioIn):
     return {'success': True}
 
 
+@api.post('/auth/photo', response=MeOut)
+def upload_photo(request, photo: UploadedFile = File(...)):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        raise HttpError(401, 'Not authenticated')
+    user = AppUser.objects.get(id=user_id)
+    if user.photo:
+        user.photo.delete(save=False)
+    user.photo.save(f'{user_id}.{photo.name.rsplit(".", 1)[-1]}', photo, save=True)
+    return _me_dict(user)
+
+
 @api.post('/auth/logout')
 def logout(request):
     request.session.flush()
@@ -150,6 +173,35 @@ def me(request):
     except AppUser.DoesNotExist:
         raise HttpError(401, 'Not authenticated')
     return _me_dict(user)
+
+
+# ── Team photo upload (captain only) ────────────────────────────────────────
+
+@api.get('/team/{team_id}/photo', response=dict)
+def get_team_photo(request, team_id: int):
+    from api.models import Team as ApiTeam
+    try:
+        team = ApiTeam.objects.get(id=team_id)
+    except ApiTeam.DoesNotExist:
+        raise HttpError(404, 'Team not found')
+    photo_url = _media_url(team.photo)
+    return {'photo_url': photo_url}
+
+
+@api.post('/team/photo', response=dict)
+def upload_team_photo(request, photo: UploadedFile = File(...)):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        raise HttpError(401, 'Not authenticated')
+    user = AppUser.objects.select_related('player').get(id=user_id)
+    if not user.is_captain():
+        raise HttpError(403, 'Not a captain')
+    from api.models import Team as ApiTeam
+    team = ApiTeam.objects.get(captain=user.player)
+    if team.photo:
+        team.photo.delete(save=False)
+    team.photo.save(f'{team.id}.{photo.name.rsplit(".", 1)[-1]}', photo, save=True)
+    return {'photo_url': _media_url(team.photo)}
 
 
 # ── Referee forms endpoints ──────────────────────────────────────────────────
@@ -424,8 +476,8 @@ def finish_match(request, match_id: int, payload: FinishMatchIn):
 
     if payload.home_score < 0 or payload.away_score < 0:
         raise HttpError(422, 'Scores must be >= 0')
-    if not (-5 <= payload.home_fair_play <= 5) or not (-5 <= payload.away_fair_play <= 5):
-        raise HttpError(422, 'Fair play must be between -5 and 5')
+    if not (0 <= payload.home_fair_play <= 5) or not (0 <= payload.away_fair_play <= 5):
+        raise HttpError(422, 'Fair play must be between 0 and 5')
     for c in payload.cards:
         if c.card_type not in ('yellow', 'red'):
             raise HttpError(422, 'card_type must be yellow or red')

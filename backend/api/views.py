@@ -18,6 +18,7 @@ from .routers.stadium_availabilities import router as stadium_availabilities_rou
 from .routers.team_preferences import router as team_preferences_router
 from .routers.referee_preferences import router as referee_preferences_router
 from .routers.schedule import router as schedule_router
+from .routers.users import router as users_router
 
 api = NinjaAPI()
 
@@ -34,6 +35,7 @@ api.add_router('/stadium-availabilities', stadium_availabilities_router)
 api.add_router('/team-preferences', team_preferences_router)
 api.add_router('/referee-preferences', referee_preferences_router)
 api.add_router('/schedule', schedule_router)
+api.add_router('/users', users_router)
 
 
 class AdminLoginIn(Schema):

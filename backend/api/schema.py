@@ -329,6 +329,7 @@ class MatchIn(Schema):
     comments: Optional[str] = None
     tournament_id: Optional[int] = None
     phase_id: Optional[int] = None
+    penalty_winner_id: Optional[int] = None
 
     @field_validator('status')
     @classmethod
@@ -392,8 +393,20 @@ class MatchIn(Schema):
                     raise ValueError('home_team_id and away_team_id must be different')
                 if self.home_score < 0 or self.away_score < 0:
                     raise ValueError('Scores must be >= 0')
-                if not (-5 <= self.home_fair_play <= 5) or not (-5 <= self.away_fair_play <= 5):
-                    raise ValueError('Fair play must be between -5 and 5')
+                if not (0 <= self.home_fair_play <= 5) or not (0 <= self.away_fair_play <= 5):
+                    raise ValueError('Fair play must be between 0 and 5')
+                # Knockout tie requires penalty winner
+                if self.tournament_id is not None and self.home_score == self.away_score:
+                    from .models import Tournament
+                    try:
+                        t = Tournament.objects.get(id=self.tournament_id)
+                    except Tournament.DoesNotExist:
+                        t = None
+                    if t and t.type == 'knockout':
+                        if self.penalty_winner_id is None:
+                            raise ValueError('Σε ισοπαλία νοκ-άουτ απαιτείται νικητής στα πέναλτι.')
+                        if self.penalty_winner_id not in (self.home_team_id, self.away_team_id):
+                            raise ValueError('Ο νικητής πέναλτι πρέπει να είναι μία από τις δύο ομάδες.')
         return self
 
 
@@ -412,6 +425,7 @@ class MatchOut(Schema):
     comments: Optional[str]
     tournament_id: Optional[int]
     phase_id: Optional[int]
+    penalty_winner_id: Optional[int]
 
 
 class MatchPlayerCardIn(Schema):

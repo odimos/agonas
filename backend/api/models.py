@@ -201,6 +201,9 @@ class Match(models.Model):
     phase = models.ForeignKey(
         'Phase', null=True, blank=True, on_delete=models.SET_NULL,
     )
+    penalty_winner = models.ForeignKey(
+        Team, null=True, blank=True, on_delete=models.SET_NULL, related_name='penalty_wins',
+    )
 
     def save(self, *args, **kwargs):
         if self.comments:

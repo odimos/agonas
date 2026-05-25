@@ -7,7 +7,6 @@ import { useUser } from '../UserContext'
 const GHOST = '1px solid rgba(194,200,194,0.2)'
 const API = '/app/api'
 
-const PHOTO_URL = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBkCHnAwmADB4NVNQl029WFv6xEjDW2ujhKW1D5szW1EdUo9ag9ORUcUCLaUe9DMvbJiY8BPok1c2xCeHmNuaV5_wjrimUUTomUrObt4xbRwxFj2DFuw1lSNEZt0_G-70h4qXyNPS2zW_PnJEuAtK7mcSeHqltTrFcmOBbajPqTHtgMb5243h_kGpJAkBl_F5A7vyL2RhSR7HN4UcOQwwVi44NnCMAdi_qEEvwuYu2_sxcXoxptbfBmZPuC-HxYcsMX2BCqiHLVKw'
 
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -26,12 +25,14 @@ export default function User() {
   const [recentMatches, setRecentMatches] = useState([])
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
-  const [draft, setDraft] = useState({})
+  const [photoUrl, setPhotoUrl] = useState(null)
+  const [uploadBusy, setUploadBusy] = useState(false)
   const fileRef = useRef(null)
 
   useEffect(() => {
     if (!user) return
     setBio(user.bio || '')
+    setPhotoUrl(user.photo_url || null)
     if (user.is_player && user.team_id) {
       fetch(`${API}/player/goals`).then(r => r.ok ? r.json() : {goals: 0}).then(d => setGoals(d.goals))
       fetch(`${API}/team/${user.team_id}/matches`).then(r => r.ok ? r.json() : []).then(matches => {
@@ -45,6 +46,24 @@ export default function User() {
     win:  { border: colors.tertiary,        color: colors.tertiary,        label: t('result_win')  },
     draw: { border: colors.outline,         color: colors.onSurfaceVariant, label: t('result_draw') },
     loss: { border: colors.error,           color: colors.error,           label: t('result_loss') },
+  }
+
+  async function onPhotoChange(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadBusy(true)
+    try {
+      const form = new FormData()
+      form.append('photo', file)
+      const res = await fetch(`${API}/auth/photo`, { method: 'POST', body: form })
+      if (res.ok) {
+        const data = await res.json()
+        setPhotoUrl(data.photo_url)
+      }
+    } finally {
+      setUploadBusy(false)
+      e.target.value = ''
+    }
   }
 
   function enterEdit() {
@@ -96,16 +115,19 @@ export default function User() {
           <div style={{ position: 'absolute', left: '50%', transform: 'translate(-50%, 50%)', bottom: 0 }}>
             <div
               onClick={editing ? () => fileRef.current.click() : undefined}
-              style={{ position: 'relative', width: '6rem', height: '6rem', borderRadius: '50%', overflow: 'hidden', border: `4px solid ${colors.surface}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: editing ? 'pointer' : 'default' }}
+              style={{ position: 'relative', width: '6rem', height: '6rem', borderRadius: '50%', overflow: 'hidden', border: `4px solid ${colors.surface}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: editing ? 'pointer' : 'default', background: colors.surfaceContainerHigh, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <img src={PHOTO_URL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {photoUrl
+                ? <img src={photoUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', color: colors.onSurfaceVariant }}>person</span>
+              }
               {editing && (
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '1.75rem' }}>photo_camera</span>
+                  <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '1.75rem' }}>{uploadBusy ? 'hourglass_empty' : 'photo_camera'}</span>
                 </div>
               )}
             </div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} />
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onPhotoChange} disabled={uploadBusy} />
           </div>
         </div>
 

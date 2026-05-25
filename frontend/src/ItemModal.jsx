@@ -5,10 +5,12 @@ import { useLang } from './LangContext'
 export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', onClose, onDelete, onSave, onEditingChange, children }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const { t } = useLang()
 
   function setEditingWithCb(val) {
     setEditing(val)
+    setSaveError(null)
     onEditingChange?.(val)
   }
 
@@ -20,9 +22,13 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
 
   async function handleSave() {
     setSaving(true)
+    setSaveError(null)
     try {
       await onSave?.()
       setEditingWithCb(false)
+    } catch (err) {
+      const msg = err?.detail?.[0]?.msg ?? err?.detail ?? err?.message ?? 'Σφάλμα αποθήκευσης.'
+      setSaveError(typeof msg === 'string' ? msg : JSON.stringify(msg))
     } finally {
       setSaving(false)
     }
@@ -60,6 +66,9 @@ export default function ItemModal({ title, subtitle, badge, maxWidth = '672px', 
             </button>
           )}
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {editing && saveError && (
+              <span style={{ fontSize: '0.8125rem', color: colors.error, fontWeight: 600 }}>{saveError}</span>
+            )}
             {editing ? (
               <>
                 <button style={st.cancelBtn} onClick={() => setEditingWithCb(false)} disabled={saving}>{t('modal_cancel')}</button>

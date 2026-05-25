@@ -11,7 +11,7 @@ const SORT_OPTIONS = [
   { value: '-name',       label: 'Αλφαβητικά Ω→Α' },
 ]
 
-export default function DataTable({ columns, rows, renderRow, search, onSearch, total, ordering, onOrdering }) {
+export default function DataTable({ columns, rows, renderRow, search, onSearch, searchFields, total, ordering, onOrdering }) {
   const { t } = useLang()
   const [page, setPage] = useState(1)
   const [sortOpen, setSortOpen] = useState(false)
@@ -24,13 +24,21 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
     return () => document.removeEventListener('mousedown', close)
   }, [sortOpen])
 
-  // Reset to page 1 whenever the dataset changes (search, new data)
-  useEffect(() => { setPage(1) }, [rows.length, search])
+  // Client-side filtering when searchFields provided
+  const filteredRows = (searchFields && search)
+    ? rows.filter(row => {
+        const q = search.toLowerCase()
+        return searchFields.some(f => (row[f] ?? '').toLowerCase().includes(q))
+      })
+    : rows
 
-  const totalRows  = total ?? rows.length
+  // Reset to page 1 whenever the dataset changes (search, new data)
+  useEffect(() => { setPage(1) }, [filteredRows.length, search])
+
+  const totalRows  = total ?? filteredRows.length
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE))
   const start      = (page - 1) * PAGE_SIZE
-  const pageRows   = rows.slice(start, start + PAGE_SIZE)
+  const pageRows   = filteredRows.slice(start, start + PAGE_SIZE)
 
   // Build a compact page window: always show first, last, current ±1, with ellipsis
   function pageNumbers() {
@@ -98,18 +106,25 @@ export default function DataTable({ columns, rows, renderRow, search, onSearch, 
         </div>
       </div>
 
-      {/* Column Headers */}
-      <div style={st.thead}>
-        {columns.map(col => (
-          <div key={col.header} style={col.style}>
-            <span style={st.th}>{col.header}</span>
-          </div>
-        ))}
-      </div>
+      {/* Scrollable table area */}
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ minWidth: '560px' }}>
 
-      {/* Rows — current page only */}
-      <div>
-        {pageRows.map((row, i) => renderRow(row, i === 0))}
+          {/* Column Headers */}
+          <div style={st.thead}>
+            {columns.map(col => (
+              <div key={col.header} style={col.style}>
+                <span style={st.th}>{col.header}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Rows — current page only */}
+          <div>
+            {pageRows.map((row, i) => renderRow(row, i === 0))}
+          </div>
+
+        </div>
       </div>
 
       {/* Pagination */}
