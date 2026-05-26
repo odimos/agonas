@@ -14,6 +14,7 @@ import { fetchPlayers }    from './api/players'
 import { fetchMatchGoals, deleteMatchGoal } from './api/match_player_goals'
 import { fetchMatchCards, deleteMatchCard } from './api/match_player_cards'
 import { fetchAllAvailabilities } from './api/stadium_availabilities'
+import { fetchPreferences as fetchTeamPrefs } from './api/team_preferences'
 
 // ─── FilterDropdown ───────────────────────────────────────────────────────────
 
@@ -147,7 +148,10 @@ function addDays(date, n) {
 }
 
 function isoDate(d) {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function formatMatchDate(isoStr, lang = 'gr') {
@@ -374,7 +378,7 @@ function ActionBtn({ icon, title, color, onClick }) {
 
 // ─── Match Row ────────────────────────────────────────────────────────────────
 
-function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tournaments, phases, availabilities, onSave, onDelete, onView }) {
+function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tournaments, phases, availabilities, onSave, onDelete, onView, onReschedule }) {
   const [hovered, setHovered] = useState(false)
   const [pendingDate, setPendingDate] = useState(null)
   const { t } = useLang()
@@ -507,6 +511,7 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
       </td>
       <td style={{ ...st.td, padding: '0.5rem 0.75rem' }}>
         <div style={{ display: 'flex', gap: '0.25rem' }}>
+          <ActionBtn icon="event" title="Reschedule" color={colors.tertiary} onClick={onReschedule} />
           <ActionBtn icon="visibility" title="View" color={colors.primary} onClick={onView} />
           <ActionBtn icon="delete" title="Delete" color={colors.error} onClick={onDelete} />
         </div>
@@ -688,6 +693,235 @@ function CreateMatchModal({ teams, referees, stadiums, tournaments, phases, avai
   )
 }
 
+// ─── Schedule Picker Modal ────────────────────────────────────────────────────
+
+const DAY_NAMES_GR = ['Δευ', 'Τρι', 'Τετ', 'Πεμ', 'Παρ', 'Σαβ', 'Κυρ']
+const PREF_COLORS = ['#e53935', '#ffc107', '#ff9800', '#4caf50']
+
+function SchedulePickerModal({ match, stadiums, availabilities, allMatches, onClose, onPick }) {
+  const initialWeek = useMemo(() => {
+    if (match.scheduled_at) return weekStart(new Date(match.scheduled_at.slice(0, 10)))
+    return weekStart(new Date())
+  }, [match.scheduled_at])
+  const [weekOf, setWeekOf] = useState(initialWeek)
+  const [dayFilter, setDayFilter] = useState(new Set())   // empty = all
+  const [stadiumFilter, setStadiumFilter] = useState(new Set())
+  const [applyPrefs, setApplyPrefs] = useState(false)
+  const [homePrefs, setHomePrefs] = useState({}) // availability_id -> score
+  const [awayPrefs, setAwayPrefs] = useState({})
+
+  useEffect(() => {
+    async function load() {
+      const [hp, ap] = await Promise.all([
+        match.home_team_id ? fetchTeamPrefs(match.home_team_id).catch(() => []) : Promise.resolve([]),
+        match.away_team_id ? fetchTeamPrefs(match.away_team_id).catch(() => []) : Promise.resolve([]),
+      ])
+      const toMap = arr => Object.fromEntries(arr.map(p => [p.availability_id, p.score]))
+      setHomePrefs(toMap(hp))
+      setAwayPrefs(toMap(ap))
+    }
+    load()
+  }, [match.home_team_id, match.away_team_id])
+
+  function toggleDay(d) {
+    setDayFilter(prev => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n })
+  }
+  function toggleStadium(sid) {
+    setStadiumFilter(prev => { const n = new Set(prev); n.has(sid) ? n.delete(sid) : n.add(sid); return n })
+  }
+
+  // Build occupied counts from existing matches: stadium|date|HH:MM → count
+  const occupied = useMemo(() => {
+    const m = {}
+    for (const x of allMatches) {
+      if (!x.stadium_id || !x.scheduled_at) continue
+      if (x.id === match.id) continue
+      if (x.status === 'canceled') continue
+      const key = `${x.stadium_id}|${x.scheduled_at.slice(0,10)}|${x.scheduled_at.slice(11,16)}`
+      m[key] = (m[key] ?? 0) + 1
+    }
+    return m
+  }, [allMatches, match.id])
+
+  // Slots for the visible week, filtered, sorted
+  const slotsByDay = useMemo(() => {
+    const out = Array.from({ length: 7 }, () => [])
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(weekOf, i)
+      const dow = (day.getDay() + 6) % 7 // Mon=0
+      if (dayFilter.size > 0 && !dayFilter.has(dow)) continue
+      const dateStr = isoDate(day)
+      for (const av of availabilities) {
+        if (av.day !== dow) continue
+        if (stadiumFilter.size > 0 && !stadiumFilter.has(av.stadium_id)) continue
+        const time = av.start_time.slice(0, 5)
+        const key = `${av.stadium_id}|${dateStr}|${time}`
+        const used = occupied[key] ?? 0
+        if (used >= av.quantity) continue
+
+        let prefScore = null
+        if (applyPrefs) {
+          // Only an explicit 0 excludes; missing preference = no opinion
+          const h = match.home_team_id && av.id in homePrefs ? homePrefs[av.id] : null
+          const a = match.away_team_id && av.id in awayPrefs ? awayPrefs[av.id] : null
+          if (h === 0 || a === 0) continue
+          const both = [h, a].filter(v => v != null)
+          prefScore = both.length > 0 ? Math.min(...both) : null
+        }
+
+        out[i].push({
+          stadium_id: av.stadium_id,
+          stadium_name: av.stadium_name,
+          date: dateStr,
+          time,
+          remaining: av.quantity - used,
+          prefScore,
+        })
+      }
+      out[i].sort((a, b) => a.time.localeCompare(b.time) || a.stadium_name.localeCompare(b.stadium_name))
+    }
+    return out
+  }, [weekOf, availabilities, occupied, dayFilter, stadiumFilter, applyPrefs, homePrefs, awayPrefs, match.home_team_id, match.away_team_id])
+
+  const weekFromLabel = weekOf.toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
+  const weekToLabel = addDays(weekOf, 6).toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
+
+  const visibleDayIdxs = [0,1,2,3,4,5,6].filter(d => dayFilter.size === 0 || dayFilter.has(d))
+
+  return (
+    <div style={spm.overlay} onClick={onClose}>
+      <div style={spm.modal} onClick={e => e.stopPropagation()}>
+        <div style={spm.header}>
+          <h2 style={spm.title}>Επιλογή Ημερομηνίας & Γηπέδου</h2>
+          <button style={spm.closeBtn} onClick={onClose}>
+            <span className="material-symbols-outlined" style={{ fontSize: '1.25rem', color: colors.onSurfaceVariant }}>close</span>
+          </button>
+        </div>
+
+        <div style={spm.toolbar}>
+          <div style={spm.weekNav}>
+            <button style={spm.weekBtn} onClick={() => setWeekOf(d => addDays(d, -7))}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_left</span>
+            </button>
+            <span style={spm.weekLabel}>{weekFromLabel} — {weekToLabel}</span>
+            <button style={spm.weekBtn} onClick={() => setWeekOf(d => addDays(d, 7))}>
+              <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>chevron_right</span>
+            </button>
+          </div>
+          <button
+            onClick={() => setApplyPrefs(v => !v)}
+            disabled={!match.home_team_id && !match.away_team_id}
+            style={{ ...spm.prefBtn, ...(applyPrefs ? spm.prefBtnOn : {}), opacity: (!match.home_team_id && !match.away_team_id) ? 0.4 : 1 }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '0.875rem' }}>tune</span>
+            Apply preferences
+          </button>
+        </div>
+
+        <div style={spm.filtersRow}>
+          <div style={spm.filterGroup}>
+            <span style={spm.filterLabel}>Ημέρες</span>
+            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+              {DAY_NAMES_GR.map((name, idx) => {
+                const on = dayFilter.has(idx)
+                return (
+                  <button key={idx} onClick={() => toggleDay(idx)} style={{ ...spm.chip, ...(on ? spm.chipOn : {}) }}>
+                    {name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div style={spm.filterGroup}>
+            <span style={spm.filterLabel}>Γήπεδα</span>
+            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+              {stadiums.map(s => {
+                const on = stadiumFilter.has(s.id)
+                return (
+                  <button key={s.id} onClick={() => toggleStadium(s.id)} style={{ ...spm.chip, ...(on ? spm.chipOn : {}) }}>
+                    {s.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div style={spm.grid}>
+          {visibleDayIdxs.map(d => {
+            const day = addDays(weekOf, d)
+            const dateLabel = `${String(day.getDate()).padStart(2,'0')}/${String(day.getMonth()+1).padStart(2,'0')}`
+            return (
+              <div key={d} style={spm.dayCol}>
+                <div style={spm.dayHeader}>
+                  <span style={spm.dayName}>{DAY_NAMES_GR[d]}</span>
+                  <span style={spm.dayDate}>{dateLabel}</span>
+                </div>
+                <div style={spm.daySlots}>
+                  {slotsByDay[d].length === 0 ? (
+                    <span style={spm.emptyDay}>—</span>
+                  ) : (
+                    slotsByDay[d].map((slot, j) => {
+                      const borderColor = slot.prefScore == null
+                        ? `${colors.outlineVariant}33`
+                        : PREF_COLORS[slot.prefScore]
+                      return (
+                        <button
+                          key={j}
+                          style={{ ...spm.slotBtn, borderColor, borderWidth: slot.prefScore != null ? '2px' : '1px' }}
+                          onClick={() => {
+                            onPick({
+                              scheduled_at: `${slot.date}T${slot.time}:00`,
+                              stadium_id: slot.stadium_id,
+                            })
+                            onClose()
+                          }}
+                        >
+                          <span style={spm.slotTime}>{slot.time}</span>
+                          <span style={spm.slotStadium}>{slot.stadium_name}</span>
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const spm = {
+  overlay: { position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: `${colors.onSurface}66`, backdropFilter: 'blur(4px)' },
+  modal: { backgroundColor: colors.surfaceContainerLowest, width: '100%', maxWidth: '960px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: radius.DEFAULT, border: `1px solid ${colors.outlineVariant}4d`, boxShadow: '0 12px 32px rgba(25,28,28,0.12)', overflow: 'hidden' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', backgroundColor: colors.surfaceContainerHigh, borderBottom: `1px solid ${colors.outlineVariant}80` },
+  title: { fontSize: '1.125rem', fontWeight: 700, color: colors.onSurface, margin: 0, fontFamily: fonts.headline },
+  closeBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex' },
+  toolbar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.75rem 1rem', borderBottom: `1px solid ${colors.outlineVariant}33`, backgroundColor: colors.surface },
+  prefBtn: { display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', borderRadius: radius.full, border: `1px solid ${colors.outlineVariant}`, background: 'transparent', color: colors.onSurfaceVariant, cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.label },
+  prefBtnOn: { backgroundColor: colors.tertiary, color: '#fff', borderColor: colors.tertiary },
+  weekNav: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
+  weekBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem', borderRadius: radius.DEFAULT, color: colors.onSurfaceVariant },
+  weekLabel: { padding: '0 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: colors.onSurface, minWidth: '10rem', textAlign: 'center' },
+  filtersRow: { display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.75rem 1rem', borderBottom: `1px solid ${colors.outlineVariant}33`, backgroundColor: colors.surfaceContainerLow },
+  filterGroup: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  filterLabel: { fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.onSurfaceVariant, minWidth: '4rem' },
+  chip: { fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: radius.full, border: `1px solid ${colors.outlineVariant}`, background: 'transparent', color: colors.onSurfaceVariant, cursor: 'pointer', fontFamily: fonts.label },
+  chipOn: { backgroundColor: colors.tertiary, color: colors.onTertiary ?? '#fff', borderColor: colors.tertiary },
+  grid: { flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem', padding: '0.75rem', backgroundColor: colors.surface },
+  dayCol: { display: 'flex', flexDirection: 'column', gap: '0.375rem' },
+  dayHeader: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0.375rem 0', borderBottom: `2px solid ${colors.tertiary}33`, gap: '0.125rem' },
+  dayName: { fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.tertiary },
+  dayDate: { fontSize: '0.6875rem', color: colors.onSurfaceVariant, fontFamily: 'monospace' },
+  daySlots: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
+  slotBtn: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0.375rem 0.5rem', backgroundColor: colors.surfaceContainerLow, borderStyle: 'solid', borderRadius: radius.DEFAULT, cursor: 'pointer', textAlign: 'left', fontFamily: fonts.body },
+  slotTime: { fontSize: '0.8125rem', fontWeight: 700, color: colors.onSurface, fontFamily: 'monospace' },
+  slotStadium: { fontSize: '0.6875rem', color: colors.onSurfaceVariant, marginTop: '0.125rem' },
+  emptyDay: { fontSize: '0.6875rem', color: colors.outline, textAlign: 'center', padding: '0.5rem 0' },
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
@@ -705,6 +939,7 @@ export default function Dashboard() {
   const [phases,      setPhases]      = useState([])
   const [loading,      setLoading]      = useState(true)
   const [creating,     setCreating]     = useState(false)
+  const [rescheduling, setRescheduling] = useState(null)
   const [selected,     setSelected]     = useState(null)
   const [selectedForm, setSelectedForm] = useState(null)
   const [allPlayers,   setAllPlayers]   = useState([])
@@ -1140,7 +1375,7 @@ export default function Dashboard() {
               <col style={{ width: '60px'  }} />{/* Score 1 */}
               <col style={{ width: '60px'  }} />{/* Score 2 */}
               <col style={{ width: '140px' }} />{/* Referee */}
-              <col style={{ width: '70px'  }} />{/* Actions */}
+              <col style={{ width: '110px' }} />{/* Actions */}
             </colgroup>
             <thead>
               <tr style={{ backgroundColor: colors.surfaceContainerHigh }}>
@@ -1169,6 +1404,7 @@ export default function Dashboard() {
                   onSave={handleInlineSave}
                   onDelete={() => handleDelete(m)}
                   onView={() => openMatch(m)}
+                  onReschedule={() => setRescheduling(m)}
                 />
               ))}
             </tbody>
@@ -1221,6 +1457,19 @@ export default function Dashboard() {
           availabilities={allAvailabilities}
           onClose={() => setCreating(false)}
           onCreated={() => { setCreating(false); loadMatches() }}
+        />
+      )}
+
+      {rescheduling && (
+        <SchedulePickerModal
+          match={rescheduling}
+          stadiums={stadiums}
+          availabilities={allAvailabilities}
+          allMatches={matches}
+          onClose={() => setRescheduling(null)}
+          onPick={async ({ scheduled_at, stadium_id }) => {
+            await handleInlineSave({ ...rescheduling, scheduled_at, stadium_id })
+          }}
         />
       )}
 

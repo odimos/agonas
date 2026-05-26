@@ -49,7 +49,10 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
     phase_team_ids = list(phase.teams.values_list('id', flat=True))
 
     if payload.from_scratch:
-        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected']).delete()
+        # Disconnect ALL non-finished matches from this phase + tournament
+        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected']).update(
+            phase=None, tournament=None,
+        )
 
     avs = list(StadiumAvailability.objects.select_related('stadium').all())
     slots = _expand_slots(avs, payload.start_date, payload.end_date)
@@ -77,7 +80,8 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_re
         .select_related('home_team', 'away_team', 'referee')
     )
     if not matches:
-        return {'suggestions': [], 'unscheduled': [], 'new_matches': []}
+        from ninja.errors import HttpError
+        raise HttpError(400, 'Δεν υπάρχουν αγώνες προς προγραμματισμό σε αυτή τη φάση.')
 
     matches_sorted = sorted(matches, key=lambda m: sum(
         1 for sl in slots if _slot_score(m, sl, team_prefs, ref_prefs) >= 0
@@ -136,17 +140,23 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_re
 # ─── Knockout mode ────────────────────────────────────────────────────────────
 
 def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, from_scratch=True):
-    # Find teams already paired in existing draft/expected matches
-    existing_matches = list(
-        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected'])
-    ) if not from_scratch else []
+    # A team "has a match" only if it appears in an expected/finished match in this phase
+    if from_scratch:
+        covered_matches = []
+    else:
+        covered_matches = list(
+            Match.objects.filter(phase_id=phase.id, status__in=['expected', 'finished'])
+        )
 
     already_paired = set()
-    for m in existing_matches:
+    for m in covered_matches:
         if m.home_team_id: already_paired.add(m.home_team_id)
         if m.away_team_id: already_paired.add(m.away_team_id)
 
     teams = [tid for tid in phase_team_ids if tid not in already_paired]
+    if not teams:
+        from ninja.errors import HttpError
+        raise HttpError(400, 'Όλες οι ομάδες της φάσης έχουν ήδη προγραμματισμένο αγώνα.')
     random.shuffle(teams)
 
     pairs = []  # (home_id, away_id) or (home_id, None) for bye

@@ -92,12 +92,15 @@ export default function TournamentOverview() {
   const sortedPhases   = [...phases].sort((a, b) => a.order - b.order)
   const phase1         = sortedPhases[0]
   const allTeams       = phase1 ? phase1.team_ids.length : 0
-  const openPhases     = sortedPhases.filter(p => p.is_open)
-  const lastOpenPhase  = openPhases[openPhases.length - 1]
-  const remainingTeams = lastOpenPhase ? lastOpenPhase.team_ids.length : 0
-  const progress       = allTeams > 0
-    ? Math.round(((allTeams - remainingTeams) / allTeams) * 10) * 10
-    : 0
+  // Teams still in contention: take the latest phase that has any teams
+  const latestPhase    = [...sortedPhases].reverse().find(p => p.team_ids.length > 0)
+  const remainingTeams = latestPhase ? latestPhase.team_ids.length : allTeams
+  // Progress = how far through the elimination we are.
+  // 0%  → no team eliminated (all N still in)
+  // 100% → only the champion remains (1 left)
+  const progress       = allTeams > 1
+    ? Math.min(100, Math.round(((allTeams - remainingTeams) / (allTeams - 1)) * 100))
+    : (allTeams === 1 ? 100 : 0)
 
   return (
     <div style={st.page}>

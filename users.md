@@ -18,9 +18,8 @@ Dont forget to make the link to referee-form/id with the match id.
 
 
 
-  │ ref1     │ pass123  │ Referee (ddd Giannakopoulos)                                                    │
+                                             │
   ├──────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────┤
-  │ player1  │ pass123  │ Player (Zara Alpha, Zeta FC) — also captain since her player was set as captain │
   ├──────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────┤
   │ captain1 │ pass123  │ Player (Zara Alpha, Zeta FC) — same player as player1                           │
   ├──────────┼──────────┼─────────────────────────────────────────────────────────────────────────────────┤
@@ -28,3 +27,20 @@ Dont forget to make the link to referee-form/id with the match id.
 
     Credentials for the management console (localhost:5173):  - Username: admin
   - Password: agonas2026
+
+  Player (EKPA Rovers)
+  SteliosA
+  123
+ 
+  Player & Captain Sunday Knee FC(Sunday Knee FC)
+  stav_ioannis 
+  123
+
+  Referee Apostolos Tolios
+  ref1
+  pass123
+
+
+  Player & Referee (Offsidious)
+  Dermitzakis
+  123

@@ -31,7 +31,11 @@ function ScheduleModal({ phaseId, teams, referees, tournamentType, onClose, onAp
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ start_date: startDate, end_date: endDate, mode, from_scratch: fromScratch }),
       })
-      if (!res.ok) { setError('Σφάλμα κατά τη δημιουργία προγράμματος.'); return }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(body?.detail ?? 'Σφάλμα κατά τη δημιουργία προγράμματος.')
+        return
+      }
       setPreview(await res.json())
     } catch { setError('Σφάλμα σύνδεσης.') }
     finally { setLoading(false) }
