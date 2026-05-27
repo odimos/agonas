@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { colors, fonts } from './styles'
 import ModalField from './ModalField'
 import { useLang } from './LangContext'
+import SearchableSelect from './SearchableSelect'
 
 // form shape: { firstName, lastName, nickname, phone, email, team_id, comments }
 export function initPlayerForm(player = {}) {
@@ -40,20 +41,17 @@ export default function PlayerModalContent({ form, setForm, editing, teams = [] 
         <ModalField label={t('modal_phone')} value={form.phone} editing={editing} onChange={set('phone')} icon="call" type="tel"   testId="input-phone" />
         <ModalField label="Email"            value={form.email} editing={editing} onChange={set('email')} icon="mail" type="email" testId="input-email" />
 
-        {/* Team — full-width select */}
+        {/* Team — searchable */}
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={st.selectLabel}>{t('modal_team_field')}</label>
-          <div style={{ position: 'relative' }}>
-            <select
-              style={{ ...st.select, borderBottomColor: editing ? colors.primary : `${colors.outlineVariant}4d`, cursor: editing ? 'pointer' : 'default', pointerEvents: editing ? 'auto' : 'none' }}
-              value={form.team_id ?? ''}
-              onChange={e => set('team_id')(e.target.value ? Number(e.target.value) : null)}
-              data-testid="input-team"
-            >
-              <option value="">—</option>
-              {teams.map(tm => <option key={tm.id} value={tm.id}>{tm.name}</option>)}
-            </select>
-            <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
+          <div style={{ padding: '0.375rem 0', borderBottom: `1px solid ${editing ? colors.primary : `${colors.outlineVariant}4d`}` }}>
+            <SearchableSelect
+              value={form.team_id ? String(form.team_id) : ''}
+              options={teams.map(tm => ({ value: String(tm.id), label: tm.name }))}
+              onChange={v => set('team_id')(v ? Number(v) : null)}
+              disabled={!editing}
+              testId="input-team"
+            />
           </div>
         </div>
       </div>

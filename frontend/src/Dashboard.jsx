@@ -15,6 +15,7 @@ import { fetchMatchGoals, deleteMatchGoal } from './api/match_player_goals'
 import { fetchMatchCards, deleteMatchCard } from './api/match_player_cards'
 import { fetchAllAvailabilities } from './api/stadium_availabilities'
 import { fetchPreferences as fetchTeamPrefs } from './api/team_preferences'
+import SearchableSelect from './SearchableSelect'
 
 // ─── FilterDropdown ───────────────────────────────────────────────────────────
 
@@ -485,14 +486,14 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
         }} disabled={locked} stadiumId={match.stadium_id} availabilities={availabilities} />
       </td>
       <td style={st.td}>
-        <InlineSelect value={match.stadium_id ? String(match.stadium_id) : ''} options={stadiumOpts} onChange={v => patch('stadium_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => stadium?.name || '—'} disabled={locked} />
+        <SearchableSelect value={match.stadium_id ? String(match.stadium_id) : ''} options={stadiumOpts} onChange={v => patch('stadium_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => stadium?.name || '—'} disabled={locked} />
       </td>
       <td style={{ ...st.td, textAlign: 'right', fontWeight: 700 }}>
-        <InlineSelect value={match.home_team_id ? String(match.home_team_id) : (match.tournament_id && !match.home_team_id ? 'bye' : '')} options={teamOpts} onChange={v => patch('home_team_id', v && v !== 'bye' ? Number(v) : null)} style={{ fontWeight: 700 }} getLabel={() => homeTeam?.name || (match.tournament_id && !match.home_team_id ? 'BYE' : '—')} disabled={locked} />
+        <SearchableSelect value={match.home_team_id ? String(match.home_team_id) : (match.tournament_id && !match.home_team_id ? 'bye' : '')} options={teamOpts} onChange={v => patch('home_team_id', v && v !== 'bye' ? Number(v) : null)} style={{ fontWeight: 700 }} getLabel={() => homeTeam?.name || (match.tournament_id && !match.home_team_id ? 'BYE' : '—')} disabled={locked} />
       </td>
       <td style={st.tdVs}>vs</td>
       <td style={{ ...st.td, fontWeight: 700 }}>
-        <InlineSelect value={match.away_team_id ? String(match.away_team_id) : (match.tournament_id && !match.away_team_id ? 'bye' : '')} options={teamOpts} onChange={v => patch('away_team_id', v && v !== 'bye' ? Number(v) : null)} style={{ fontWeight: 700 }} getLabel={() => awayTeam?.name || (match.tournament_id && !match.away_team_id ? 'BYE' : '—')} disabled={locked} />
+        <SearchableSelect value={match.away_team_id ? String(match.away_team_id) : (match.tournament_id && !match.away_team_id ? 'bye' : '')} options={teamOpts} onChange={v => patch('away_team_id', v && v !== 'bye' ? Number(v) : null)} style={{ fontWeight: 700 }} getLabel={() => awayTeam?.name || (match.tournament_id && !match.away_team_id ? 'BYE' : '—')} disabled={locked} />
       </td>
       <td style={{ ...st.td, textAlign: 'center', backgroundColor: colors.surfaceContainerLow, fontWeight: 700 }}>
         {match.home_score ?? '—'}
@@ -507,7 +508,7 @@ function MatchRow({ match, isFirst, isConflict, teams, referees, stadiums, tourn
         )}
       </td>
       <td style={st.td}>
-        <InlineSelect value={match.referee_id ? String(match.referee_id) : ''} options={refereeOpts} onChange={v => patch('referee_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => referee ? `${referee.first_name[0]}. ${referee.last_name}` : '—'} disabled={locked} />
+        <SearchableSelect value={match.referee_id ? String(match.referee_id) : ''} options={refereeOpts} onChange={v => patch('referee_id', v ? Number(v) : null)} style={{ color: colors.onSurfaceVariant }} getLabel={() => referee ? `${referee.first_name[0]}. ${referee.last_name}` : '—'} disabled={locked} />
       </td>
       <td style={{ ...st.td, padding: '0.5rem 0.75rem' }}>
         <div style={{ display: 'flex', gap: '0.25rem' }}>

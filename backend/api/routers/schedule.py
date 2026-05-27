@@ -24,9 +24,9 @@ class ScheduleSuggestion(Schema):
     home_team_id: Optional[int]
     away_team_id: Optional[int]
     referee_id: Optional[int] = None
-    stadium_id: int
-    stadium_name: str
-    scheduled_at: datetime
+    stadium_id: Optional[int] = None
+    stadium_name: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
     score: int
     is_bye: bool = False
 
@@ -49,10 +49,15 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
     phase_team_ids = list(phase.teams.values_list('id', flat=True))
 
     if payload.from_scratch:
-        # Disconnect ALL non-finished matches from this phase + tournament
+        # Disconnect non-finished matches from this phase + tournament
         Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected']).update(
             phase=None, tournament=None,
         )
+        # BYE matches (finished + exactly one team) also get reset
+        from django.db.models import Q
+        Match.objects.filter(phase_id=phase.id, status='finished').filter(
+            Q(home_team_id__isnull=True) | Q(away_team_id__isnull=True)
+        ).update(phase=None, tournament=None)
 
     avs = list(StadiumAvailability.objects.select_related('stadium').all())
     slots = _expand_slots(avs, payload.start_date, payload.end_date)
@@ -67,7 +72,7 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
         ref_prefs.setdefault(rp.referee_id, {})[rp.availability_id] = rp.score
 
     if payload.mode == 'knockout':
-        return _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, payload.from_scratch)
+        return _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, payload.from_scratch, payload.start_date)
     else:
         return _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids)
 
@@ -139,7 +144,7 @@ def _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_re
 
 # ─── Knockout mode ────────────────────────────────────────────────────────────
 
-def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, from_scratch=True):
+def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, from_scratch=True, start_date=None):
     # A team "has a match" only if it appears in an expected/finished match in this phase
     if from_scratch:
         covered_matches = []
@@ -170,6 +175,22 @@ def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_
 
     for home_id, away_id in pairs:
         is_bye = away_id is None
+        if is_bye:
+            # BYE: no stadium/time/referee — the lone team auto-advances.
+            # Stamp a placeholder date (start of window) so the match appears in the right week bucket.
+            bye_dt = datetime(start_date.year, start_date.month, start_date.day) if start_date else None
+            suggestions.append(ScheduleSuggestion(
+                match_id=None,
+                home_team_id=home_id,
+                away_team_id=None,
+                referee_id=None,
+                stadium_id=None,
+                stadium_name=None,
+                scheduled_at=bye_dt,
+                score=0,
+                is_bye=True,
+            ))
+            continue
         best_score, best_idx, best_ref_id = -1, None, None
 
         for i, sl in enumerate(slots):
@@ -238,13 +259,14 @@ def apply_schedule(request, phase_id: int, payload: ApplyRequest):
             match.save()
             applied += 1
         else:
-            # Create new match (knockout)
+            # Create new match (knockout). BYE matches are auto-finished — the lone team advances.
+            # BYE keeps its placeholder date (for week bucketing) but no stadium/referee.
             Match.objects.create(
-                status='expected',
+                status='finished' if s.is_bye else 'expected',
                 home_team_id=s.home_team_id,
                 away_team_id=s.away_team_id,
-                referee_id=s.referee_id,
-                stadium_id=s.stadium_id,
+                referee_id=None if s.is_bye else s.referee_id,
+                stadium_id=None if s.is_bye else s.stadium_id,
                 scheduled_at=s.scheduled_at,
                 tournament_id=phase.tournament_id,
                 phase_id=phase.id,

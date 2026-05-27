@@ -5,6 +5,7 @@ import { useLang } from './LangContext'
 import { fetchAllAvailabilities } from './api/stadium_availabilities'
 import { fetchPreferences, upsertPreference } from './api/team_preferences'
 import { uploadTeamPhoto } from './api/teams'
+import SearchableSelect from './SearchableSelect'
 
 // form shape: { name, is_active, captain_id, vice_captain_id, comments }
 export function initTeamForm(team = {}) {
@@ -287,19 +288,13 @@ export default function TeamModalContent({ form, setForm, editing, players = [],
           {/* Inline add-player picker */}
           {addPickerOpen && (
             <div style={st.addPickerRow} data-testid="add-player-picker">
-              <div style={{ position: 'relative', flex: 1 }}>
-                <select
-                  style={st.addSelect}
+              <div style={{ flex: 1, padding: '0.375rem 0.5rem', borderBottom: `2px solid ${colors.tertiary}`, backgroundColor: colors.surfaceContainer, borderRadius: radius.DEFAULT }}>
+                <SearchableSelect
                   value={addingId}
-                  onChange={e => setAddingId(e.target.value)}
-                  data-testid="add-player-select"
-                >
-                  <option value="">{t('modal_select_player')}</option>
-                  {availablePlayers.map(p => (
-                    <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined" style={st.selectChevron}>expand_more</span>
+                  options={availablePlayers.map(p => ({ value: String(p.id), label: `${p.first_name} ${p.last_name}` }))}
+                  onChange={v => setAddingId(v ?? '')}
+                  testId="add-player-select"
+                />
               </div>
               <button
                 style={{ ...st.addBtn, opacity: (!addingId || addBusy) ? 0.5 : 1 }}
