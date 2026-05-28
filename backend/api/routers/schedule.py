@@ -4,7 +4,8 @@ from typing import List, Optional
 
 from django.shortcuts import get_object_or_404
 from ninja import Router, Schema
-
+from django.db.models import Q
+from ninja.errors import HttpError
 from api.models import (
     Match, Phase, Referee, RefereePreference, StadiumAvailability, TeamPreference,
 )
@@ -15,7 +16,7 @@ router = Router()
 class ScheduleRequest(Schema):
     start_date: date
     end_date: date
-    mode: str = 'league'  # 'league' or 'knockout'
+    mode: str = 'knockout'  # 'league' or 'knockout'
     from_scratch: bool = False
 
 
@@ -54,7 +55,6 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
             phase=None, tournament=None,
         )
         # BYE matches (finished + exactly one team) also get reset
-        from django.db.models import Q
         Match.objects.filter(phase_id=phase.id, status='finished').filter(
             Q(home_team_id__isnull=True) | Q(away_team_id__isnull=True)
         ).update(phase=None, tournament=None)
@@ -73,73 +73,6 @@ def generate_schedule(request, phase_id: int, payload: ScheduleRequest):
 
     if payload.mode == 'knockout':
         return _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids, payload.from_scratch, payload.start_date)
-    else:
-        return _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids)
-
-
-# ─── League mode ──────────────────────────────────────────────────────────────
-
-def _generate_league(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_referee_ids):
-    matches = list(
-        Match.objects.filter(phase_id=phase.id, status__in=['draft', 'expected'])
-        .select_related('home_team', 'away_team', 'referee')
-    )
-    if not matches:
-        from ninja.errors import HttpError
-        raise HttpError(400, 'Δεν υπάρχουν αγώνες προς προγραμματισμό σε αυτή τη φάση.')
-
-    matches_sorted = sorted(matches, key=lambda m: sum(
-        1 for sl in slots if _slot_score(m, sl, team_prefs, ref_prefs) >= 0
-    ))
-
-    day_teams, day_refs, slot_used = {}, {}, {i: 0 for i in range(len(slots))}
-    suggestions, unscheduled = [], []
-
-    for match in matches_sorted:
-        best_score, best_idx, best_ref_id = -1, None, None
-        for i, sl in enumerate(slots):
-            d = sl['dt'].date()
-            if match.home_team_id and match.home_team_id in day_teams.get(d, set()):
-                continue
-            if match.away_team_id and match.away_team_id in day_teams.get(d, set()):
-                continue
-            if slot_used[i] >= sl['capacity']:
-                continue
-            # Use match's existing referee if available and free, otherwise pick best free referee
-            if match.referee_id and match.referee_id not in day_refs.get(d, set()):
-                chosen_ref = match.referee_id
-            else:
-                chosen_ref = _pick_referee(all_referee_ids, ref_prefs, sl['av_id'], day_refs.get(d, set()))
-            if chosen_ref is None:
-                continue
-            score = _slot_score_with_ref(match, sl, team_prefs, ref_prefs, chosen_ref)
-            if score > best_score:
-                best_score, best_idx, best_ref_id = score, i, chosen_ref
-
-        if best_idx is not None:
-            sl = slots[best_idx]
-            d = sl['dt'].date()
-            day_teams.setdefault(d, set())
-            day_refs.setdefault(d, set())
-            if match.home_team_id: day_teams[d].add(match.home_team_id)
-            if match.away_team_id: day_teams[d].add(match.away_team_id)
-            day_refs[d].add(best_ref_id)
-            slot_used[best_idx] += 1
-            suggestions.append(ScheduleSuggestion(
-                match_id=match.id,
-                home_team_id=match.home_team_id,
-                away_team_id=match.away_team_id,
-                referee_id=best_ref_id,
-                stadium_id=sl['stadium_id'],
-                stadium_name=sl['stadium_name'],
-                scheduled_at=sl['dt'],
-                score=best_score,
-                is_bye=False,
-            ))
-        else:
-            unscheduled.append(match.id)
-
-    return {'suggestions': suggestions, 'unscheduled': unscheduled, 'new_matches': []}
 
 
 # ─── Knockout mode ────────────────────────────────────────────────────────────
@@ -160,7 +93,7 @@ def _generate_knockout(phase, phase_team_ids, slots, team_prefs, ref_prefs, all_
 
     teams = [tid for tid in phase_team_ids if tid not in already_paired]
     if not teams:
-        from ninja.errors import HttpError
+
         raise HttpError(400, 'Όλες οι ομάδες της φάσης έχουν ήδη προγραμματισμένο αγώνα.')
     random.shuffle(teams)
 
@@ -296,29 +229,6 @@ def _expand_slots(avs, start_date, end_date):
                 })
         current += timedelta(days=1)
     return slots
-
-
-def _slot_score(match, sl, team_prefs, ref_prefs):
-    score = 0
-    av_id = sl['av_id']
-    if match.home_team_id:
-        score += team_prefs.get(match.home_team_id, {}).get(av_id, 0)
-    if match.away_team_id:
-        score += team_prefs.get(match.away_team_id, {}).get(av_id, 0)
-    if match.referee_id:
-        score += ref_prefs.get(match.referee_id, {}).get(av_id, 0)
-    return score
-
-
-def _slot_score_with_ref(match, sl, team_prefs, ref_prefs, referee_id):
-    av_id = sl['av_id']
-    score = 0
-    if match.home_team_id:
-        score += team_prefs.get(match.home_team_id, {}).get(av_id, 0)
-    if match.away_team_id:
-        score += team_prefs.get(match.away_team_id, {}).get(av_id, 0)
-    score += ref_prefs.get(referee_id, {}).get(av_id, 0)
-    return score
 
 
 def _pick_referee(all_referee_ids, ref_prefs, av_id, busy_referee_ids):

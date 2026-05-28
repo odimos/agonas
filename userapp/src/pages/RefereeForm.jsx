@@ -27,7 +27,27 @@ function SectionHeader({ icon, label }) {
 
 const selectStyle = { fontSize: '0.8rem', fontWeight: 600, color: colors.onSurface, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }
 
-function GoalRow({ entry, players, onChange, onRemove }) {
+function PlayerOptions({ players, homeTeam, awayTeam }) {
+  const homePlayers = players.filter(p => p.team_id === homeTeam.id)
+  const awayPlayers = players.filter(p => p.team_id === awayTeam.id)
+  return (
+    <>
+      <option value="">Player…</option>
+      {homePlayers.length > 0 && (
+        <optgroup label={homeTeam.name}>
+          {homePlayers.map(p => <option key={p.id} value={p.id}>{`  ${p.first_name} ${p.last_name}`}</option>)}
+        </optgroup>
+      )}
+      {awayPlayers.length > 0 && (
+        <optgroup label={awayTeam.name}>
+          {awayPlayers.map(p => <option key={p.id} value={p.id}>{`  ${p.first_name} ${p.last_name}`}</option>)}
+        </optgroup>
+      )}
+    </>
+  )
+}
+
+function GoalRow({ entry, players, homeTeam, awayTeam, onChange, onRemove }) {
   return (
     <div style={{ background: colors.surfaceContainerLow, borderRadius: radius.xl, padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
       <input
@@ -41,8 +61,7 @@ function GoalRow({ entry, players, onChange, onRemove }) {
         onChange={e => onChange({ ...entry, player_id: Number(e.target.value), team_id: players.find(p => p.id === Number(e.target.value))?.team_id || '' })}
         style={{ ...selectStyle, flex: 1, minWidth: 0, fontSize: '0.75rem' }}
       >
-        <option value="">Player…</option>
-        {players.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+        <PlayerOptions players={players} homeTeam={homeTeam} awayTeam={awayTeam} />
       </select>
       <select
         value={entry.own_goal ? 'own_goal' : 'goal'}
@@ -59,7 +78,7 @@ function GoalRow({ entry, players, onChange, onRemove }) {
   )
 }
 
-function CardRow({ entry, players, onChange, onRemove }) {
+function CardRow({ entry, players, homeTeam, awayTeam, onChange, onRemove }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: colors.surfaceContainerLow, borderRadius: radius.xl, padding: '0.5rem 0.75rem' }}>
       <button
@@ -71,8 +90,7 @@ function CardRow({ entry, players, onChange, onRemove }) {
         onChange={e => onChange({ ...entry, player_id: Number(e.target.value), team_id: players.find(p => p.id === Number(e.target.value))?.team_id || '' })}
         style={{ flex: 1, fontSize: '0.8rem', fontWeight: 600, color: colors.onSurface, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}
       >
-        <option value="">Select player…</option>
-        {players.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+        <PlayerOptions players={players} homeTeam={homeTeam} awayTeam={awayTeam} />
       </select>
       <button onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.onSurfaceVariant, display: 'flex', padding: '0.1rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>close</span>
@@ -362,7 +380,7 @@ export default function RefereeForm() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {goals.map(g => (
-              <GoalRow key={g.id} entry={g} players={players} onChange={val => updateGoal(g.id, val)} onRemove={() => removeGoal(g.id)} />
+              <GoalRow key={g.id} entry={g} players={players} homeTeam={{ id: match.home_team_id, name: HOME_TEAM }} awayTeam={{ id: match.away_team_id, name: AWAY_TEAM }} onChange={val => updateGoal(g.id, val)} onRemove={() => removeGoal(g.id)} />
             ))}
           </div>
         </section>
@@ -378,7 +396,7 @@ export default function RefereeForm() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {cards.map(c => (
-              <CardRow key={c.id} entry={c} players={players} onChange={val => updateCard(c.id, val)} onRemove={() => removeCard(c.id)} />
+              <CardRow key={c.id} entry={c} players={players} homeTeam={{ id: match.home_team_id, name: HOME_TEAM }} awayTeam={{ id: match.away_team_id, name: AWAY_TEAM }} onChange={val => updateCard(c.id, val)} onRemove={() => removeCard(c.id)} />
             ))}
           </div>
         </section>

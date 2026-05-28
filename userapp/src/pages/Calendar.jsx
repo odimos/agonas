@@ -16,7 +16,7 @@ function sameDay(a, b) {
 const isPast  = d => d < TODAY && !sameDay(d, TODAY)
 const isToday = d => sameDay(d, TODAY)
 
-function DayCell({ day, match, date }) {
+function DayCell({ day, match, date, refereeDay }) {
   const today    = isToday(date)
   const past     = !!match && match.status === 'finished'
   const upcoming = !!match && match.status === 'expected'
@@ -35,8 +35,13 @@ function DayCell({ day, match, date }) {
   if (upcoming) { bg = colors.error;           color = '#fff' }
   if (past)     { bg = 'rgba(186,26,26,0.22)'; color = colors.error }
 
+  const ringStyle = refereeDay ? {
+    outline: `2px solid ${colors.tertiary}`,
+    outlineOffset: '1px',
+  } : {}
+
   return (
-    <span style={{ width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600, borderRadius: '50%', lineHeight: 1, background: bg, color }}>
+    <span style={{ width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 600, borderRadius: '50%', lineHeight: 1, background: bg, color, ...ringStyle }}>
       {day}
     </span>
   )
@@ -128,16 +133,23 @@ export default function Calendar() {
   const { t } = useLang()
   const { user } = useUser()
   const [matches, setMatches] = useState([])
+  const [refereeMatches, setRefereeMatches] = useState([])
   const [viewYear,  setViewYear]  = useState(TODAY.getFullYear())
   const [viewMonth, setViewMonth] = useState(TODAY.getMonth())
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [modalOpen,     setModalOpen]     = useState(false)
 
   useEffect(() => {
-    if (!user?.team_id) return
-    fetch(`${API}/team/${user.team_id}/matches`).then(r => r.ok ? r.json() : []).then(data => {
-      setMatches(data.map(m => ({ ...m, date: new Date(m.scheduled_at) })))
-    })
+    if (user?.team_id) {
+      fetch(`${API}/team/${user.team_id}/matches`).then(r => r.ok ? r.json() : []).then(data => {
+        setMatches(data.map(m => ({ ...m, date: new Date(m.scheduled_at) })))
+      })
+    }
+    if (user?.is_referee) {
+      fetch(`${API}/referee/matches/open`).then(r => r.ok ? r.json() : []).then(data => {
+        setRefereeMatches(data.filter(m => m.scheduled_at).map(m => ({ ...m, date: new Date(m.scheduled_at) })))
+      })
+    }
   }, [user])
 
   const MONTHS       = t('cal_months').split(',')
@@ -176,6 +188,12 @@ export default function Calendar() {
       dayMap[m.date.getDate()] = m
   })
 
+  const refereeDays = new Set()
+  refereeMatches.forEach(m => {
+    if (m.date.getFullYear() === viewYear && m.date.getMonth() === viewMonth)
+      refereeDays.add(m.date.getDate())
+  })
+
   const upcoming = matches.filter(m => m.status === 'expected').sort((a, b) => a.date - b.date)
   const past     = matches.filter(m => m.status === 'finished').sort((a, b) => b.date - a.date)
 
@@ -210,7 +228,7 @@ export default function Calendar() {
               return (
                 <div key={day} onClick={match ? () => { setSelectedMatch(match); setModalOpen(true) } : undefined}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '2.5rem', cursor: match ? 'pointer' : 'default', userSelect: 'none' }}>
-                  <DayCell day={day} match={match} date={date} />
+                  <DayCell day={day} match={match} date={date} refereeDay={refereeDays.has(day)} />
                 </div>
               )
             })}

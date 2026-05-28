@@ -7,7 +7,7 @@ from ninja.errors import HttpError
 
 from api.models import Match, MatchPlayerCard, MatchPlayerGoal, Player, Team, Phase, Tournament
 from .models import AppUser
-
+from django.conf import settings
 api = NinjaAPI(urls_namespace='userapp')
 
 
@@ -90,7 +90,6 @@ class RefereeMatchOut(Schema):
 # ── Auth endpoints ───────────────────────────────────────────────────────────
 
 def _media_url(file_field):
-    from django.conf import settings
     if not file_field:
         return None
     return f"{settings.PUBLIC_BASE_URL}{file_field.url}"

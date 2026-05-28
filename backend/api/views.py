@@ -63,11 +63,3 @@ def admin_me(request):
         raise HttpError(401, 'Not authenticated')
     return {'username': ADMIN_USERNAME}
 
-
-@api.get('/', response=HelloResponse)
-def index(request):
-    return {'message': 'Hello, world.'}
-
-
-class HelloRequest(Schema):
-    name: str
