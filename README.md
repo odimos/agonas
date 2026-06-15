@@ -7,7 +7,7 @@ It brings match scheduling, result reporting, and team management into a single 
 
 
 ## Architecture
-Postgres database, Django REST backend with two separate django apps connected with a separate React frontends each one. These two serve different purposes (league admin and app user) with different permissions, each with its own API (`/api/` for admin, `/app/api/` for the user app). All services orchestrated with Docker Compose.
+The backend is a single Django process containing two apps: `api` (for league admins, served at `/api/`) and `userapp` (for players, referees, and guests, served at `/app/api/`). Each app backs its own React frontend. All services orchestrated with Docker Compose.
 
 ![alt text](arch_dev.png "arch")
 
@@ -18,7 +18,7 @@ Postgres database, Django REST backend with two separate django apps connected w
 | Management Frontend | Dashboard for organizers (managing teams, matches, scores, ..) | 5173 |
 | User App Frontend | Public-facing app for users (browsing, referee forms, ..) | 5174 |
 | Django backend | REST API, auth, business logic, media uploads | 8000 |
-| PostgreSQL | Persists data | 5432 |
+| PostgreSQL | Persists all match/team/referee data | 5432 |
 
 
 
@@ -66,7 +66,6 @@ Must be installed: Docker + Docker Compose, Git.
 4. Initialize the database (or the optional step listed at the end) :
    ```bash
    docker compose up db
-   docker compose run --rm backend python manage.py makemigrations
    docker compose run --rm backend python manage.py migrate
    ```
 
