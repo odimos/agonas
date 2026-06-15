@@ -1,6 +1,31 @@
-docker compose build ### build images
-initialize the db 
-docker compose up -- watxh // tart the rest of the project
+# Agonas - League Management System
+
+Football tournament management platform that replaces every Excel sheet, group chat, and time-consuming manual process.
+It brings match scheduling, result reporting, and team management into a single system, making life easier for referees and organizers.
+
+**Stack**: Django + Django Ninja, React + Vite, PostgreSQL, Docker Compose.
+
+
+## Architecture
+Postgres database, Django REST backend, two separate React frontends. The two frontends serve different purposes (league admin and app user) with different permissions, each with its own API (`/api/` for admin, `/app/api/` for the user app) on the same backend. All services orchestrated with Docker Compose.
+
+![alt text](arch_dev.png "arch")
+
+| Component  | Purpose | Port |
+|---|---|---|
+| Management Frontend | Dashboard for organizers (managing teams, matches, scores, ..) | 5173 |
+| User App Frontend | Public-facing app for users (browsing, referee forms, ..) | 5174 |
+| Django backend | REST API, auth, business logic, media uploads | 8000 |
+| PostgreSQL | Persists all match/team/referee data | 5432 |
+
+**Auth**: Session-based, admin sign-in via `/api/auth/`, app users via `/app/api/auth/`.
+
+**Core entities**:
+    For the admin panel: Team, Player, Referee, Stadium, Match, Tournament/Phase.
+    For the user app: App User
+
+**Docker**: Each service has its own Dockerfile (`backend/`, `frontend/`, `userapp/`); `docker-compose.yml` combines them.
+
 ## build backend docker image
 docker compose build backend
 
@@ -28,52 +53,54 @@ docker compose up backend --no-deps
 ```
 ---
 
-## Running Tests
 
-### Backend (Django) — runs inside Docker, no stack needed
+## Setup
 
-```bash
-# All tests
-docker compose run --rm backend python manage.py test api
+Must be installed: Docker + Docker Compose, Git.
 
-# By category
-docker compose run --rm backend python manage.py test api.tests.smoke
-docker compose run --rm backend python manage.py test api.tests.unit
-docker compose run --rm backend python manage.py test api.tests.integration
-docker compose run --rm backend python manage.py test api.tests.functional
+1. Clone the project:
+   ```bash
+   git clone https://github.com/odimos/agonas.git
+   cd agonas
+   ```
 
-# Specific entity
-docker compose run --rm backend python manage.py test api.tests.integration.test_referees_api
-docker compose run --rm backend python manage.py test api.tests.integration.test_stadiums_api
-```
+2. Create the two `.env` files and fill them in.
 
-> Add `--verbosity 2` to see each test name. Add `--keepdb` to skip recreating the test DB on reruns.
+   `./.env` (project root, for Postgres + backend):
+   ```env
+   POSTGRES_DB=<your_db_name>
+   POSTGRES_USER=<your_db_user>
+   POSTGRES_PASSWORD=<your_db_password>
+   POSTGRES_HOST=db
+   POSTGRES_PORT=5432
+   ```
 
----
+   `./frontend/.env` (for the management frontend):
+   ```env
+   VITE_API_URL=http://localhost:8000/api
+   ```
 
-### Frontend (Playwright) — runs locally, stack must be running
+3. Build images:
+   ```bash
+   docker compose build
+   ```
 
-**One-time setup (inside `frontend/`):**
-```bash
-npm install
-npx playwright install chromium
-```
+4. Initialize the database:
+   ```bash
+   docker compose up db
+   docker compose run --rm backend python manage.py makemigrations
+   docker compose run --rm backend python manage.py migrate
+   ```
 
-**Run tests:**
-```bash
-# Headless (terminal output only)
-npm run test:e2e
+5. Start the stack (in separate terminals, for dev work):
+   ```bash
+   docker compose up db
+   docker compose up frontend
+   docker compose up backend --no-deps
+   ```
 
-# Headed (watch the browser)
-npm run test:e2e:headed
-
-# Interactive UI — step through tests in real time
-npm run test:e2e:ui
-
-# Specific file
-npx playwright test tests/referees.spec.js
-npx playwright test tests/stadiums.spec.js
-```
-
-> Full docs: `frontend/tests/RUNNING_TESTS.md`
-> Backend test docs: `backend/api/tests/RUNNING_TESTS.md`
+Services:
+- backend (Django) → http://localhost:8000
+- frontend (admin/dashboard) → http://localhost:5173
+- userapp → http://localhost:5174
+- db (Postgres 15) → localhost:5432
