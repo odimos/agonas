@@ -7,7 +7,7 @@ It brings match scheduling, result reporting, and team management into a single 
 
 
 ## Architecture
-The backend is a single Django process containing two apps: `api` (for league admins, served at `/api/`) and `userapp` (for players, referees, and guests, served at `/app/api/`). Each app backs its own React frontend. All services orchestrated with Docker Compose.
+The backend is a single Django server containing two apps: `api` (for league admins, served at `/api/`) and `userapp` (for players, referees, and guests, served at `/app/api/`). Each app backs its own React frontend. All services orchestrated with Docker Compose.
 
 ![alt text](arch_dev.png "arch")
 
@@ -16,7 +16,7 @@ The backend is a single Django process containing two apps: `api` (for league ad
 | Component  | Purpose | Port |
 |---|---|---|
 | Management Frontend | Dashboard for organizers (managing teams, matches, scores, ..) | 5173 |
-| User App Frontend | Public-facing app for users (browsing, referee forms, ..) | 5174 |
+| User App Frontend | App for users (browsing, referee forms, ..) | 5174 |
 | Django backend | REST API, auth, business logic, media uploads | 8000 |
 | PostgreSQL | Persists all match/team/referee data | 5432 |
 
@@ -63,7 +63,7 @@ Must be installed: Docker + Docker Compose, Git.
    docker compose build
    ```
 
-4. Initialize the database (or the optional step listed at the end) :
+4. Initialize the database (or use the demo data, listed at the end) :
    ```bash
    docker compose up db
    docker compose run --rm backend python manage.py migrate
@@ -84,7 +84,7 @@ Services:
 
 ### Load demo data (optional)
 
-Instead of step 4 above, you can use my database snapshot. The snapshot already contains the schema and demo records, so **skip `makemigrations` / `migrate`**. Your `.env` credentials from step 2 work will work fine.
+Instead of step 4 above, you can use my database snapshot. The snapshot already contains the schema and demo records, so **skip `makemigrations` / `migrate`**. Your `.env` credentials from step 2 will work fine.
 
 1. Download `agonas_snapshot.sql` from https://github.com/odimos/agonas/releases/tag/database and place it in the project root (next to `docker-compose.yml`).
 
