@@ -7,7 +7,7 @@ It brings match scheduling, result reporting, and team management into a single 
 
 
 ## Architecture
-Postgres database, Django REST backend, two separate React frontends. The two frontends serve different purposes (league admin and app user) with different permissions, each with its own API (`/api/` for admin, `/app/api/` for the user app) on the same backend. All services orchestrated with Docker Compose.
+Postgres database, Django REST backend with two separate django apps connected with a separate React frontends each one. These two serve different purposes (league admin and app user) with different permissions, each with its own API (`/api/` for admin, `/app/api/` for the user app). All services orchestrated with Docker Compose.
 
 ![alt text](arch_dev.png "arch")
 
@@ -18,7 +18,7 @@ Postgres database, Django REST backend, two separate React frontends. The two fr
 | Management Frontend | Dashboard for organizers (managing teams, matches, scores, ..) | 5173 |
 | User App Frontend | Public-facing app for users (browsing, referee forms, ..) | 5174 |
 | Django backend | REST API, auth, business logic, media uploads | 8000 |
-| PostgreSQL | Persists all match/team/referee data | 5432 |
+| PostgreSQL | Persists data | 5432 |
 
 
 
@@ -28,7 +28,7 @@ Postgres database, Django REST backend, two separate React frontends. The two fr
 &nbsp;&nbsp;&nbsp;&nbsp;For the admin panel: Team, Player, Referee, Stadium, Match, Tournament/Phase.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;For the user app: App User
 
-**Docker**: Each service has its own Dockerfile (`backend/`, `frontend/`, `userapp/`); `docker-compose.yml` combines them.
+**Docker**: Each service has its own Dockerfile (`backend/`, `frontend/`, `userapp/`), `docker-compose.yml` combines them.
 
 
 
