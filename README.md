@@ -11,6 +11,8 @@ Postgres database, Django REST backend, two separate React frontends. The two fr
 
 ![alt text](arch_dev.png "arch")
 
+
+
 | Component  | Purpose | Port |
 |---|---|---|
 | Management Frontend | Dashboard for organizers (managing teams, matches, scores, ..) | 5173 |
@@ -18,40 +20,16 @@ Postgres database, Django REST backend, two separate React frontends. The two fr
 | Django backend | REST API, auth, business logic, media uploads | 8000 |
 | PostgreSQL | Persists all match/team/referee data | 5432 |
 
+
+
 **Auth**: Session-based, admin sign-in via `/api/auth/`, app users via `/app/api/auth/`.
 
-**Core entities**:
-    For the admin panel: Team, Player, Referee, Stadium, Match, Tournament/Phase.
-    For the user app: App User
+**Core entities**:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;For the admin panel: Team, Player, Referee, Stadium, Match, Tournament/Phase.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;For the user app: App User
 
 **Docker**: Each service has its own Dockerfile (`backend/`, `frontend/`, `userapp/`); `docker-compose.yml` combines them.
 
-## build backend docker image
-docker compose build backend
-
-
-docker compose run --rm backend python manage.py makemigrations
-docker compose run --rm backend python manage.py migrate
-
-docker compose run --rm -p 8000:8000 backend python manage.py runserver 0.0.0.0:8000
-
---watch -> automatically rebuilds
-docker compose up postgress
-docker compose up --watch frontend
-docker compose run -rm --no-deps --service-ports --use-aliases backend python manage.py runserver 0.0.0.0:8000
-
-
-docker compose up db
-docker compose up --watch frontend
-docker compose up --watch --no-deps backend
-
-### Use this for dev work:
-```bash
-docker compose up db
-docker compose up frontend
-docker compose up backend --no-deps
-```
----
 
 
 ## Setup
@@ -85,7 +63,7 @@ Must be installed: Docker + Docker Compose, Git.
    docker compose build
    ```
 
-4. Initialize the database:
+4. Initialize the database (or the optional step listed at the end) :
    ```bash
    docker compose up db
    docker compose run --rm backend python manage.py makemigrations
@@ -104,3 +82,25 @@ Services:
 - frontend (admin/dashboard) → http://localhost:5173
 - userapp → http://localhost:5174
 - db (Postgres 15) → localhost:5432
+
+### Load demo data (optional)
+
+Instead of step 4 above, you can use my database snapshot. The snapshot already contains the schema and demo records, so **skip `makemigrations` / `migrate`**. Your `.env` credentials from step 2 work will work fine.
+
+1. Download `agonas_snapshot.sql` from https://github.com/odimos/agonas/releases/tag/database and place it in the project root (next to `docker-compose.yml`).
+
+2. Start the DB and load the snapshot (use your own values from `.env`):
+
+   ```bash
+   docker compose up db
+   docker compose exec -T db psql -U <your_db_user> -d <your_db_name> < agonas_snapshot.sql
+   ```
+
+   On Windows PowerShell:
+
+   ```powershell
+   docker compose up db
+   Get-Content agonas_snapshot.sql | docker compose exec -T db psql -U <your_db_user> -d <your_db_name>
+   ```
+
+Then continue with step 5.
